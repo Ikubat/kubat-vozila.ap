@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mjesta — pregled i unos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css?v=6" />
+</head>
+<body class="mjesta" />
+
+<header class="topbar">
+  <h1>Mjesta</h1>
+  <input id="search" type="search" placeholder="Traži: naziv, šifra, kanton" />
+  <button id="btnAdd" class="btn-icon" title="Dodaj novo mjesto" aria-label="Dodaj novo mjesto">＋</button>
+</header>
+
+<button id="fabAdd" class="fab" title="Dodaj mjesto" aria-label="Dodaj mjesto">
+  <i class="fa-solid fa-plus"></i>
+</button>
+
+<main class="container">
+  <div class="cards-table-wrap" >
+    <div class="grid-head">
+      <div>ID</div>
+      <div>Naziv mjesta</div>
+      <div>Porezna šifra</div>
+      <div>Kanton</div>
+      <div class="acts">Akcije</div>
+    </div>
+    <div id="list" class="cards-table" aria-live="polite"></div>
+  </div>
+</main>
+
+<div id="mWrap" class="modal-wrap" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modal-header">
+      <h3 id="mTitle">Novo mjesto</h3>
+      <button id="mClose" class="modal-x" aria-label="Zatvori">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="m_id" />
+      <label>Naziv mjesta
+        <input type="text" id="m_naziv" autocomplete="off" />
+      </label>
+      <label>Porezna šifra
+        <input type="text" id="m_sifra" autocomplete="off" />
+      </label>
+      <label>Kanton
+        <select id="m_kanton">
+          <option value="">— odaberi —</option>
+        </select>
+      </label>
+      <div id="mMsg" class="tiny" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button id="mSave" class="btn primary">Spremi</button>
+      <button id="mCancel" class="btn ghost" type="button">Odustani</button>
+    </div>
+  </div>
+</div>
+
+<script src="common.js?v=106"></script>
+<script src="mjesta.js?v=106"></script>
+</body>
+</html>
+

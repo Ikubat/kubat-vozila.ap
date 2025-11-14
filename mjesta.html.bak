@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mjesta — pregled i unos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* fallback ako styles.css fali */
+    .acts { display:flex; gap:6px }
+    .act { border:1px solid #e5e7eb; background:#fff; padding:6px 8px; border-radius:8px; cursor:pointer }
+    .act:hover { background:#eef6ff }
+    .modal-wrap{ position:fixed; inset:0; backdrop-filter:blur(6px); background:rgba(0,0,0,.25); display:none; align-items:center; justify-content:center; padding:16px; z-index:100 }
+    .modal-wrap.show{ display:flex }
+    .modal{ width:min(560px,96vw); background:#fff; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,.25); overflow:hidden }
+    .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #e5e7eb }
+    .modal-header h3{ margin:0; font-size:18px }
+    .modal-x{ font-size:22px; line-height:1; border:none; background:transparent; cursor:pointer; padding:6px 8px }
+    .modal-body{ padding:16px; display:grid; gap:10px }
+    .modal-footer{ display:flex; gap:8px; justify-content:flex-end; padding:12px 16px; border-top:1px solid #e5e7eb }
+    .btn-ghost{ background:#fff; border:1px solid #e5e7eb }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Mjesta</h1>
+    <input id="search" type="search" placeholder="Traži: naziv, šifra, kanton" autofocus>
+  </header>
+
+ <main class="container">
+
+  <div class="cards-table-wrap">
+
+    <div class="grid-head">
+      <div>ID</div>
+      <div>Naziv mjesta</div>
+      <div>Porezna šifra</div>
+      <div>Kanton</div>
+      <div class="acts">Akcije</div>
+    </div>
+
+    <div id="list" class="cards-table"></div>
+
+  </div>
+
+</main>
+
+  <!-- Modal -->
+  <div id="modalWrap" class="modal-wrap" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Uredi mjesto</h3>
+        <button class="modal-x" id="modalClose" aria-label="Zatvori">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="m_id">
+        <label>Naziv mjesta
+          <input id="m_naziv" required>
+        </label>
+        <label>Porezna šifra
+          <input id="m_sifra" required>
+        </label>
+        <label>Kanton
+          <select id="m_kanton" required>
+            <option value="">— odaberi —</option>
+            <option>KS</option>
+            <option>ZE-DO</option>
+            <option>SBK/KSB</option>
+            <option>HNK</option>
+            <option>ZHK</option>
+            <option>USK</option>
+            <option>BPK</option>
+            <option>TK</option>
+            <option>PK</option>
+          </select>
+        </label>
+        <div id="modalMsg" class="hint" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="modalSave">Spremi izmjene</button>
+        <button id="modalCancel" type="button" class="btn-ghost">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $s   = document.getElementById('search');
+    const $tb  = document.querySelector('#tbl tbody');
+    const $msg = document.getElementById('msg');
+
+    // učitaj odmah prvih 50 (ako API tako radi)
+    load('');
+
+    // debounce pretrage
+    let t=null;
+    $s.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>load($s.value.trim()), 220); });
+    $s.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); load($s.value.trim()); }});
+
+    async function load(q){
+      const url = '../api/mjesta_search.php' + (q ? ('?q='+encodeURIComponent(q)) : '');
+      try{
+        const r = await fetch(url);
+        if(!r.ok){ throw new Error('HTTP '+r.status); }
+        const rows = await r.json();
+        $tb.innerHTML = rows.length ? rows.map(m => `
+          <tr tabindex="0" data-id="${m.id}"
+              data-naziv="${(m.naziv_mjesta||'').replace(/"/g,'&quot;')}"
+              data-sifra="${(m.porezna_sifra||'').replace(/"/g,'&quot;')}"
+              data-kanton="${(m.kanton||'').replace(/"/g,'&quot;')}">
+            <td>${m.id}</td>
+            <td>${m.naziv_mjesta || ''}</td>
+            <td>${m.porezna_sifra || ''}</td>
+            <td>${m.kanton || ''}</td>
+            <td class="acts">
+  <button class="act edit" title="Uredi mjesto" aria-label="Uredi">
+    <i class="fa-solid fa-pen"></i>
+  </button>
+  <button class="act del"  title="Obriši mjesto" aria-label="Obriši">
+    <i class="fa-solid fa-trash"></i>
+  </button>
+</td>
+          </tr>
+        `).join('') : '<tr><td colspan="5">Nema rezultata.</td></tr>';
+      }catch(e){
+        console.error(e);
+        $tb.innerHTML = '<tr><td colspan="5">Greška pri dohvaćanju podataka.</td></tr>';
+      }
+    }
+
+    // ===== Modal helpers =====
+    const $wrap = document.getElementById('modalWrap');
+    const $mId = document.getElementById('m_id');
+    const $mNaziv = document.getElementById('m_naziv');
+    const $mSifra = document.getElementById('m_sifra');
+    const $mKanton = document.getElementById('m_kanton');
+    const $mMsg = document.getElementById('modalMsg');
+    const $btnSave = document.getElementById('modalSave');
+    const $btnCancel = document.getElementById('modalCancel');
+    const $btnClose = document.getElementById('modalClose');
+
+    function openModal(row){
+      $mId.value = row.dataset.id;
+      $mNaziv.value = row.dataset.naziv || '';
+      $mSifra.value = row.dataset.sifra || '';
+      $mKanton.value = row.dataset.kanton || '';
+      $mMsg.style.display = 'none';
+      $wrap.classList.add('show');
+      $mNaziv.focus();
+    }
+    function closeModal(){ $wrap.classList.remove('show'); }
+
+    document.addEventListener('click', e=>{
+      const btnEdit = e.target.closest('.act.edit');
+      const btnDel  = e.target.closest('.act.del');
+      if (btnEdit){
+        const tr = btnEdit.closest('tr[data-id]');
+        if (tr) openModal(tr);
+      }
+      if (btnDel){
+        const tr = btnDel.closest('tr[data-id]');
+        if (!tr) return;
+        const id = +tr.dataset.id;
+        if (confirm('Obrisati mjesto #' + id + ' ?')){
+          fetch('../api/mjesta_delete.php', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ id })
+          })
+          .then(r=>r.json()).then(out=>{
+            if(out.ok){ load($s.value.trim()); }
+            else { alert('Brisanje nije uspjelo: ' + (out.error||'nepoznata greška')); }
+          }).catch(()=> alert('Greška pri brisanju.'));
+        }
+      }
+    });
+
+    $btnCancel.addEventListener('click', closeModal);
+    $btnClose.addEventListener('click', closeModal);
+    $wrap.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+    $btnSave.addEventListener('click', async ()=>{
+      const body = {
+        id: +$mId.value || 0,
+        naziv_mjesta: $mNaziv.value.trim(),
+        porezna_sifra: $mSifra.value.trim(),
+        kanton: $mKanton.value
+      };
+      if(!body.id || !body.naziv_mjesta || !body.porezna_sifra || !body.kanton){
+        $mMsg.textContent = 'Sva polja su obavezna.'; $mMsg.style.display='block'; $mMsg.style.color='#b00020'; return;
+      }
+      try{
+        const r = await fetch('../api/mjesta_update.php', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(body)
+        });
+        const out = await r.json();
+        if(out.ok){
+          closeModal();
+          load($s.value.trim());
+        }else{
+          $mMsg.textContent = (out.error || (out.errors||[]).join(', ') || 'Greška pri spremanju.');
+          $mMsg.style.display='block'; $mMsg.style.color='#b00020';
+        }
+      }catch(e){
+        $mMsg.textContent = 'Greška pri spremanju.'; $mMsg.style.display='block'; $mMsg.style.color='#b00020';
+      }
+    });
+  </script>
+</body>
+</html>

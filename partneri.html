@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Partneri</title>
+  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="partneri">
+  <header class="topbar">
+    <h1>Partneri</h1>
+    <div class="search">
+      <input id="q" type="search" placeholder="Traži: ime, prezime, kontakt, email, adresa">
+    </div>
+    <button id="btnAddTop" class="btn-icon" title="Dodaj partnera" aria-label="Dodaj partnera">＋</button>
+  </header>
+
+  <main class="container">
+    <div class="cards-table-wrap">
+      <div class="grid-head">
+        <div>Ime</div>
+        <div>Prezime</div>
+        <div>Kontakt</div>
+        <div>Email</div>
+        <div>Adresa</div>
+        <div>Mjesto</div>
+        <div class="acts">Akcije</div>
+      </div>
+      <div id="list" class="cards-table" aria-live="polite"></div>
+      <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
+      <div id="pageInfo" class="tiny" style="margin-top:8px"></div>
+    </div>
+  </main>
+<div id="pager" class="pager">
+  <button id="pgPrev" class="btn" title="Prethodna">«</button>
+  <span id="pgInfo" class="tiny">0 rezultata</span>
+  <button id="pgNext" class="btn" title="Sljedeća">»</button>
+</div>
+
+
+  <!-- Modal Partner -->
+  <div id="pWrap" class="modal-wrap" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+      <div class="modal-header">
+        <h3 id="pTitle">Partner</h3>
+        <button id="pClose" class="modal-x" aria-label="Zatvori">×</button>
+      </div>
+      <div class="modal-body grid">
+        <input type="hidden" id="p_id">
+
+        <label>Ime
+          <input id="p_ime" type="text" placeholder="npr. Marko">
+        </label>
+
+        <label>Prezime
+          <input id="p_prezime" type="text" placeholder="npr. Marić">
+        </label>
+
+        <label>Kontakt
+          <input id="p_kontakt" type="text" placeholder="npr. 063 123 456">
+        </label>
+
+        <label>Email
+          <input id="p_email" type="email" placeholder="npr. marko@gmail.com">
+        </label>
+
+        <label>Adresa
+          <input id="p_adresa" type="text" placeholder="npr. Krčevine 156, Kiseljak">
+        </label>
+
+        <label>Mjesto
+  <div class="mjesto-wrap">
+    <select id="p_mjesto">
+      <!-- opcije se pune iz JS-a ili može ostati prazno pa ručno -->
+    </select>
+    <button id="btnAddMjesto" class="btn-icon" type="button" title="Dodaj mjesto">+</button>
+  </div>
+</label>
+<!-- Mini modal: Dodaj mjesto -->
+<div id="dlgMjesto" class="modal-wrap" aria-hidden="true">
+  <div class="modal" style="width:min(420px,90vw)" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Dodaj mjesto</h3>
+      <button id="mClose" class="modal-x" aria-label="Zatvori">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <label>Naziv mjesta
+        <input id="m_naziv" type="text" autocomplete="off">
+      </label>
+
+      <label>Porezna šifra
+        <input id="m_sifra" type="text" autocomplete="off">
+      </label>
+
+      <label>Kanton
+        <select id="m_kanton">
+          <option value="">— odaberi —</option>
+          <option>KS</option>
+          <option>ZE-DO</option>
+          <option>SBK/KSB</option>
+          <option>HNK</option>
+          <option>ZHK</option>
+          <option>USK</option>
+          <option>BPK</option>
+          <option>TK</option>
+          <option>PK</option>
+        </select>
+      </label>
+
+      <div id="mMsg" class="tiny" style="display:none;color:#b00020"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="mSave" class="btn primary">Spremi</button>
+      <button id="mCancel" class="btn ghost" type="button">Odustani</button>
+    </div>
+  </div>
+</div>
+
+
+        <div id="p_msg" class="tiny" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="pCancel" class="btn ghost">Odustani</button>
+        <button id="pSave" class="btn primary">Spremi</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="common.js?v=777"></script>
+  <script src="partneri.js?v=9001"></script>
+</body>
+</html>
+
+
