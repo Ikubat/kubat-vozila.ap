@@ -50,16 +50,17 @@
   const $addTop = document.getElementById('btnAddTop');
 
   // util
-  const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const esc  = s => String(s ?? '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
   // -------- stanje liste --------
-  const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false, done:false };
+    const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false, done:false };
 
   function updateInfo() {
     if(!$pageInfo) return;
     const shown = ($list?.querySelectorAll('.card-row').length || 0);
-    $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'}`;
+    const pagesLoaded = Math.max(0, state.page - (state.done ? 0 : 1));
+    $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'} · Stranice: ${pagesLoaded} / ${state.pages || '…'}`;
   }
 
   // -------- vrste (select) --------
@@ -313,3 +314,4 @@
   if(!PICK) loadVrste('');
   resetAndLoad('');
 })();
+

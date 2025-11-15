@@ -7,9 +7,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     /* — zajednička skala (isto kao u obracun.html) — */
     html{ font-size:18px; }
-    body{ font-size:1rem; line-height:1.6; background:#f6f7fb; color:#111827; margin:0; }
+    body{
+      font-size:1rem;
+      line-height:1.6;
+      background:#f6f7fb;
+      color:#111827;
+      margin:0;
+      font-family:'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif;
+    }
     body.pick{ font-size:1rem; } /* kad je ?pick=1 */
 
     .wrap{ max-width:1200px; margin:0 auto; padding:16px; }
@@ -70,7 +78,7 @@
 
       <div class="head-row">
         <div>Vrsta / Serija</div>
-        <div>Marka &amp; Model</div>
+        <div id="pageInfo">Prikazano: 0 · Stranice: 0 / …</div>
         <div>Pogon / Mjenjač</div>
         <div>Snaga / Oblik</div>
         <div style="text-align:right">Akcije</div>
@@ -80,7 +88,7 @@
       <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
       <div id="pageInfo">Prikazano: 0</div>
 
-      <div id="infiniteSentinel" class="hint" style="opacity:.45">Učitavanje…</div>
+      <div id="infiniteSentinel" class="hint" style="opacity:.45" aria-live="polite"></div>
     </div>
   </div>
 
