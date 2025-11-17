@@ -6,11 +6,12 @@
 
   if (!document.body.classList.contains('mjesta')) return;
 
+  const baseApi = location.pathname.includes('/app/') ? '../api/' : 'api/';
   const API = {
-    search: '../api/mjesta_search.php',
-    create: '../api/mjesta_create.php',
-    update: '../api/mjesta_update.php',
-    del:    '../api/mjesta_delete.php'
+    search: baseApi + 'mjesta_search.php',
+    create: baseApi + 'mjesta_create.php',
+    update: baseApi + 'mjesta_update.php',
+    del:    baseApi + 'mjesta_delete.php'
   };
 
   const $s        = document.getElementById('search');

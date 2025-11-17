@@ -1,5 +1,5 @@
 <?php
-// vrsta_delete.php
+require __DIR__ . '/../vrsta_delete.php';
 // Briše vrstu vozila ako je ne koristi nijedna marka_vozila.
 // Očekuje: { "id": 3 } (POST JSON) ili klasični POST id=3.
 

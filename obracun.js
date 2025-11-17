@@ -20,7 +20,8 @@
   const $lInfo         = document.getElementById('l_info');
 
   // ----- API -----
-  const baseApi = location.pathname.includes('/app/') ? '../api/' : 'api/';
+  const baseRoot = location.pathname.includes('/app/') ? '../' : './';
+  const baseApi = baseRoot;
   const API = {
     create: baseApi + 'obracun_create.php',
     list  : baseApi + 'obracun_list.php'
@@ -45,7 +46,7 @@
 
   function openPartnerPicker(){
     const w=1100,h=800, x=Math.max(0,(screen.width-w)/2), y=Math.max(0,(screen.height-h)/2);
-    const url = (location.pathname.includes('/app/') ? 'partneri.html' : 'app/partneri.html') + '?pick=1';
+    const url = baseRoot + 'partneri.html?pick=1';
     window.open(url,'pick_partner',`width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
   }
   $btnPickPartner?.addEventListener('click', openPartnerPicker);
@@ -61,7 +62,7 @@
 
   function openMarkaPicker(){
     const w=1100,h=800, x=Math.max(0,(screen.width-w)/2), y=Math.max(0,(screen.height-h)/2);
-    const url = (location.pathname.includes('/app/') ? 'marka.html' : 'app/marka.html') + '?pick=1';
+    const url = baseRoot + 'marka.html?pick=1';
     window.open(url,'pick_marka',`width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
   }
   $btnPickVozilo?.addEventListener('click', openMarkaPicker);

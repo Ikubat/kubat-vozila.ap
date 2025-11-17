@@ -1,5 +1,5 @@
 <?php
-// vrsta_list_auto.php — lista svih vrsta (auto mapiranje kolona)
+require __DIR__ . '/../vrsta_list_auto.php';
 // GET parametri:
 //   table=vrsta_vozila (default)   -> ime tabele
 //   all=1                          -> vrati sve bez paginacije

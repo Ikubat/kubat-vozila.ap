@@ -57,11 +57,15 @@
     .three{ grid-template-columns:repeat(3,1fr); }
     @media(max-width:900px){ .two,.three{ grid-template-columns:1fr; } }
 
-    label{ display:block; font-weight:600; margin-bottom:2px; }
+        label{ display:block; font-weight:600; margin-bottom:2px; }␊
     input, select{
       width:100%; padding:10px 12px; border:1px solid #d4d8e1; border-radius:12px; background:#fff; font-size:1rem; outline:none;
     }
     input:focus, select:focus{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+
+    .inline-field{ display:flex; gap:8px; align-items:center; }
+    .inline-field select{ flex:1; }
+    .inline-field .btn{ white-space:nowrap; }
 
     .msg{ display:none; font-size:.9rem; color:#b91c1c; }
   </style>
@@ -106,9 +110,15 @@
         <div class="grid two">
           <div>
             <label>Vrsta vozila</label>
-            <select id="m_vrsta"></select>
+            <div class="inline-field">
+              <select id="m_vrsta"></select>
+              <button id="btnPickVrsta" class="btn ghost" type="button">
+                <i class="fa-solid fa-plus"></i>
+                Nova vrsta
+              </button>
+            </div>
           </div>
-          <div>
+        </div>
             <label>Serija</label>
             <input id="m_serija" type="text" placeholder="npr. W212, F30, 8V">
           </div>

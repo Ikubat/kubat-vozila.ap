@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-require __DIR__ . '/db.php';
+rrequire __DIR__ . '/../db.php';
 
 try {
     $stmt = $pdo->query("SELECT id, naziv_mjesta FROM mjesta ORDER BY naziv_mjesta");

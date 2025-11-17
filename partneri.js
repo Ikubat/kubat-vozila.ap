@@ -4,9 +4,10 @@
 // - Pick mode (?pick=1): klik na red vrati partnera u obracun (setSelectedPartner)
 //   + u pick modu i dalje radi dodavanje/uređivanje
 
-loadMjesta();
+const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
 const mjSelect = document.getElementById('p_mjesto');
-const MJ_API = (location.pathname.includes('/app/') ? '../api/' : 'api/') + 'mjesta_list.php';
+const MJ_API = ROOT_PATH + 'mjesta_list.php';
+loadMjesta();
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, m => ({
@@ -70,9 +71,7 @@ loadMjesta();
   if (!document.body.classList.contains('partneri')) return;
 
   // -------- API base --------
-  const baseApi = location.pathname.includes('/app/')
-    ? '../api/'
-    : 'api/';
+  const baseApi = ROOT_PATH;
 
   const API = {
     list:        baseApi + 'partneri_list.php',

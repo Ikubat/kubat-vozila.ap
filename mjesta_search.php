@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-require __DIR__ . '/db.php';
+require __DIR__ . '/../db.php';
 
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 $params = [];

@@ -8,14 +8,14 @@
   if (PICK) document.body.classList.add('pick');
 
   // -------- API --------
-  const baseApi = location.pathname.includes('/app/') ? '../api/' : 'api/';
-  const API = {
-    search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=
-    create : baseApi + 'marka_create.php',
-    update : baseApi + 'marka_update.php',
-    delete : baseApi + 'marka_delete.php',
-    vrste  : baseApi + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)
-  };
+  const baseApi = location.pathname.includes('/app/') ? '../' : './';
+  const API = {␊
+    search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=␊
+    create : baseApi + 'marka_create.php',␊
+    update : baseApi + 'marka_update.php',␊
+    delete : baseApi + 'marka_delete.php',␊
+    vrste  : baseApi + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)␊
+  };␊
 
   // -------- elementi --------
   const $q        = document.getElementById('q');
@@ -48,7 +48,12 @@
   const $kataloska   = document.getElementById('m_kataloska');
 
   const $addTop = document.getElementById('btnAddTop');
-
+  const $pickVrsta = document.getElementById('btnPickVrsta');
+  const vrstaPickerCandidates = location.pathname.includes('/app/')
+    ? ['../vrsta.html', 'vrsta.html', '../app/vrsta.html', './vrsta.html']
+    : ['vrsta.html', 'app/vrsta.html', './vrsta.html', '../vrsta.html'];
+  let vrstaPickerBaseUrl = null;
+  
   // util
   const esc  = s => String(s ?? '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
@@ -215,6 +220,51 @@
   $close ?.addEventListener('click', closeModal);
   $wrap  ?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+  async function resolveVrstaPickerUrl(){
+    if(vrstaPickerBaseUrl) return vrstaPickerBaseUrl;
+    for(const candidate of vrstaPickerCandidates){
+      try{
+        const testUrl = new URL(candidate, location.href);
+        let res = await fetch(testUrl, {method:'HEAD', cache:'no-store'});
+        if(res.status === 405){
+          res = await fetch(testUrl, {method:'GET', cache:'no-store'});
+        }
+        if(res.ok){
+          vrstaPickerBaseUrl = testUrl.href;
+          return vrstaPickerBaseUrl;
+        }
+      }catch(err){
+        console.debug('Vrsta picker candidate failed:', candidate, err);
+      }
+    }
+    return null;
+  }
+
+  async function openVrstaPicker(){
+    const base = await resolveVrstaPickerUrl();
+    if(!base){
+      alert('Stranica s vrstama vozila nije pronađena.');
+      return;
+    }
+    const pickerUrl = new URL(base);
+    pickerUrl.searchParams.set('pick','1');
+    const url = pickerUrl.toString();
+    const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
+    if(w) w.focus(); else location.href = url;
+  }
+  $pickVrsta?.addEventListener('click', openVrstaPicker);
+  window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
+
+
+  function openVrstaPicker(){
+    const base = location.pathname.includes('/app/') ? '../vrsta.html' : 'vrsta.html';
+    const url = base + '?pick=1';
+    const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
+    if(w) w.focus();
+  }
+  $pickVrsta?.addEventListener('click', openVrstaPicker);
+  window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
 
   // -------- spremi (create/update) --------
   async function saveMarka(){

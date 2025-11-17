@@ -1,5 +1,5 @@
 <?php
-// marka_create.php
+require __DIR__ . '/../marka_create.php';
 // Dodavanje nove marke u tablicu marka_vozila.
 // Očekuje (idealno JSON POST):
 // { "naziv": "...", "model": "...", "vrsta_id": 2 }

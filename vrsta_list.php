@@ -1,5 +1,5 @@
 <?php
-// vrsta_list.php - vraća sve vrste vozila kao JSON
+require __DIR__ . '/../vrsta_list.php';
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

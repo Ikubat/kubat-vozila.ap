@@ -3,11 +3,12 @@
 (function () {
   if (!document.body.classList.contains('vrste')) return;
 
+  const baseApi = location.pathname.includes('/app/') ? '../' : './';
   const API = {
-    list: '../api/vrsta_list.php',
-    create: '../api/vrsta_create.php',
-    update: '../api/vrsta_update.php',
-    delete: '../api/vrsta_delete.php'
+    list: baseApi + 'vrsta_list.php',
+    create: baseApi + 'vrsta_create.php',
+    update: baseApi + 'vrsta_update.php',
+    delete: baseApi + 'vrsta_delete.php'
   };
 
   const $q = document.getElementById('q');
