@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../vrsta_create.php';
 // vrsta_create.php - doda novu vrstu u vrsta_vozila
 // prima JSON ili form-data: naziv, oznaka
 

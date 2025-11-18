@@ -1,5 +1,4 @@
-<<?php
-require __DIR__ . '/../vrsta_update.php';
+<?php
 // vrsta_update.php
 // Ažurira postojeću vrstu vozila u tablici vrsta_vozila.
 // Očekuje (POST ili JSON):
