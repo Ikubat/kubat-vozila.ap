@@ -10,19 +10,34 @@
   // "api/" poddirektorija. Na serveru je aplikacija ponekad smještena unutar
   // /app/ podstaze, zato se ovdje podešava relativni korijen ovisno o URL-u.
   // Prod instanca aplikacije ponekad živi u /app/ poddirektoriju, dok je lokalno
-  // (npr. http://localhost/kubatapp) sve u istom direktoriju. Prethodna provjera
-  // koristila je `includes('/app/')` što se aktiviralo i za "kubatapp" te je
-  // rezultiralo zahtjevima prema krivom relativnom putu (../mjesta_search.php),
-  // odnosno HTTP 404 greškom. Segmentiramo path i tražimo zasebnu "app"
-  // komponentu.
-  const pathSegments = location.pathname.split('/').filter(Boolean);
-  const baseApi = pathSegments.includes('app') ? '../' : './';
-  const API = {
-    search: baseApi + 'mjesta_search.php',
-    create: baseApi + 'mjesta_create.php',
-    update: baseApi + 'mjesta_update.php',
-    del:    baseApi + 'mjesta_delete.php'
-  };
+  // (npr. http://localhost/kubatapp) sve u istom direktoriju. Dodatno, neki
+  // hosting setupi drže HTML u jednom direktoriju (kubatapp/), dok PHP skripte
+  // žive jedan nivo više. Umjesto nagađanja, probamo pogoditi bazni put prema
+  // dostupnosti ping.php fajla.
+  const API_BASES = ['./', '../'];
+  let apiBaseIdx = 0;
+  const makeApi = base => ({
+    search: base + 'mjesta_search.php',
+    create: base + 'mjesta_create.php',
+    update: base + 'mjesta_update.php',
+    del:    base + 'mjesta_delete.php'
+  });
+  let API = makeApi(API_BASES[apiBaseIdx]);
+
+  function setApiBase(idx){
+    apiBaseIdx = idx;
+    API = makeApi(API_BASES[apiBaseIdx]);
+    document.body.dataset.mjestaApiBase = API_BASES[apiBaseIdx];
+  }
+
+  async function detectApiBase(){
+    for(let i=0;i<API_BASES.length;i++){
+      try{
+        const r = await fetch(API_BASES[i] + 'ping.php', {cache:'no-store'});
+        if(r.ok){ setApiBase(i); return; }
+      }catch{}
+    }
+  }
 
   const $s        = document.getElementById('search');
   const $list     = document.getElementById('list');
@@ -164,5 +179,5 @@
     }
   });
 
-  load('');
+  detectApiBase().finally(()=> load(''));
 })();
