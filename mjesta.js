@@ -35,7 +35,9 @@
       try{
         const r = await fetch(API_BASES[i] + 'ping.php', {cache:'no-store'});
         if(r.ok){ setApiBase(i); return; }
-      }catch{}
+      }catch(err){
+        console.warn('[Mjesta] ping fallback failed for base', API_BASES[i], err);
+      }
     }
   }
 
@@ -147,7 +149,8 @@
         const out = await r.json();
         if(out.ok) load($s?.value.trim() || '');
         else alert('Brisanje nije uspjelo.');
-      }catch{
+      }catch(err){
+        console.error(err);
         alert('Greška pri brisanju.');
       }
     }
@@ -172,7 +175,8 @@
       const out = await r.json();
       if(out.ok){ closeWrap(); load($s?.value.trim() || ''); }
       else { $msg.textContent = out.error || (out.errors||[]).join(', ') || 'Greška pri spremanju.'; show($msg,true); }
-    }catch{
+    }catch(err){
+      console.error(err);
       $msg.textContent = 'Greška pri spremanju na server.'; show($msg,true);
     }finally{
       $save.disabled = false;
