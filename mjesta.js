@@ -9,7 +9,14 @@
   // API skripte se nalaze u istom direktoriju kao i HTML stranica pa nema zasebnog
   // "api/" poddirektorija. Na serveru je aplikacija ponekad smještena unutar
   // /app/ podstaze, zato se ovdje podešava relativni korijen ovisno o URL-u.
-  const baseApi = location.pathname.includes('/app/') ? '../' : './';
+  // Prod instanca aplikacije ponekad živi u /app/ poddirektoriju, dok je lokalno
+  // (npr. http://localhost/kubatapp) sve u istom direktoriju. Prethodna provjera
+  // koristila je `includes('/app/')` što se aktiviralo i za "kubatapp" te je
+  // rezultiralo zahtjevima prema krivom relativnom putu (../mjesta_search.php),
+  // odnosno HTTP 404 greškom. Segmentiramo path i tražimo zasebnu "app"
+  // komponentu.
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const baseApi = pathSegments.includes('app') ? '../' : './';
   const API = {
     search: baseApi + 'mjesta_search.php',
     create: baseApi + 'mjesta_create.php',
