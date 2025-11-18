@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../marka_search.php';
 // Lista marki iz tablice marka_vozila + vrsta_vozila, bez pretpostavke da postoji "model" kolona.
 
 header('Content-Type: application/json; charset=utf-8');

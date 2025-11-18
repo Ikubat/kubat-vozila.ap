@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../partneri_update.php';
 // partneri_update.php
 // Ažurira postojeći zapis u `partneri`.
 // Podržava:
