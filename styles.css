@@ -344,7 +344,7 @@ body {
 .grid-head,
 .head-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 0.6fr 2fr 1fr 1fr auto;
   gap: 6px;
   padding: 6px 8px;
   font-weight: 600;
@@ -362,7 +362,7 @@ body {
 }
 .card-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 0.6fr 2fr 1fr 1fr auto;
   gap: 6px;
   padding: 6px 8px;
   background: #ffffff;
