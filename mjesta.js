@@ -62,7 +62,6 @@
            data-naziv="${esc(m.naziv_mjesta)}"
            data-sifra="${esc(m.porezna_sifra)}"
            data-kanton="${esc(m.kanton)}">
-        <div>${esc(m.id)}</div>
         <div>${esc(m.naziv_mjesta)}</div>
         <div>${esc(m.porezna_sifra)}</div>
         <div>${esc(m.kanton)}</div>
