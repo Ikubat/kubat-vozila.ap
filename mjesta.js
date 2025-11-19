@@ -74,20 +74,24 @@ async function load(q=''){
 
 
   function render(rows){
-    $list.innerHTML = (rows && rows.length) ? rows.map(m => `
-      <div class="card-row" data-id="${m.id}"
-           data-naziv="${esc(m.naziv_mjesta)}"
-           data-sifra="${esc(m.porezna_sifra)}"
-           data-kanton="${esc(m.kanton)}">
-        <div>${esc(m.naziv_mjesta)}</div>
-        <div>${esc(m.porezna_sifra)}</div>
-        <div>${esc(m.kanton)}</div>
-        <div class="acts">
-          <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
-          <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
+    if(rows && rows.length){
+      $list.innerHTML = rows.map(m => `
+        <div class="row" data-id="${m.id}"
+             data-naziv="${esc(m.naziv_mjesta)}"
+             data-sifra="${esc(m.porezna_sifra)}"
+             data-kanton="${esc(m.kanton)}">
+          <div>${esc(m.naziv_mjesta)}</div>
+          <div>${esc(m.porezna_sifra)}</div>
+          <div>${esc(m.kanton)}</div>
+          <div class="acts">
+            <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
+            <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
+          </div>
         </div>
-      </div>
-    `).join('') : `<div class="hint">Nema rezultata.</div>`;
+      `).join('');
+    } else {
+      $list.innerHTML = `<div class="hint">Nema rezultata.</div>`;
+    }
   }
 
   let t=null;
@@ -122,7 +126,7 @@ async function load(q=''){
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeWrap(); });
 
   document.addEventListener('click', async (e)=>{
-    const row = e.target.closest('.card-row[data-id]');
+    const row = e.target.closest('.row[data-id]');
     const ed  = e.target.closest('.act.edit');
     const dl  = e.target.closest('.act.del');
 
