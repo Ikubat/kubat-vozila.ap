@@ -3,7 +3,7 @@
 (function () {
   if (!document.body.classList.contains('vrste')) return;
 
-  const baseApi = location.pathname.includes('/app/') ? '../' : './';
+  const baseApi = location.pathname.includes('/app/') ? '../api/' : './api/';
   const API = {
     list: baseApi + 'vrsta_list.php',
     create: baseApi + 'vrsta_create.php',
