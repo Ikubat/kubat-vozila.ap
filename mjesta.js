@@ -9,13 +9,37 @@
   // API skripte se nalaze u istom direktoriju kao i HTML stranica pa nema zasebnog
   // "api/" poddirektorija. Na serveru je aplikacija ponekad smještena unutar
   // /app/ podstaze, zato se ovdje podešava relativni korijen ovisno o URL-u.
-  const baseApi = location.pathname.includes('/app/') ? '../' : './';
-  const API = {
-    search: baseApi + 'mjesta_search.php',
-    create: baseApi + 'mjesta_create.php',
-    update: baseApi + 'mjesta_update.php',
-    del:    baseApi + 'mjesta_delete.php'
-  };
+  // Prod instanca aplikacije ponekad živi u /app/ poddirektoriju, dok je lokalno
+  // (npr. http://localhost/kubatapp) sve u istom direktoriju. Dodatno, neki
+  // hosting setupi drže HTML u jednom direktoriju (kubatapp/), dok PHP skripte
+  // žive jedan nivo više. Umjesto nagađanja, probamo pogoditi bazni put prema
+  // dostupnosti ping.php fajla.
+  const API_BASES = ['./', '../'];
+  let apiBaseIdx = 0;
+  const makeApi = base => ({
+    search: base + 'mjesta_search.php',
+    create: base + 'mjesta_create.php',
+    update: base + 'mjesta_update.php',
+    del:    base + 'mjesta_delete.php'
+  });
+  let API = makeApi(API_BASES[apiBaseIdx]);
+
+  function setApiBase(idx){
+    apiBaseIdx = idx;
+    API = makeApi(API_BASES[apiBaseIdx]);
+    document.body.dataset.mjestaApiBase = API_BASES[apiBaseIdx];
+  }
+
+  async function detectApiBase(){
+    for(let i=0;i<API_BASES.length;i++){
+      try{
+        const r = await fetch(API_BASES[i] + 'ping.php', {cache:'no-store'});
+        if(r.ok){ setApiBase(i); return; }
+      }catch(err){
+        console.warn('[Mjesta] ping fallback failed for base', API_BASES[i], err);
+      }
+    }
+  }
 
   const $s        = document.getElementById('search');
   const $list     = document.getElementById('list');
@@ -125,7 +149,8 @@
         const out = await r.json();
         if(out.ok) load($s?.value.trim() || '');
         else alert('Brisanje nije uspjelo.');
-      }catch{
+      }catch(err){
+        console.error(err);
         alert('Greška pri brisanju.');
       }
     }
@@ -150,12 +175,13 @@
       const out = await r.json();
       if(out.ok){ closeWrap(); load($s?.value.trim() || ''); }
       else { $msg.textContent = out.error || (out.errors||[]).join(', ') || 'Greška pri spremanju.'; show($msg,true); }
-    }catch{
+    }catch(err){
+      console.error(err);
       $msg.textContent = 'Greška pri spremanju na server.'; show($msg,true);
     }finally{
       $save.disabled = false;
     }
   });
 
-  load('');
+  detectApiBase().finally(()=> load(''));
 })();
