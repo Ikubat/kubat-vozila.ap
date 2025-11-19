@@ -341,11 +341,11 @@ body {
   padding: 10px;
   box-shadow: 0 2px 8px rgba(15,23,42,0.06);
 }
-.grid-head,
-.head-row {
+.grid-head,␊
+.head-row {␊
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  grid-template-columns: 0.6fr 2fr 1fr 1fr auto;
+  gap: 6px;␊
   padding: 6px 8px;
   font-weight: 600;
   background: #eef2ff;
@@ -361,9 +361,9 @@ body {
   margin-top: 4px;
 }
 .card-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  display: grid;␊
+  grid-template-columns: 0.6fr 2fr 1fr 1fr auto;
+  gap: 6px;␊
   padding: 6px 8px;
   background: #ffffff;
   border-radius: 6px;

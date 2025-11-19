@@ -6,16 +6,27 @@
 
   if (!document.body.classList.contains('mjesta')) return;
 
-  // API skripte se nalaze u istom direktoriju kao i HTML stranica pa nema zasebnog
-  // "api/" poddirektorija. Na serveru je aplikacija ponekad smještena unutar
-  // /app/ podstaze, zato se ovdje podešava relativni korijen ovisno o URL-u.
-  const baseApi = location.pathname.includes('/app/') ? '../' : './';
-  const API = {
-    search: baseApi + 'mjesta_search.php',
-    create: baseApi + 'mjesta_create.php',
-    update: baseApi + 'mjesta_update.php',
-    del:    baseApi + 'mjesta_delete.php'
-  };
+// API je u ../api u odnosu na /app
+const API_BASES = ['../api/'];
+let apiBaseIdx = 0;
+const makeApi = base => ({
+  search: base + 'mjesta_search.php',
+  create: base + 'mjesta_create.php',
+  update: base + 'mjesta_update.php',
+  del:    base + 'mjesta_delete.php'
+});
+let API = makeApi(API_BASES[apiBaseIdx]);
+
+function setApiBase(idx){
+  apiBaseIdx = idx;
+  API = makeApi(API_BASES[apiBaseIdx]);
+  document.body.dataset.mjestaApiBase = API_BASES[apiBaseIdx];
+}
+
+// više nam zapravo ne treba ping detekcija, znamo bazu
+async function detectApiBase(){
+  setApiBase(0);
+}
 
   const $s        = document.getElementById('search');
   const $list     = document.getElementById('list');
@@ -44,17 +55,23 @@
     window.fillKantonSelect($kanton, preselect);
   }
 
-  async function load(q=''){
-    const url = API.search + (q ? ('?q='+encodeURIComponent(q)) : '');
-    try{
-      const r = await fetch(url);
-      const rows = await r.json();
-      render(rows);
-    }catch(e){
-      console.error(e);
+async function load(q=''){
+  const url = API.search + (q ? ('?q='+encodeURIComponent(q)) : '');
+  try{
+    const r = await fetch(url);
+    if (!r.ok) {
+      console.error('[Mjesta] API error', r.status, r.statusText);
       render([]);
+      return;
     }
+    const rows = await r.json();
+    render(rows);
+  }catch(e){
+    console.error('[Mjesta] load error', e);
+    render([]);
   }
+}
+
 
   function render(rows){
     $list.innerHTML = (rows && rows.length) ? rows.map(m => `
@@ -62,7 +79,6 @@
            data-naziv="${esc(m.naziv_mjesta)}"
            data-sifra="${esc(m.porezna_sifra)}"
            data-kanton="${esc(m.kanton)}">
-        <div>${esc(m.id)}</div>
         <div>${esc(m.naziv_mjesta)}</div>
         <div>${esc(m.porezna_sifra)}</div>
         <div>${esc(m.kanton)}</div>
@@ -101,8 +117,8 @@
   $fabAdd?.addEventListener('click', openNew);
 
   $cancel?.addEventListener('click', closeWrap);
-  $close ?.addEventListener('click', closeWrap);
-  $wrap  ?.addEventListener('click', e=>{ if(e.target===$wrap) closeWrap(); });
+  $close?.addEventListener('click', closeWrap);
+  $wrap?.addEventListener('click', e=>{ if(e.target===$wrap) closeWrap(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeWrap(); });
 
   document.addEventListener('click', async (e)=>{
@@ -125,7 +141,8 @@
         const out = await r.json();
         if(out.ok) load($s?.value.trim() || '');
         else alert('Brisanje nije uspjelo.');
-      }catch{
+      }catch(err){
+        console.error(err);
         alert('Greška pri brisanju.');
       }
     }
@@ -157,5 +174,6 @@
     }
   });
 
-  load('');
+  detectApiBase().finally(()=> load(''));
 })();
+

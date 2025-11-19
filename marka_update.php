@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../marka_update.php';
 // Ažuriranje postojeće marke u marka_vozila.
 // Očekuje (JSON ili POST):
 // { "id": 5, "naziv": "...", "model": "...", "vrsta_id": 2 }

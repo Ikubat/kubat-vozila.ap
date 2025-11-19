@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../partneri_list.php';
 // partneri_list.php
 // Robusna lista partnera za frontend (partneri.js).
 // Podržava:

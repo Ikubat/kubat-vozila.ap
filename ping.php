@@ -1,3 +1,3 @@
 <?php
-header('Content-Type: text/plain; charset=utf-8');
-echo "pong\n";
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode(['ok' => true, 'ts' => time()]);

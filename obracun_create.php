@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../obracun_create.php';
 // Prima JSON iz obracun.js i upisuje zapis u tablicu obračuna.
 //
 // Očekuje minimalno:

@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../vrsta_list_auto.php';
 // GET parametri:
 //   table=vrsta_vozila (default)   -> ime tabele
 //   all=1                          -> vrati sve bez paginacije

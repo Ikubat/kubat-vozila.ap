@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../mjesta_create.php';
 // Dodaje novo mjesto u tablicu `mjesta`.
 //
 // Prihvaća POST JSON ili klasični POST:

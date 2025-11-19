@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../marka_delete.php';
 // Briše marku iz tablice marka_vozila po ID-u.
 //
 // Prihvaća:

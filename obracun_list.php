@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . '/../obracun_list.php';
 // Vraća popis obračuna iz obracun_vozila bez kompliciranih joinova,
 // tako da radi s bilo kojom postojećom shemom partnera/vozila.
 
