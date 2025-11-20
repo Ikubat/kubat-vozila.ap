@@ -1,183 +1,109 @@
 <!doctype html>
 <html lang="hr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vozila / Marke</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Marke vozila</title>
+  <link rel="stylesheet" href="styles.css?v=6">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    /* — zajednička skala (isto kao u obracun.html) — */
-    html{ font-size:18px; }
-    body{
-      font-size:1rem;
-      line-height:1.6;
-      background:#f6f7fb;
-      color:#111827;
-      margin:0;
-      font-family:'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif;
-    }
-    body.pick{ font-size:1rem; } /* kad je ?pick=1 */
-
-    .wrap{ max-width:1200px; margin:0 auto; padding:16px; }
-    .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,.06); padding:16px; }
-
-    h1{ margin:0 0 12px; font-size:1.35rem; }
-
-    .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 12px; }
-    .grow{ flex:1; }
-    input[type="search"]{ width:100%; padding:10px 12px; border:1px solid #d4d8e1; border-radius:12px; background:#fff; }
-    .btn{ border:0; border-radius:12px; padding:10px 16px; cursor:pointer; font-size:1rem; }
-    .primary{ background:#2563eb; color:#fff; }
-    .ghost{ background:#eef2ff; color:#0f2b6b; }
-
-    /* Lista: 5 kolona (mora odgovarati renderu u JS-u) */
-    .head-row,.card-row{
-      display:grid; gap:8px; align-items:center; background:#fff; border:1px solid #e8ecf5; border-radius:12px; padding:10px 12px;
-      grid-template-columns: 1.8fr 2.4fr 1.6fr 1.4fr 60px; /* Vrsta/serija | Marka&Model | Pogon/mj | Snaga/oblik | Akcije */
-    }
-    .head-row{ font-weight:700; background:#f2f5ff; }
-    .card-row .acts{ display:flex; gap:8px; justify-content:flex-end; }
-
-    .hint{ text-align:center; color:#6b7280; padding:12px; font-size:.9rem; }
-    #pageInfo{ font-size:.9rem; color:#6b7280; margin-top:6px; }
-
-    /* Modal */
-    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.45); padding:16px; }
-    .modal.show{ display:flex; }
-    .box{ max-width:980px; width:min(980px,100%); background:#fff; border-radius:18px; box-shadow:0 14px 50px rgba(0,0,0,.18); }
-    header{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; }
-    header h2{ margin:0; font-size:1.15rem; }
-    .body{ padding:14px 16px; }
-    .footer{ padding:14px 16px; border-top:1px solid #e5e7eb; display:flex; gap:10px; justify-content:flex-end; }
-
-    .grid{ display:grid; gap:12px; }
-    .two{ grid-template-columns:1fr 1fr; }
-    .three{ grid-template-columns:repeat(3,1fr); }
-    @media(max-width:900px){ .two,.three{ grid-template-columns:1fr; } }
-
-        label{ display:block; font-weight:600; margin-bottom:2px; }␊
-    input, select{
-      width:100%; padding:10px 12px; border:1px solid #d4d8e1; border-radius:12px; background:#fff; font-size:1rem; outline:none;
-    }
-    input:focus, select:focus{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.15); }
-
-    .inline-field{ display:flex; gap:8px; align-items:center; }
-    .inline-field select{ flex:1; }
-    .inline-field .btn{ white-space:nowrap; }
-
-    .msg{ display:none; font-size:.9rem; color:#b91c1c; }
-  </style>
 </head>
 <body class="marke">
-  <div class="wrap">
-    <div class="card">
-      <h1>Vozila / Marke</h1>
-
-      <div class="toolbar">
-        <input id="q" type="search" class="grow" placeholder="Traži po marki, modelu, seriji, pogonu…">
-        <button id="btnAddTop" class="btn primary" type="button"><i class="fa-solid fa-plus"></i> Nova marka</button>
-      </div>
-
-      <div class="head-row">
-        <div>Vrsta / Serija</div>
-        <div id="pageInfo">Prikazano: 0 · Stranice: 0 / …</div>
-        <div>Pogon / Mjenjač</div>
-        <div>Snaga / Oblik</div>
-        <div style="text-align:right">Akcije</div>
-      </div>
-
-      <div id="list"></div>
-      <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
-      <div id="pageInfo">Prikazano: 0</div>
-
-      <div id="infiniteSentinel" class="hint" style="opacity:.45" aria-live="polite"></div>
+  <header class="topbar">
+    <h1>Marke vozila</h1>
+    <div class="search">
+      <input id="q" type="search" placeholder="Traži: marka, model, vrsta…">
     </div>
-  </div>
+    <button id="btnAddTop" class="btn-icon" title="Dodaj marku" aria-label="Dodaj marku">＋</button>
+  </header>
+
+  <main class="container">
+    <div class="cards-table-wrap">
+      <div class="grid-head marke-grid">
+        <div>Vrsta / serija</div>
+        <div>Marka i model</div>
+        <div>Pogon / mjenjač</div>
+        <div>Snaga / oblik</div>
+        <div class="acts">Akcije</div>
+      </div>
+      <div id="list" class="cards-table" aria-live="polite"></div>
+      <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
+      <div id="pageInfo" class="tiny" style="margin-top:8px">Prikazano: 0</div>
+    </div>
+    <div id="infiniteSentinel" class="hint" style="opacity:.45" aria-live="polite"></div>
+  </main>
 
   <!-- Modal: Nova/Uredi marka -->
-  <div id="mWrap" class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-    <div class="box">
-      <header>
-        <h2 id="mTitle">Uredi marku / vozilo</h2>
-        <button id="mClose" class="btn ghost" type="button">✕</button>
-      </header>
-
-      <div class="body">
-        <input id="m_id" type="hidden">
-
-        <div class="grid two">
-          <div>
-            <label>Vrsta vozila</label>
-            <div class="inline-field">
-              <select id="m_vrsta"></select>
-              <button id="btnPickVrsta" class="btn ghost" type="button">
-                <i class="fa-solid fa-plus"></i>
-                Nova vrsta
-              </button>
-            </div>
-          </div>
-        </div>
-            <label>Serija</label>
-            <input id="m_serija" type="text" placeholder="npr. W212, F30, 8V">
-          </div>
-
-          <div>
-            <label>Marka *</label>
-            <input id="m_naziv" type="text" required placeholder="npr. Opel">
-          </div>
-          <div>
-            <label>Model</label>
-            <input id="m_model" type="text" placeholder="npr. Insignia">
-          </div>
-
-          <div>
-            <label>Oblik karoserije</label>
-            <input id="m_oblik" type="text" placeholder="limuzina, karavan, SUV…">
-          </div>
-          <div>
-            <label>Vrsta mjenjača</label>
-            <input id="m_mjenjac" type="text" placeholder="manualni, automatik…">
-          </div>
-
-          <div>
-            <label>Pogon</label>
-            <input id="m_pogon" type="text" placeholder="FWD, RWD, AWD…">
-          </div>
-          <div>
-            <label>Snaga (kW)</label>
-            <input id="m_snaga" type="number" min="0" step="1" inputmode="numeric">
-          </div>
-
-          <div>
-            <label>Zapremina (ccm)</label>
-            <input id="m_zapremina" type="number" min="0" step="1" inputmode="numeric">
-          </div>
-          <div>
-            <label>Vrata</label>
-            <input id="m_vrata" type="number" min="2" max="6" step="1" inputmode="numeric">
-          </div>
-
-          <div>
-            <label>Modelska godina</label>
-            <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric">
-          </div>
-          <div>
-            <label>God. prestanka proizvodnje</label>
-            <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric">
-          </div>
-
-          <div>
-            <label>Kataloška vrijednost (EUR)</label>
-            <input id="m_kataloska" type="number" min="0" step="0.01" inputmode="decimal">
-          </div>
-        </div>
-
-        <div id="mMsg" class="msg">Poruka</div>
+  <div id="mWrap" class="modal-wrap" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+      <div class="modal-header">
+        <h3 id="mTitle">Uredi marku / vozilo</h3>
+        <button id="mClose" class="modal-x" aria-label="Zatvori">×</button>
       </div>
 
-      <div class="footer">
+      <div class="modal-body marke-modal">
+        <input id="m_id" type="hidden">
+
+        <label>Vrsta vozila
+          <div class="inline-field">
+            <select id="m_vrsta"></select>
+            <button id="btnPickVrsta" class="btn ghost" type="button" title="Dodaj novu vrstu">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </label>
+
+        <label>Serija
+          <input id="m_serija" type="text" placeholder="npr. W212, F30, 8V">
+        </label>
+
+        <label>Marka *
+          <input id="m_naziv" type="text" required placeholder="npr. Opel">
+        </label>
+
+        <label>Model
+          <input id="m_model" type="text" placeholder="npr. Insignia">
+        </label>
+
+        <label>Oblik karoserije
+          <input id="m_oblik" type="text" placeholder="limuzina, karavan, SUV…">
+        </label>
+
+        <label>Vrsta mjenjača
+          <input id="m_mjenjac" type="text" placeholder="manualni, automatik…">
+        </label>
+
+        <label>Pogon
+          <input id="m_pogon" type="text" placeholder="FWD, RWD, AWD…">
+        </label>
+
+        <label>Snaga (kW)
+          <input id="m_snaga" type="number" min="0" step="1" inputmode="numeric">
+        </label>
+
+        <label>Zapremina (ccm)
+          <input id="m_zapremina" type="number" min="0" step="1" inputmode="numeric">
+        </label>
+
+        <label>Vrata
+          <input id="m_vrata" type="number" min="2" max="6" step="1" inputmode="numeric">
+        </label>
+
+        <label>Modelska godina
+          <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric">
+        </label>
+
+        <label>God. prestanka proizvodnje
+          <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric">
+        </label>
+
+        <label>Kataloška vrijednost (EUR)
+          <input id="m_kataloska" type="number" min="0" step="0.01" inputmode="decimal">
+        </label>
+      </div>
+
+      <div id="mMsg" class="tiny" style="display:none;color:#b00020"></div>
+
+      <div class="modal-footer">
         <button id="mCancel" class="btn ghost" type="button">Odustani</button>
         <button id="mSave"   class="btn primary" type="button">Spremi</button>
       </div>
@@ -185,8 +111,6 @@
   </div>
 
   <script src="common.js?v=777"></script>
-  <script src="marka.js?v=9001"></script>
+  <script src="marka.js?v=9002"></script>
 </body>
 </html>
-
-
