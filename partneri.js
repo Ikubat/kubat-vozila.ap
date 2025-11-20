@@ -4,7 +4,8 @@
 // - Pick mode (?pick=1): klik na red vrati partnera u obracun (setSelectedPartner)
 //   + u pick modu i dalje radi dodavanje/uređivanje
 
-const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
+// API baza: ista logika kao u mjesta.js i vrsta.js
+const ROOT_PATH = location.pathname.includes('/app/') ? '../api/' : './api/';
 const mjSelect = document.getElementById('p_mjesto');
 const MJ_API = ROOT_PATH + 'mjesta_list.php';
 loadMjesta();
@@ -175,24 +176,12 @@ loadMjesta();
     if (!rows || !rows.length) {
       $list.innerHTML = '';
       if ($empty) $empty.style.display = 'block';
-      if ($pageInfo) $pageInfo.textContent = '0 rezultata';
+      if ($pageInfo) $pageInfo.textContent = 'Prikazano: 0';
       return;
     }
 
     if ($empty) $empty.style.display = 'none';
-    if ($pageInfo) $pageInfo.textContent = rows.length + ' rezultata';
-
-    const head = `
-      <div class="grid-head">
-        <div>Ime</div>
-        <div>Prezime</div>
-        <div>Kontakt</div>
-        <div>Email</div>
-        <div>Adresa</div>
-        <div>Mjesto</div>
-        <div class="acts">Akcije</div>
-      </div>
-    `;
+    if ($pageInfo) $pageInfo.textContent = 'Prikazano: ' + rows.length;
 
     const bodyHtml = rows.map(p => {
       const ime     = p.ime || '';
@@ -227,7 +216,7 @@ loadMjesta();
       `;
     }).join('');
 
-    $list.innerHTML = head + bodyHtml;
+    $list.innerHTML = bodyHtml;
   }
 
   // -------- dohvat liste --------

@@ -1,4 +1,4 @@
-// marka.js — lista + modal + pick-mode (?pick=1) + beskonačno učitavanje
+// marka.js — lista + modal + pick-mode (?pick=1) + paginacija
 (function () {
   if (!document.body.classList.contains('marke')) return;
 
@@ -8,21 +8,24 @@
   if (PICK) document.body.classList.add('pick');
 
   // -------- API --------
-  const baseApi = location.pathname.includes('/app/') ? '../' : './';
-  const API = {␊
-    search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=␊
-    create : baseApi + 'marka_create.php',␊
-    update : baseApi + 'marka_update.php',␊
-    delete : baseApi + 'marka_delete.php',␊
-    vrste  : baseApi + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)␊
-  };␊
+  const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
+  const API = {
+    search : ROOT_PATH + 'marka_search.php',      // GET ?q=&page=&page_size=
+    create : ROOT_PATH + 'marka_create.php',
+    update : ROOT_PATH + 'marka_update.php',
+    delete : ROOT_PATH + 'marka_delete.php',
+    vrste  : ROOT_PATH + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)
+  };
 
   // -------- elementi --------
   const $q        = document.getElementById('q');
   const $list     = document.getElementById('list');
   const $empty    = document.getElementById('empty');
   const $pageInfo = document.getElementById('pageInfo');
-  const $sentinel = document.getElementById('infiniteSentinel');
+  const $pager    = document.getElementById('pager');
+  const $pgPrev   = document.getElementById('pgPrev');
+  const $pgNext   = document.getElementById('pgNext');
+  const $pgInfo   = document.getElementById('pgInfo');
 
   // modal
   const $wrap  = document.getElementById('mWrap');
@@ -53,19 +56,24 @@
     ? ['../vrsta.html', 'vrsta.html', '../app/vrsta.html', './vrsta.html']
     : ['vrsta.html', 'app/vrsta.html', './vrsta.html', '../vrsta.html'];
   let vrstaPickerBaseUrl = null;
-  
+
   // util
   const esc  = s => String(s ?? '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
   // -------- stanje liste --------
-    const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false, done:false };
+  const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false };
 
   function updateInfo() {
-    if(!$pageInfo) return;
-    const shown = ($list?.querySelectorAll('.card-row').length || 0);
-    const pagesLoaded = Math.max(0, state.page - (state.done ? 0 : 1));
-    $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'} · Stranice: ${pagesLoaded} / ${state.pages || '…'}`;
+    if($pgInfo){
+      $pgInfo.textContent = `${state.total || 0} rezultata` + (state.pages ? ` · Stranica ${state.page} / ${state.pages}` : '');
+    }
+    if($pageInfo){
+      const shown = ($list?.querySelectorAll('.card-row').length || 0);
+      $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'} · Stranica: ${state.page} / ${state.pages || '…'}`;
+    }
+    if($pgPrev) $pgPrev.disabled = state.page <= 1;
+    if($pgNext) $pgNext.disabled = state.pages && state.page >= state.pages;
   }
 
   // -------- vrste (select) --------
@@ -78,7 +86,7 @@
       let rows = Array.isArray(out) ? out : (out.data||[]);
       if(!rows.length){
         // fallback na stariji endpoint
-        r = await fetch(baseApi + 'vrsta_list.php?all=1', {cache:'no-store'});
+        r = await fetch(ROOT_PATH + 'vrsta_list.php?all=1', {cache:'no-store'});
         out = await r.json();
         rows = Array.isArray(out) ? out : (out.data||[]);
       }
@@ -122,7 +130,7 @@
 
   // -------- dohvat jedne stranice --------
   async function fetchPage(){
-    if(state.loading || state.done) return;
+    if(state.loading) return;
     state.loading = true;
 
     const qs = new URLSearchParams({ q: state.q, page:String(state.page), page_size:String(state.pageSize) });
@@ -134,28 +142,13 @@
       state.total = Array.isArray(out) ? rows.length : (out.total ?? 0);
       state.pages = Array.isArray(out) ? 1 : (out.pages ?? 0);
 
-      if(state.page===1){
-        $list.innerHTML = '';
-        show($empty, rows.length===0);
-      }
-
-      if(rows.length){
-        const html = rows.map(rowToHTML).join('');
-        $list.insertAdjacentHTML('beforeend', html);
-        updateInfo();
-      }else{
-        state.done = true;
-      }
-
-      if(state.page >= state.pages || rows.length < state.pageSize){
-        state.done = true;
-      }else{
-        state.page += 1;
-      }
+      $list.innerHTML = rows.map(rowToHTML).join('');
+      show($empty, rows.length===0);
+      updateInfo();
     }catch(e){
       console.error(e);
-      if(state.page===1){
-        $list.innerHTML = '';
+      $list.innerHTML = '';
+      if($empty){
         show($empty,true);
         $empty.textContent = 'Greška pri dohvaćanju podataka.';
       }
@@ -164,22 +157,21 @@
     }
   }
 
-  // -------- beskonačni skrol --------
-  const io = new IntersectionObserver((ents)=>{
-    ents.forEach(ent => { if(ent.isIntersecting) fetchPage(); });
-  }, {root:null, rootMargin:'300px 0px', threshold:0});
-  if($sentinel) io.observe($sentinel);
-
   // -------- search --------
   let t=null;
   function resetAndLoad(q){
     state.q = q||'';
-    state.page=1; state.done=false; state.loading=false;
-    updateInfo();
+    state.page=1; state.loading=false;
     fetchPage();
   }
   $q?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>resetAndLoad($q.value.trim()), 250); });
   $q?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); resetAndLoad($q.value.trim()); } });
+
+  // -------- pager --------
+  function goPrev(){ if(state.page>1){ state.page-=1; fetchPage(); } }
+  function goNext(){ if(state.pages===0 || state.page<state.pages){ state.page+=1; fetchPage(); } }
+  $pgPrev?.addEventListener('click', goPrev);
+  $pgNext?.addEventListener('click', goNext);
 
   // -------- modal open/close --------
   function openNew(){
@@ -256,16 +248,6 @@
   $pickVrsta?.addEventListener('click', openVrstaPicker);
   window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
 
-
-  function openVrstaPicker(){
-    const base = location.pathname.includes('/app/') ? '../vrsta.html' : 'vrsta.html';
-    const url = base + '?pick=1';
-    const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
-    if(w) w.focus();
-  }
-  $pickVrsta?.addEventListener('click', openVrstaPicker);
-  window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
-
   // -------- spremi (create/update) --------
   async function saveMarka(){
     const body = {
@@ -295,7 +277,7 @@
       if(!out.ok){ throw new Error(out.error||'Greška.'); }
       closeModal();
       // refresh od početka radi konzistentnog sortiranja
-      state.page=1; state.done=false; $list.innerHTML=''; fetchPage();
+      state.page=1; $list.innerHTML=''; fetchPage();
     }catch(e){
       $msg.textContent = e.message || 'Greška pri spremanju.'; $msg.style.display='block';
       console.error(e);
