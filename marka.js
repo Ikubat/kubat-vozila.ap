@@ -8,16 +8,38 @@
   if (PICK) document.body.classList.add('pick');
 
   // -------- API --------
-  const ROOT_URL = document.currentScript?.src
-    ? new URL('.', document.currentScript.src)
-    : new URL('./', location.href);
+  const baseFromDoc    = document.baseURI ? new URL('.', document.baseURI) : null;
+  const baseFromScript = document.currentScript?.src ? new URL('.', document.currentScript.src) : null;
+  const baseFromLoc    = new URL('./', location.href);
+  const BASES = [baseFromDoc, baseFromScript, baseFromLoc]
+    .filter(Boolean)
+    .map(u => u.toString())
+    .filter((u, idx, arr) => arr.indexOf(u) === idx); // uniq
+
   const API = {
-    search : new URL('marka_search.php', ROOT_URL).toString(),      // GET ?q=&page=&page_size=
-    create : new URL('marka_create.php', ROOT_URL).toString(),
-    update : new URL('marka_update.php', ROOT_URL).toString(),
-    delete : new URL('marka_delete.php', ROOT_URL).toString(),
-    vrste  : new URL('vrsta_list_auto.php', ROOT_URL).toString()    // GET ?all=1 (fallback na vrsta_list.php ispod)
+    search : BASES.map(b => new URL('marka_search.php', b).toString()),      // GET ?q=&page=&page_size=
+    create : BASES.map(b => new URL('marka_create.php', b).toString()),
+    update : BASES.map(b => new URL('marka_update.php', b).toString()),
+    delete : BASES.map(b => new URL('marka_delete.php', b).toString()),
+    vrste  : BASES.map(b => new URL('vrsta_list_auto.php', b).toString())    // GET ?all=1 (fallback na vrsta_list.php ispod)
   };
+
+  async function fetchFirst(urls, options){
+    const errors = [];
+    for(const url of urls){
+      try{
+        const res = await fetch(url, options);
+        if(res.ok) return res;
+        errors.push({url, status: res.status});
+      }catch(err){
+        errors.push({url, error: err});
+      }
+    }
+    const last = errors[errors.length-1];
+    const err = new Error('HTTP '+(last?.status || 'error'));
+    err.attempts = errors;
+    throw err;
+  }
 
   // -------- elementi --------
   const $q          = document.getElementById('q');
@@ -77,13 +99,14 @@
   async function loadVrste(preselectId=null){
     if(!$vrsta) return;
     try{
-      let r = await fetch(API.vrste + '?all=1', {cache:'no-store'});
+      let r = await fetchFirst(API.vrste.map(u=>u+'?all=1'), {cache:'no-store'});
       if(!r.ok) throw new Error('HTTP '+r.status);
       let out = await r.json();
       let rows = Array.isArray(out) ? out : (out.data||[]);
       if(!rows.length){
         // fallback na stariji endpoint
-        r = await fetch(new URL('vrsta_list.php?all=1', ROOT_URL), {cache:'no-store'});
+        const fallback = new URL('vrsta_list.php?all=1', BASES[0] || location.href);
+        r = await fetch(fallback, {cache:'no-store'});
         out = await r.json();
         rows = Array.isArray(out) ? out : (out.data||[]);
       }
@@ -144,7 +167,7 @@
 
     const qs = new URLSearchParams({ q: state.q, page:String(state.page), page_size:String(state.pageSize) });
     try{
-      const r = await fetch(API.search + '?' + qs.toString(), {cache:'no-store'});
+      const r = await fetchFirst(API.search.map(u=>u+'?'+qs.toString()), {cache:'no-store'});
       if(!r.ok) throw new Error('HTTP '+r.status);
       const out = await r.json();
       const rows = Array.isArray(out) ? out : (out.data||[]);
@@ -274,7 +297,7 @@
     }
     const url = body.id ? API.update : API.create;
     try{
-      const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+      const r = await fetchFirst(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
       const text = await r.text();
       let out; try{ out=JSON.parse(text); }catch(_){ throw new Error('Neispravan JSON: '+text); }
       if(!out.ok){ throw new Error(out.error||'Greška.'); }
@@ -304,7 +327,7 @@
       const id = +row.dataset.id;
       if(!confirm('Obrisati marku #'+id+'?')) return;
       try{
-        const r = await fetch(API.delete, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
+        const r = await fetchFirst(API.delete, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
         const out = await r.json();
         if(!out.ok) throw new Error(out.error||'Greška pri brisanju.');
         row.remove(); updateInfo();
