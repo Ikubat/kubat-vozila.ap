@@ -2,142 +2,127 @@
 <html lang="hr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vozila / Marke</title>
-  <link rel="stylesheet" href="styles.css?v=6">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=9002">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body class="marke">
-  <header class="topbar">
-    <h1>Vozila / Marke</h1>
-    <div class="search">
-      <input id="q" type="search" placeholder="Traži po marki, modelu, seriji, pogonu…">
-    </div>
-    <button id="btnAddTop" class="btn-icon" type="button" title="Nova marka" aria-label="Nova marka">＋</button>
-  </header>
+  <div class="wrap">
+    <div class="card">
+      <h1>Vozila / Marke</h1>
+      <p class="sub">Upravljanje markama i modelima vozila s modernim pregledom.</p>
 
-  <main class="container">
-    <div class="cards-table-wrap">
-      <div class="grid-head marke-head">
-        <div>Vrsta / Serija</div>
-        <div>Marka / Model</div>
-        <div>Pogon / Mjenjač</div>
-        <div>Snaga / Oblik</div>
-        <div class="acts">Akcije</div>
+      <div class="toolbar">
+        <div class="grow">
+          <input id="q" type="search" placeholder="Filtriraj po marki, modelu, seriji…" aria-label="Pretraži marke" />
+        </div>
+        <button id="btnAddTop" class="btn" title="Dodaj marku" aria-label="Dodaj marku">
+          <i class="fa-solid fa-plus"></i> Nova marka
+        </button>
       </div>
 
-      <div id="list" class="cards-table" aria-live="polite"></div>
-      <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
-      <div id="pageInfo" class="tiny" style="margin-top:8px"></div>
-    </div>
-  </main>
+      <div class="list" aria-live="polite">
+        <div class="head-row">
+          <div>Vrsta / Serija</div>
+          <div>Marka / Model</div>
+          <div>Pogon / Mjenjač</div>
+          <div>Snaga / Oblik</div>
+          <div style="text-align:right">Akcije</div>
+        </div>
+        <div id="list"></div>
+      </div>
 
-  <div id="pager" class="pager">
-    <button id="pgPrev" class="btn" type="button" title="Prethodna">«</button>
-    <span id="pgInfo" class="tiny">0 rezultata</span>
-    <button id="pgNext" class="btn" type="button" title="Sljedeća">»</button>
+      <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
+
+      <div class="info-bar">
+        <div id="pageInfo">Prikazano: 0</div>
+        <div id="infoFilter"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Modal: Nova/Uredi marka -->
-  <div id="mWrap" class="modal-wrap" aria-hidden="true">
-    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-      <div class="modal-header">
-        <h3 id="mTitle">Uredi marku / vozilo</h3>
-        <button id="mClose" class="modal-x" aria-label="Zatvori">×</button>
-      </div>
+  <!-- MODAL: Nova / Uredi marka -->
+  <div id="mWrap" class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="box">
+      <header>
+        <h2 id="mTitle">Uredi marku / vozilo</h2>
+        <button id="mClose" class="close-x" aria-label="Zatvori" type="button">✕</button>
+      </header>
 
-      <div class="modal-body grid two">
-        <input id="m_id" type="hidden">
+      <input type="hidden" id="m_id" />
 
+      <div class="grid two-col">
         <div>
-          <label>Vrsta vozila
-            <div class="inline-field">
-              <select id="m_vrsta"></select>
-              <button id="btnPickVrsta" class="btn ghost" type="button">
-                <i class="fa-solid fa-plus"></i>
-                Nova vrsta
-              </button>
-            </div>
-          </label>
+          <label for="m_vrsta">Vrsta vozila</label>
+          <div class="inline-field">
+            <select id="m_vrsta"></select>
+            <button id="btnPickVrsta" class="btn sec" type="button" title="Dodaj vrstu" aria-label="Dodaj vrstu">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
-          <label>Serija
-            <input id="m_serija" type="text" placeholder="npr. W204">
-          </label>
+          <label for="m_serija">Serija</label>
+          <input id="m_serija" type="text" placeholder="npr. W204" />
         </div>
         <div>
-          <label>Marka
-            <input id="m_naziv" type="text" placeholder="npr. Mercedes-Benz" required>
-          </label>
+          <label for="m_naziv">Marka</label>
+          <input id="m_naziv" type="text" placeholder="npr. Mercedes-Benz" />
         </div>
         <div>
-          <label>Model
-            <input id="m_model" type="text" placeholder="npr. C-klasa" required>
-          </label>
+          <label for="m_model">Model</label>
+          <input id="m_model" type="text" placeholder="npr. C-klasa" />
         </div>
         <div>
-          <label>Oblik
-            <input id="m_oblik" type="text" placeholder="npr. limuzina / karavan">
-          </label>
-        </div>
-      </div>
-
-      <div class="modal-body grid three">
-        <div>
-          <label>Pogon
-            <input id="m_pogon" type="text" placeholder="npr. 2.0 dizel">
-          </label>
+          <label for="m_oblik">Oblik</label>
+          <input id="m_oblik" type="text" placeholder="npr. limuzina / karavan" />
         </div>
         <div>
-          <label>Mjenjač
-            <input id="m_mjenjac" type="text" placeholder="npr. automatik (7G-Tronic)">
-          </label>
+          <label for="m_pogon">Pogon</label>
+          <input id="m_pogon" type="text" placeholder="npr. 2.0 dizel" />
         </div>
         <div>
-          <label>Broj vrata
-            <input id="m_vrata" type="number" min="2" max="8" step="1" inputmode="numeric">
-          </label>
+          <label for="m_mjenjac">Mjenjač</label>
+          <input id="m_mjenjac" type="text" placeholder="npr. automatik (7G-Tronic)" />
         </div>
         <div>
-          <label>Snaga (kW)
-            <input id="m_snaga" type="number" min="1" max="2000" step="1" inputmode="numeric">
-          </label>
+          <label for="m_vrata">Broj vrata</label>
+          <input id="m_vrata" type="number" min="2" max="8" step="1" inputmode="numeric" />
         </div>
         <div>
-          <label>Zapremina (ccm)
-            <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric">
-          </label>
+          <label for="m_snaga">Snaga (kW)</label>
+          <input id="m_snaga" type="number" min="1" max="2000" step="1" inputmode="numeric" />
         </div>
         <div>
-          <label>Modelska godina
-            <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric">
-          </label>
+          <label for="m_zapremina">Zapremina (ccm)</label>
+          <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric" />
         </div>
         <div>
-          <label>God. prestanka proizvodnje
-            <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric">
-          </label>
+          <label for="m_god_modela">Modelska godina</label>
+          <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric" />
         </div>
-
         <div>
-          <label>Kataloška vrijednost (EUR)
-            <input id="m_kataloska" type="number" min="0" step="0.01" inputmode="decimal">
-          </label>
+          <label for="m_god_kraj">God. prestanka proizvodnje</label>
+          <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="m_kataloska">Kataloška vrijednost (EUR)</label>
+          <input id="m_kataloska" type="number" min="0" step="0.01" inputmode="decimal" />
         </div>
       </div>
 
-      <div id="mMsg" class="msg" style="display:none"></div>
+      <div id="mMsg" class="msg"></div>
 
-      <div class="modal-footer">
-        <button id="mCancel" class="btn ghost" type="button">Odustani</button>
-        <button id="mSave"   class="btn primary" type="button">Spremi</button>
+      <div class="actions">
+        <button id="mSave" class="btn" type="button">Spremi</button>
+        <button id="mCancel" class="btn sec" type="button">Odustani</button>
       </div>
     </div>
   </div>
 
   <script src="common.js?v=777"></script>
-  <script src="marka.js?v=9001"></script>
+  <script src="marka.js?v=9002"></script>
 </body>
 </html>
-
-
