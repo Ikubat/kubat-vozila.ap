@@ -589,3 +589,46 @@ input.picked {
   background-color: #e5f1ff;    /* svijetlo plava */
   border-color: #3b82f6;
 }
+
+/* =========================
+   MARKE - SPECIFIČNI STILOVI
+   ========================= */
+.body.marke, body.marke { background:#f8f9fb; }
+
+.marke .grid-head.marke-grid,
+.marke .card-row.marke-grid-row {
+  grid-template-columns: 1.6fr 1.8fr 1.4fr 1.2fr 110px;
+}
+
+@media (max-width: 900px) {
+  .marke .grid-head.marke-grid,
+  .marke .card-row.marke-grid-row {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .marke .acts { justify-content: flex-start; }
+}
+
+.marke .modal-body.marke-modal {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.marke .inline-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.marke .modal-body input,
+.marke .modal-body select {
+  width: 100%;
+}
+
+.marke .card-row .sub {
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.marke .card-row.pickable:hover {
+  cursor: pointer;
+}

@@ -9,13 +9,13 @@
 
   // -------- API --------
   const baseApi = location.pathname.includes('/app/') ? '../' : './';
-  const API = {␊
-    search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=␊
-    create : baseApi + 'marka_create.php',␊
-    update : baseApi + 'marka_update.php',␊
-    delete : baseApi + 'marka_delete.php',␊
-    vrste  : baseApi + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)␊
-  };␊
+  const API = {
+    search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=
+    create : baseApi + 'marka_create.php',
+    update : baseApi + 'marka_update.php',
+    delete : baseApi + 'marka_delete.php',
+    vrste  : baseApi + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)
+  };
 
   // -------- elementi --------
   const $q        = document.getElementById('q');
@@ -59,7 +59,7 @@
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
   // -------- stanje liste --------
-    const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false, done:false };
+  const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false, done:false };
 
   function updateInfo() {
     if(!$pageInfo) return;
@@ -103,10 +103,10 @@
     const pogonMj     = [m.pogon, m.mjenjac].filter(Boolean).map(esc).join(' · ');
     const snagaOblik  = [m.snaga ? (esc(m.snaga)+' kW') : '', m.oblik ? esc(m.oblik):''].filter(Boolean).join(' · ');
     return `
-      <div class="card-row" data-id="${m.id}"
+      <div class="card-row marke-grid-row${PICK ? ' pickable' : ''}" data-id="${m.id}"
            data-vrsta_id="${m.vrsta_id||''}"
            data-naziv="${esc(m.naziv||'')}" data-model="${esc(m.model||'')}">
-        <div>${vrstaSerija}</div>
+      <div>${vrstaSerija}</div>
         <div class="main">${markaModel}</div>
         <div class="sub">${pogonMj}</div>
         <div class="sub">${snagaOblik}</div>
@@ -130,6 +130,9 @@
       const r = await fetch(API.search + '?' + qs.toString(), {cache:'no-store'});
       if(!r.ok) throw new Error('HTTP '+r.status);
       const out = await r.json();
+      if(out && out.ok === false){
+        throw new Error(out.error || 'Greška pri dohvaćanju podataka.');
+      }
       const rows = Array.isArray(out) ? out : (out.data||[]);
       state.total = Array.isArray(out) ? rows.length : (out.total ?? 0);
       state.pages = Array.isArray(out) ? 1 : (out.pages ?? 0);
@@ -182,19 +185,20 @@
   $q?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); resetAndLoad($q.value.trim()); } });
 
   // -------- modal open/close --------
-  function openNew(){
-    if(PICK) return; // u pick modu nema dodavanja
+    function openNew(){
+      if(PICK) return; // u pick modu nema dodavanja
     $title.textContent='Nova marka';
     $id.value='';
     $serija.value=''; $naziv.value=''; $model.value='';
     $oblik.value=''; $mjenjac.value=''; $pogon.value='';
     $snaga.value=''; $zapremina.value=''; $vrata.value='';
-    $god_modela.value=''; $god_kraj.value=''; $kataloska.value='';
-    loadVrste('');
-    $msg.style.display='none';
-    $wrap.classList.add('show');
-    $naziv.focus();
-  }
+      $god_modela.value=''; $god_kraj.value=''; $kataloska.value='';
+      loadVrste('');
+      $msg.style.display='none';
+      $wrap.classList.add('show');
+      $wrap.setAttribute('aria-hidden','false');
+      $naziv.focus();
+    }
   function openEdit(row){
     if(PICK) return;
     const d = row.dataset;
@@ -203,22 +207,26 @@
     $naziv.value = d.naziv || row.querySelector('.main')?.textContent.trim().split(' ')[0] || '';
     $model.value = d.model || '';
     // preostala polja dohvatimo iz DOM-a gdje je moguće (opcionalno ostaju prazna)
-    const seg2 = row.children[2]?.textContent || '';
-    const seg3 = row.children[3]?.textContent || '';
-    $pogon.value   = (seg2.split('·')[0]||'').trim();
-    $mjenjac.value = (seg2.split('·')[1]||'').trim();
-    $snaga.value   = (seg3.match(/\d+/)||[''])[0];
-    $oblik.value   = (seg3.includes('·') ? seg3.split('·')[1].trim() : '');
-    loadVrste(row.dataset.vrsta_id || '');
-    $msg.style.display='none';
-    $wrap.classList.add('show');
-    $naziv.focus();
-  }
-  function closeModal(){ $wrap.classList.remove('show'); }
-  $addTop?.addEventListener('click', openNew);
-  $cancel?.addEventListener('click', closeModal);
-  $close ?.addEventListener('click', closeModal);
-  $wrap  ?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
+      const seg2 = row.children[2]?.textContent || '';
+      const seg3 = row.children[3]?.textContent || '';
+      $pogon.value   = (seg2.split('·')[0]||'').trim();
+      $mjenjac.value = (seg2.split('·')[1]||'').trim();
+      $snaga.value   = (seg3.match(/\d+/)||[''])[0];
+      $oblik.value   = (seg3.includes('·') ? seg3.split('·')[1].trim() : '');
+      loadVrste(row.dataset.vrsta_id || '');
+      $msg.style.display='none';
+      $wrap.classList.add('show');
+      $wrap.setAttribute('aria-hidden','false');
+      $naziv.focus();
+    }
+    function closeModal(){
+      $wrap.classList.remove('show');
+      $wrap.setAttribute('aria-hidden','true');
+    }
+    $addTop?.addEventListener('click', openNew);
+    $cancel?.addEventListener('click', closeModal);
+    $close?.addEventListener('click', closeModal);
+    $wrap?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
   async function resolveVrstaPickerUrl(){
@@ -252,16 +260,6 @@
     const url = pickerUrl.toString();
     const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
     if(w) w.focus(); else location.href = url;
-  }
-  $pickVrsta?.addEventListener('click', openVrstaPicker);
-  window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
-
-
-  function openVrstaPicker(){
-    const base = location.pathname.includes('/app/') ? '../vrsta.html' : 'vrsta.html';
-    const url = base + '?pick=1';
-    const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
-    if(w) w.focus();
   }
   $pickVrsta?.addEventListener('click', openVrstaPicker);
   window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
