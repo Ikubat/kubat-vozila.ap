@@ -68,8 +68,13 @@
     .btn.warn{background:#fee2e2;color:#991b1b}
     .btn:disabled{opacity:.6;cursor:not-allowed}
 
-    .list{margin-top:8px}
-    .head-row,.row{
+    .list{
+      display:grid;
+      gap:6px;
+      margin-top:8px;
+    }
+    .head-row,
+    .card-row{
       display:grid;
       grid-template-columns:2.4fr 1fr 1fr 90px;
       gap:8px;
@@ -83,7 +88,9 @@
       background:#f3f4ff;
       font-weight:600;
     }
-    .row{background:#fff;margin-top:6px}
+    .card-row{
+      background:#fff;
+    }
     .acts{
       display:flex;
       justify-content:flex-end;
@@ -198,6 +205,12 @@
         </div>
         <div id="list"></div>
       </div>
+
+      <!-- Info bar kao kod VRSTE -->
+      <div class="info-bar">
+        <div id="infoCount">Prikazano: 0</div>
+        <div id="infoFilter"></div>
+      </div>
     </div>
   </div>
 
@@ -240,4 +253,3 @@
   <script src="mjesta.js?v=106"></script>
 </body>
 </html>
-
