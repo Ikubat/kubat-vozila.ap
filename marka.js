@@ -8,32 +8,31 @@
   if (PICK) document.body.classList.add('pick');
 
   // -------- API --------
-  const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
+  const ROOT_URL = document.currentScript?.src
+    ? new URL('.', document.currentScript.src)
+    : new URL('./', location.href);
   const API = {
-    search : ROOT_PATH + 'marka_search.php',      // GET ?q=&page=&page_size=
-    create : ROOT_PATH + 'marka_create.php',
-    update : ROOT_PATH + 'marka_update.php',
-    delete : ROOT_PATH + 'marka_delete.php',
-    vrste  : ROOT_PATH + 'vrsta_list_auto.php'    // GET ?all=1 (fallback na vrsta_list.php ispod)
+    search : new URL('marka_search.php', ROOT_URL).toString(),      // GET ?q=&page=&page_size=
+    create : new URL('marka_create.php', ROOT_URL).toString(),
+    update : new URL('marka_update.php', ROOT_URL).toString(),
+    delete : new URL('marka_delete.php', ROOT_URL).toString(),
+    vrste  : new URL('vrsta_list_auto.php', ROOT_URL).toString()    // GET ?all=1 (fallback na vrsta_list.php ispod)
   };
 
   // -------- elementi --------
-  const $q        = document.getElementById('q');
-  const $list     = document.getElementById('list');
-  const $empty    = document.getElementById('empty');
-  const $pageInfo = document.getElementById('pageInfo');
-  const $pager    = document.getElementById('pager');
-  const $pgPrev   = document.getElementById('pgPrev');
-  const $pgNext   = document.getElementById('pgNext');
-  const $pgInfo   = document.getElementById('pgInfo');
+  const $q          = document.getElementById('q');
+  const $list       = document.getElementById('list');
+  const $empty      = document.getElementById('empty');
+  const $pageInfo   = document.getElementById('pageInfo');
+  const $infoFilter = document.getElementById('infoFilter');
 
   // modal
-  const $wrap  = document.getElementById('mWrap');
-  const $title = document.getElementById('mTitle');
-  const $close = document.getElementById('mClose');
-  const $save  = document.getElementById('mSave');
-  const $cancel= document.getElementById('mCancel');
-  const $msg   = document.getElementById('mMsg');
+  const $wrap   = document.getElementById('mWrap');
+  const $title  = document.getElementById('mTitle');
+  const $close  = document.getElementById('mClose');
+  const $save   = document.getElementById('mSave');
+  const $cancel = document.getElementById('mCancel');
+  const $msg    = document.getElementById('mMsg');
 
   const $id          = document.getElementById('m_id');
   const $vrsta       = document.getElementById('m_vrsta');
@@ -58,22 +57,20 @@
   let vrstaPickerBaseUrl = null;
 
   // util
-  const esc  = s => String(s ?? '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+  const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
   // -------- stanje liste --------
   const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false };
 
   function updateInfo() {
-    if($pgInfo){
-      $pgInfo.textContent = `${state.total || 0} rezultata` + (state.pages ? ` · Stranica ${state.page} / ${state.pages}` : '');
+    if($infoFilter){
+      $infoFilter.textContent = state.q ? `Filter: "${state.q}"` : '';
     }
     if($pageInfo){
       const shown = ($list?.querySelectorAll('.card-row').length || 0);
-      $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'} · Stranica: ${state.page} / ${state.pages || '…'}`;
+      $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'}`;
     }
-    if($pgPrev) $pgPrev.disabled = state.page <= 1;
-    if($pgNext) $pgNext.disabled = state.pages && state.page >= state.pages;
   }
 
   // -------- vrste (select) --------
@@ -86,7 +83,7 @@
       let rows = Array.isArray(out) ? out : (out.data||[]);
       if(!rows.length){
         // fallback na stariji endpoint
-        r = await fetch(ROOT_PATH + 'vrsta_list.php?all=1', {cache:'no-store'});
+        r = await fetch(new URL('vrsta_list.php?all=1', ROOT_URL), {cache:'no-store'});
         out = await r.json();
         rows = Array.isArray(out) ? out : (out.data||[]);
       }
@@ -114,10 +111,22 @@
       <div class="card-row" data-id="${m.id}"
            data-vrsta_id="${m.vrsta_id||''}"
            data-naziv="${esc(m.naziv||'')}" data-model="${esc(m.model||'')}">
-        <div>${vrstaSerija}</div>
-        <div class="main">${markaModel}</div>
-        <div class="sub">${pogonMj}</div>
-        <div class="sub">${snagaOblik}</div>
+        <div>
+          <div class="main">${vrstaSerija || '—'}</div>
+          <div class="sub">${esc(m.serija || '')}</div>
+        </div>
+        <div>
+          <div class="main">${markaModel || '—'}</div>
+          <div class="sub">${esc(m.oblik || '')}</div>
+        </div>
+        <div>
+          <div class="main">${pogonMj || '—'}</div>
+          <div class="sub">${esc(m.mjenjac || '')}</div>
+        </div>
+        <div>
+          <div class="main">${snagaOblik || '—'}</div>
+          <div class="sub">${m.vrata ? esc(m.vrata)+' vrata' : ''}</div>
+        </div>
         <div class="acts">
           ${PICK ? '' : `
             <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
@@ -167,12 +176,6 @@
   $q?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>resetAndLoad($q.value.trim()), 250); });
   $q?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); resetAndLoad($q.value.trim()); } });
 
-  // -------- pager --------
-  function goPrev(){ if(state.page>1){ state.page-=1; fetchPage(); } }
-  function goNext(){ if(state.pages===0 || state.page<state.pages){ state.page+=1; fetchPage(); } }
-  $pgPrev?.addEventListener('click', goPrev);
-  $pgNext?.addEventListener('click', goNext);
-
   // -------- modal open/close --------
   function openNew(){
     if(PICK) return; // u pick modu nema dodavanja
@@ -194,13 +197,13 @@
     $id.value = d.id || '';
     $naziv.value = d.naziv || row.querySelector('.main')?.textContent.trim().split(' ')[0] || '';
     $model.value = d.model || '';
-    // preostala polja dohvatimo iz DOM-a gdje je moguće (opcionalno ostaju prazna)
-    const seg2 = row.children[2]?.textContent || '';
-    const seg3 = row.children[3]?.textContent || '';
-    $pogon.value   = (seg2.split('·')[0]||'').trim();
-    $mjenjac.value = (seg2.split('·')[1]||'').trim();
-    $snaga.value   = (seg3.match(/\d+/)||[''])[0];
-    $oblik.value   = (seg3.includes('·') ? seg3.split('·')[1].trim() : '');
+    const cols = row.querySelectorAll('.main');
+    const detailCols = row.querySelectorAll('.sub');
+    $pogon.value   = (cols[2]?.textContent.split('·')[0]||'').trim();
+    $mjenjac.value = (cols[2]?.textContent.split('·')[1]||'').trim();
+    $snaga.value   = (cols[3]?.textContent.match(/\d+/)||[''])[0];
+    $oblik.value   = (cols[1]?.textContent.includes('·') ? cols[1].textContent.split('·')[1].trim() : detailCols[1]?.textContent.trim() || '');
+    $vrata.value   = (detailCols[3]?.textContent.match(/\d+/)||[''])[0];
     loadVrste(row.dataset.vrsta_id || '');
     $msg.style.display='none';
     $wrap.classList.add('show');
@@ -276,7 +279,6 @@
       let out; try{ out=JSON.parse(text); }catch(_){ throw new Error('Neispravan JSON: '+text); }
       if(!out.ok){ throw new Error(out.error||'Greška.'); }
       closeModal();
-      // refresh od početka radi konzistentnog sortiranja
       state.page=1; $list.innerHTML=''; fetchPage();
     }catch(e){
       $msg.textContent = e.message || 'Greška pri spremanju.'; $msg.style.display='block';
@@ -346,4 +348,3 @@
   if(!PICK) loadVrste('');
   resetAndLoad('');
 })();
-
