@@ -4,7 +4,8 @@
 // - Pick mode (?pick=1): klik na red vrati partnera u obracun (setSelectedPartner)
 //   + u pick modu i dalje radi dodavanje/uređivanje
 
-const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
+// API baza: ista logika kao u mjesta.js i vrsta.js
+const ROOT_PATH = location.pathname.includes('/app/') ? '../api/' : './api/';
 const mjSelect = document.getElementById('p_mjesto');
 const MJ_API = ROOT_PATH + 'mjesta_list.php';
 loadMjesta();
