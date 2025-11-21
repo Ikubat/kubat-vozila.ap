@@ -119,14 +119,14 @@
         <div>${valOrDash(m.naziv || '')}</div>
         <div>${valOrDash(m.model || '')}</div>
         <div>${valOrDash(m.serija)}</div>
-        <div>${valOrDash(m.oblik)}</div>
-        <div>${numOrDash(m.vrata)}</div>
-        <div>${valOrDash(m.mjenjac)}</div>
-        <div>${valOrDash(m.pogon)}</div>
-        <div>${numOrDash(m.snaga)}</div>
-        <div>${numOrDash(m.zapremina)}</div>
         <div>${numOrDash(m.god_modela)}</div>
         <div>${numOrDash(m.god_kraj)}</div>
+        <div>${valOrDash(m.oblik)}</div>
+        <div>${numOrDash(m.vrata)}</div>
+        <div>${numOrDash(m.snaga)}</div>
+        <div>${numOrDash(m.zapremina)}</div>
+        <div>${valOrDash(m.pogon)}</div>
+        <div>${valOrDash(m.mjenjac)}</div>
         <div>${numOrDash(m.kataloska)}</div>
         <div class="acts">
           ${PICK ? '' : `
