@@ -1,139 +1,145 @@
 // marka.js — lista + modal + pick-mode (?pick=1) + paginacija
 (function () {
-  if (!document.body.classList.contains('marke')) return;
+  function init(){
+    if (!document.body.classList.contains('marke')) return;
 
-  // -------- pick mode --------
-  const params   = new URLSearchParams(location.search);
-  const PICK     = params.get('pick') === '1';
-  if (PICK) document.body.classList.add('pick');
+    // -------- pick mode --------
+    const params   = new URLSearchParams(location.search);
+    const PICK     = params.get('pick') === '1';
+    if (PICK) document.body.classList.add('pick');
 
-   // -------- API --------␊
-   const baseApi = location.pathname.includes('/app/') ? '../' : './';
+    // -------- API --------
+    const baseApi = location.pathname.includes('/app/') ? '../' : './';
 
-  const API = {
-    search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=
-    create : baseApi + 'marka_create.php',
-    update : baseApi + 'marka_update.php',
-    delete : baseApi + 'marka_delete.php',
-    marke  : baseApi + 'marka_distinct.php',
-    vrste  : baseApi + 'vrsta_list_auto.php',    // GET ?all=1 (fallback na vrsta_list.php ispod)
-    vrsteFallback: baseApi + 'vrsta_list.php'
-  };
-  // -------- elementi --------
-  const $q          = document.getElementById('q');
-  const $list       = document.getElementById('list');
-  const $empty      = document.getElementById('empty');
-  const $pageInfo   = document.getElementById('pageInfo');
-  const $infoFilter = document.getElementById('infoFilter');
+    const API = {
+      search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=
+      create : baseApi + 'marka_create.php',
+      update : baseApi + 'marka_update.php',
+      delete : baseApi + 'marka_delete.php',
+      marke  : baseApi + 'marka_distinct.php',
+      vrste  : baseApi + 'vrsta_list_auto.php',    // GET ?all=1 (fallback na vrsta_list.php ispod)
+      vrsteFallback: baseApi + 'vrsta_list.php'
+    };
+    // -------- elementi --------
+    const $q          = document.getElementById('q');
+    const $list       = document.getElementById('list');
+    const $empty      = document.getElementById('empty');
+    const $pageInfo   = document.getElementById('pageInfo');
+    const $infoFilter = document.getElementById('infoFilter');
 
-  // modal
-  const $wrap   = document.getElementById('mWrap');
-  const $title  = document.getElementById('mTitle');
-  const $close  = document.getElementById('mClose');
-  const $save   = document.getElementById('mSave');
-  const $cancel = document.getElementById('mCancel');
-  const $msg    = document.getElementById('mMsg');
+    // modal
+    const $wrap   = document.getElementById('mWrap');
+    const $title  = document.getElementById('mTitle');
+    const $close  = document.getElementById('mClose');
+    const $save   = document.getElementById('mSave');
+    const $cancel = document.getElementById('mCancel');
+    const $msg    = document.getElementById('mMsg');
 
-  const $id          = document.getElementById('m_id');
-  const $vrsta       = document.getElementById('m_vrsta');
-  const $serija      = document.getElementById('m_serija');
-  const $nazivSelect = document.getElementById('m_naziv_select');
-  const $model       = document.getElementById('m_model');
-  const $oblik       = document.getElementById('m_oblik');
-  const $mjenjac     = document.getElementById('m_mjenjac');
-  const $pogon       = document.getElementById('m_pogon');
-  const $snaga       = document.getElementById('m_snaga');
-  const $zapremina   = document.getElementById('m_zapremina');
-  const $vrata       = document.getElementById('m_vrata');
-  const $god_modela  = document.getElementById('m_god_modela');
-  const $god_kraj    = document.getElementById('m_god_kraj');
-  const $kataloska   = document.getElementById('m_kataloska');
+    const $id          = document.getElementById('m_id');
+    const $vrsta       = document.getElementById('m_vrsta');
+    const $serija      = document.getElementById('m_serija');
+    const $nazivSelect = document.getElementById('m_naziv_select');
+    const $model       = document.getElementById('m_model');
+    const $oblik       = document.getElementById('m_oblik');
+    const $mjenjac     = document.getElementById('m_mjenjac');
+    const $pogon       = document.getElementById('m_pogon');
+    const $snaga       = document.getElementById('m_snaga');
+    const $zapremina   = document.getElementById('m_zapremina');
+    const $vrata       = document.getElementById('m_vrata');
+    const $god_modela  = document.getElementById('m_god_modela');
+    const $god_kraj    = document.getElementById('m_god_kraj');
+    const $kataloska   = document.getElementById('m_kataloska');
 
-  const $addTop = document.getElementById('btnAddTop');
-  const $addMarka = document.getElementById('btnAddMarka');
-  const $pickVrsta = document.getElementById('btnPickVrsta');
-  const vrstaPickerCandidates = location.pathname.includes('/app/')
-    ? ['../vrsta.html', 'vrsta.html', '../app/vrsta.html', './vrsta.html']
-    : ['vrsta.html', 'app/vrsta.html', './vrsta.html', '../vrsta.html'];
-  let vrstaPickerBaseUrl = null;
-
-  // util
-  const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-  const escAttr = esc;
-  const escCss = s => {
-    if(!s && s!==0) return '';
-    if(window.CSS?.escape) return CSS.escape(String(s));
-    return String(s).replace(/(["'\\])/g, '\\$1').replace(/\0/g,'\uFFFD');
-  };
-  const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
-
-  // -------- stanje liste --------
-  const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false };
-
-  function updateInfo() {
-    if($infoFilter){
-      $infoFilter.textContent = state.q ? `Filter: "${state.q}"` : '';
+    if(!$wrap || !$id || !$nazivSelect){
+      console.error('Nedostaju elementi modala za marke.');
+      return;
     }
-    if($pageInfo){
-      const shown = ($list?.querySelectorAll('.card-row').length || 0);
-      $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'}`;
-    }
-  }
 
-  // -------- vrste (select) --------
-  async function loadVrste(preselectId=null){
-    if(!$vrsta) return;
-    try{
-      let r = await fetch(API.vrste + '?all=1', {cache:'no-store'});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      let out = await r.json();
-      let rows = Array.isArray(out) ? out : (out.data||[]);
-      if(!rows.length){
-        // fallback na stariji endpoint
-        r = await fetch(new URL('vrsta_list.php?all=1', location.href), {cache:'no-store'});
-        out = await r.json();
-        rows = Array.isArray(out) ? out : (out.data||[]);
+    const $addTop = document.getElementById('btnAddTop');
+    const $addMarka = document.getElementById('btnAddMarka');
+    const $pickVrsta = document.getElementById('btnPickVrsta');
+    const vrstaPickerCandidates = location.pathname.includes('/app/')
+      ? ['../vrsta.html', 'vrsta.html', '../app/vrsta.html', './vrsta.html']
+      : ['vrsta.html', 'app/vrsta.html', './vrsta.html', '../vrsta.html'];
+    let vrstaPickerBaseUrl = null;
+
+    // util
+    const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+    const escAttr = esc;
+    const escCss = s => {
+      if(!s && s!==0) return '';
+      if(window.CSS?.escape) return CSS.escape(String(s));
+      return String(s).replace(/(["'\\])/g, '\\$1').replace(/\0/g,'\uFFFD');
+    };
+    const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
+
+    // -------- stanje liste --------
+    const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false };
+
+    function updateInfo() {
+      if($infoFilter){
+        $infoFilter.textContent = state.q ? `Filter: "${state.q}"` : '';
       }
-      rows = rows.map(v=>({
-        id: v.id ?? v.ID ?? v.vrsta_id ?? v.Id,
-        naziv: v.naziv ?? v.naziv_vrste ?? v.Naziv ?? v.name ?? ''
-      })).filter(v=>v.id!=null);
-      rows.sort((a,b)=> String(a.naziv||'').localeCompare(String(b.naziv||''),'hr'));
-      $vrsta.innerHTML = '<option value="">— odaberi —</option>' +
-        rows.map(v=>`<option value="${v.id}">${esc(v.naziv)}</option>`).join('');
-      if(preselectId!=null && preselectId!=='') $vrsta.value = String(preselectId);
-    }catch(e){
-      $vrsta.innerHTML = '<option value="">(greška kod učitavanja)</option>';
-      console.error('loadVrste:', e);
+      if($pageInfo){
+        const shown = ($list?.querySelectorAll('.card-row').length || 0);
+        $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'}`;
+      }
     }
-  }
 
-  // -------- marke (select) --------
-  async function loadMarke(preselectNaziv=''){
-    if(!$nazivSelect) return;
-    try{
-      const r = await fetch(API.marke, {cache:'no-store'});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      const rows = await r.json();
-      const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
-      $nazivSelect.innerHTML = '<option value="">— odaberi marku —</option>' +
-        list.map(n => `<option value="${escAttr(n)}">${esc(n)}</option>`).join('');
-
-      if(preselectNaziv){
-        const val = escCss(preselectNaziv);
-        if(val && !$nazivSelect.querySelector(`option[value="${val}"]`)){
-          const opt = document.createElement('option');
-          opt.value = preselectNaziv;
-          opt.textContent = preselectNaziv;
-          $nazivSelect.appendChild(opt);
+    // -------- vrste (select) --------
+    async function loadVrste(preselectId=null){
+      if(!$vrsta) return;
+      try{
+        let r = await fetch(API.vrste + '?all=1', {cache:'no-store'});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        let out = await r.json();
+        let rows = Array.isArray(out) ? out : (out.data||[]);
+        if(!rows.length){
+          // fallback na stariji endpoint
+          r = await fetch(new URL('vrsta_list.php?all=1', location.href), {cache:'no-store'});
+          out = await r.json();
+          rows = Array.isArray(out) ? out : (out.data||[]);
         }
-        $nazivSelect.value = preselectNaziv;
+        rows = rows.map(v=>({
+          id: v.id ?? v.ID ?? v.vrsta_id ?? v.Id,
+          naziv: v.naziv ?? v.naziv_vrste ?? v.Naziv ?? v.name ?? ''
+        })).filter(v=>v.id!=null);
+        rows.sort((a,b)=> String(a.naziv||'').localeCompare(String(b.naziv||''),'hr'));
+        $vrsta.innerHTML = '<option value="">— odaberi —</option>' +
+          rows.map(v=>`<option value="${v.id}">${esc(v.naziv)}</option>`).join('');
+        if(preselectId!=null && preselectId!=='') $vrsta.value = String(preselectId);
+      }catch(e){
+        $vrsta.innerHTML = '<option value="">(greška kod učitavanja)</option>';
+        console.error('loadVrste:', e);
       }
-    }catch(e){
-      $nazivSelect.innerHTML = '<option value="">(greška kod učitavanja)</option>';
-      console.error('loadMarke:', e);
     }
-  }
+
+    // -------- marke (select) --------
+    async function loadMarke(preselectNaziv=''){
+      if(!$nazivSelect) return;
+      try{
+        const r = await fetch(API.marke, {cache:'no-store'});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const rows = await r.json();
+        const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+        $nazivSelect.innerHTML = '<option value="">— odaberi marku —</option>' +
+          list.map(n => `<option value="${escAttr(n)}">${esc(n)}</option>`).join('');
+
+        if(preselectNaziv){
+          const val = escCss(preselectNaziv);
+          if(val && !$nazivSelect.querySelector(`option[value="${val}"]`)){
+            const opt = document.createElement('option');
+            opt.value = preselectNaziv;
+            opt.textContent = preselectNaziv;
+            $nazivSelect.appendChild(opt);
+          }
+          $nazivSelect.value = preselectNaziv;
+        }
+      }catch(e){
+        $nazivSelect.innerHTML = '<option value="">(greška kod učitavanja)</option>';
+        console.error('loadMarke:', e);
+      }
+    }
 
   function addMarkaToSelect(){
     if(!$nazivSelect) return;
@@ -335,7 +341,8 @@
       kataloska:  $kataloska.value ? +$kataloska.value : null
     };
     if(!body.naziv){
-      $msg.textContent='Marka je obavezna.'; $msg.style.display='block'; return;␊
+      $msg.textContent='Marka je obavezna.'; $msg.style.display='block'; return;
+
     }
     const url = body.id ? API.update : API.create;
     try{
@@ -409,10 +416,17 @@
     }
   }
 
-  // -------- init --------
-  if(!PICK){
-    loadVrste('');
-    loadMarke('');
+    // -------- init --------
+    if(!PICK){
+      loadVrste('');
+      loadMarke('');
+    }
+    resetAndLoad('');
   }
-  resetAndLoad('');
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
