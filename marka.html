@@ -77,8 +77,13 @@
           <input id="m_serija" type="text" placeholder="npr. W204" />
         </div>
         <div>
-          <label for="m_naziv">Marka</label>
-          <input id="m_naziv" type="text" placeholder="npr. Mercedes-Benz" />
+          <label for="m_naziv_select">Marka</label>
+          <div class="inline-field">
+            <select id="m_naziv_select"></select>
+            <button id="btnAddMarka" class="btn sec" type="button" title="Dodaj marku" aria-label="Dodaj marku">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
           <label for="m_model">Model</label>
@@ -132,7 +137,7 @@
   </div>
 
   <script src="common.js?v=777"></script>
-  <script src="marka.js?v=9002"></script>
+  <script src="marka.js?v=9003"></script>
 </body>
 </html>
 
