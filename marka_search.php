@@ -44,10 +44,20 @@ try {
     }
 
     // mapiranje: šta god postoji koristimo
-    $colId     = $cols['id']          ?? $cols['id_marka']  ?? null;
-    $colNaziv  = $cols['naziv']       ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
-    $colModel  = $cols['model']       ?? $cols['tip']       ?? $cols['naziv_modela'] ?? null; // opcionalno
-    $colVrsta  = $cols['vrsta_id']    ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;       // opcionalno
+    $colId        = $cols['id']          ?? $cols['id_marka']  ?? null;
+    $colNaziv     = $cols['naziv']       ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
+    $colModel     = $cols['model']       ?? $cols['tip']       ?? $cols['naziv_modela'] ?? null; // opcionalno
+    $colVrsta     = $cols['vrsta_id']    ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;       // opcionalno
+    $colSerija    = $cols['serija']      ?? null;
+    $colOblik     = $cols['oblik']       ?? null;
+    $colVrata     = $cols['vrata']       ?? null;
+    $colMjenjac   = $cols['mjenjac']     ?? null;
+    $colPogon     = $cols['pogon']       ?? null;
+    $colSnaga     = $cols['snaga']       ?? null;
+    $colZapremina = $cols['zapremina']   ?? null;
+    $colGodModela = $cols['god_modela']  ?? null;
+    $colGodKraj   = $cols['god_kraj']    ?? null;
+    $colKataloska = $cols['kataloska']   ?? null;
 
     if (!$colId || !$colNaziv) {
         jdie("Tablica `$T_MARKA` nema očekivane kolone (id, naziv).");
@@ -73,6 +83,16 @@ try {
 
     $sel[] = "v.naziv  AS vrsta_naz";
     $sel[] = "v.oznaka AS vrsta_oznaka";
+    if ($colSerija)    $sel[] = "m.`$colSerija` AS serija";       else $sel[] = "'' AS serija";
+    if ($colOblik)     $sel[] = "m.`$colOblik` AS oblik";         else $sel[] = "'' AS oblik";
+    if ($colVrata)     $sel[] = "m.`$colVrata` AS vrata";         else $sel[] = "NULL AS vrata";
+    if ($colMjenjac)   $sel[] = "m.`$colMjenjac` AS mjenjac";     else $sel[] = "'' AS mjenjac";
+    if ($colPogon)     $sel[] = "m.`$colPogon` AS pogon";         else $sel[] = "'' AS pogon";
+    if ($colSnaga)     $sel[] = "m.`$colSnaga` AS snaga";         else $sel[] = "NULL AS snaga";
+    if ($colZapremina) $sel[] = "m.`$colZapremina` AS zapremina"; else $sel[] = "NULL AS zapremina";
+    if ($colGodModela) $sel[] = "m.`$colGodModela` AS god_modela";else $sel[] = "NULL AS god_modela";
+    if ($colGodKraj)   $sel[] = "m.`$colGodKraj` AS god_kraj";    else $sel[] = "NULL AS god_kraj";
+    if ($colKataloska) $sel[] = "m.`$colKataloska` AS kataloska"; else $sel[] = "NULL AS kataloska";
     $select = implode(",\n       ", $sel);
 
     // --- WHERE za pretragu ---
@@ -147,7 +167,17 @@ try {
             'model'        => $r['model'],              // može biti '' ako kolona ne postoji
             'vrsta_id'     => $r['vrsta_id'] !== null ? (int)$r['vrsta_id'] : null,
             'vrsta_naz'    => $r['vrsta_naz'] ?? '',
-            'vrsta_oznaka' => $r['vrsta_oznaka'] ?? ''
+            'vrsta_oznaka' => $r['vrsta_oznaka'] ?? '',
+            'serija'       => $r['serija'] ?? '',
+            'oblik'        => $r['oblik'] ?? '',
+            'vrata'        => isset($r['vrata']) ? (int)$r['vrata'] : null,
+            'mjenjac'      => $r['mjenjac'] ?? '',
+            'pogon'        => $r['pogon'] ?? '',
+            'snaga'        => isset($r['snaga']) ? (float)$r['snaga'] : null,
+            'zapremina'    => isset($r['zapremina']) ? (float)$r['zapremina'] : null,
+            'god_modela'   => isset($r['god_modela']) ? (int)$r['god_modela'] : null,
+            'god_kraj'     => isset($r['god_kraj']) ? (int)$r['god_kraj'] : null,
+            'kataloska'    => isset($r['kataloska']) ? (float)$r['kataloska'] : null
         ];
     }
 

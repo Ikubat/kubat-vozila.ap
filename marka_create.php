@@ -32,6 +32,16 @@ $ct = $_SERVER['CONTENT_TYPE'] ?? '';
 $naziv = '';
 $model = '';
 $vrstaId = null;
+$serija = '';
+$oblik = '';
+$vrata = null;
+$mjenjac = '';
+$pogon = '';
+$snaga = null;
+$zapremina = null;
+$godModela = null;
+$godKraj = null;
+$kataloska = null;
 
 if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     $raw = file_get_contents('php://input');
@@ -42,12 +52,32 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     if (array_key_exists('vrsta_id', $in) && $in['vrsta_id'] !== '' && $in['vrsta_id'] !== null) {
         $vrstaId = (int)$in['vrsta_id'];
     }
+    $serija    = trim((string)($in['serija'] ?? ''));
+    $oblik     = trim((string)($in['oblik'] ?? ''));
+    $mjenjac   = trim((string)($in['mjenjac'] ?? ''));
+    $pogon     = trim((string)($in['pogon'] ?? ''));
+    $vrata     = isset($in['vrata']) && $in['vrata'] !== '' ? (int)$in['vrata'] : null;
+    $snaga     = isset($in['snaga']) && $in['snaga'] !== '' ? (int)$in['snaga'] : null;
+    $zapremina = isset($in['zapremina']) && $in['zapremina'] !== '' ? (int)$in['zapremina'] : null;
+    $godModela = isset($in['god_modela']) && $in['god_modela'] !== '' ? (int)$in['god_modela'] : null;
+    $godKraj   = isset($in['god_kraj']) && $in['god_kraj'] !== '' ? (int)$in['god_kraj'] : null;
+    $kataloska = isset($in['kataloska']) && $in['kataloska'] !== '' ? (float)$in['kataloska'] : null;
 } elseif ($method === 'POST') {
     $naziv  = trim((string)($_POST['naziv'] ?? ''));
     $model  = trim((string)($_POST['model'] ?? ''));
     if (isset($_POST['vrsta_id']) && $_POST['vrsta_id'] !== '') {
         $vrstaId = (int)$_POST['vrsta_id'];
     }
+    $serija    = trim((string)($_POST['serija'] ?? ''));
+    $oblik     = trim((string)($_POST['oblik'] ?? ''));
+    $mjenjac   = trim((string)($_POST['mjenjac'] ?? ''));
+    $pogon     = trim((string)($_POST['pogon'] ?? ''));
+    $vrata     = isset($_POST['vrata']) && $_POST['vrata'] !== '' ? (int)$_POST['vrata'] : null;
+    $snaga     = isset($_POST['snaga']) && $_POST['snaga'] !== '' ? (int)$_POST['snaga'] : null;
+    $zapremina = isset($_POST['zapremina']) && $_POST['zapremina'] !== '' ? (int)$_POST['zapremina'] : null;
+    $godModela = isset($_POST['god_modela']) && $_POST['god_modela'] !== '' ? (int)$_POST['god_modela'] : null;
+    $godKraj   = isset($_POST['god_kraj']) && $_POST['god_kraj'] !== '' ? (int)$_POST['god_kraj'] : null;
+    $kataloska = isset($_POST['kataloska']) && $_POST['kataloska'] !== '' ? (float)$_POST['kataloska'] : null;
 } else {
     // GET test: ?naziv=VW&model=Golf&vrsta_id=2
     $naziv  = trim((string)($_GET['naziv'] ?? ''));
@@ -55,6 +85,16 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     if (isset($_GET['vrsta_id']) && $_GET['vrsta_id'] !== '') {
         $vrstaId = (int)$_GET['vrsta_id'];
     }
+    $serija    = trim((string)($_GET['serija'] ?? ''));
+    $oblik     = trim((string)($_GET['oblik'] ?? ''));
+    $mjenjac   = trim((string)($_GET['mjenjac'] ?? ''));
+    $pogon     = trim((string)($_GET['pogon'] ?? ''));
+    $vrata     = isset($_GET['vrata']) && $_GET['vrata'] !== '' ? (int)$_GET['vrata'] : null;
+    $snaga     = isset($_GET['snaga']) && $_GET['snaga'] !== '' ? (int)$_GET['snaga'] : null;
+    $zapremina = isset($_GET['zapremina']) && $_GET['zapremina'] !== '' ? (int)$_GET['zapremina'] : null;
+    $godModela = isset($_GET['god_modela']) && $_GET['god_modela'] !== '' ? (int)$_GET['god_modela'] : null;
+    $godKraj   = isset($_GET['god_kraj']) && $_GET['god_kraj'] !== '' ? (int)$_GET['god_kraj'] : null;
+    $kataloska = isset($_GET['kataloska']) && $_GET['kataloska'] !== '' ? (float)$_GET['kataloska'] : null;
 }
 
 if ($naziv === '') jdie('Naziv je obavezan.');
@@ -71,10 +111,20 @@ try {
     }
     if (!$cols) jdie("Tablica `$T_MARKA` ne postoji.");
 
-    $colId    = $cols['id']         ?? $cols['id_marka']  ?? null;
-    $colNaziv = $cols['naziv']      ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
-    $colModel = $cols['model']      ?? $cols['tip']       ?? null;
-    $colVrsta = $cols['vrsta_id']   ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;
+    $colId        = $cols['id']         ?? $cols['id_marka']  ?? null;
+    $colNaziv     = $cols['naziv']      ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
+    $colModel     = $cols['model']      ?? $cols['tip']       ?? null;
+    $colVrsta     = $cols['vrsta_id']   ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;
+    $colSerija    = $cols['serija']     ?? null;
+    $colOblik     = $cols['oblik']      ?? null;
+    $colVrata     = $cols['vrata']      ?? null;
+    $colMjenjac   = $cols['mjenjac']    ?? null;
+    $colPogon     = $cols['pogon']      ?? null;
+    $colSnaga     = $cols['snaga']      ?? null;
+    $colZapremina = $cols['zapremina']  ?? null;
+    $colGodModela = $cols['god_modela'] ?? null;
+    $colGodKraj   = $cols['god_kraj']   ?? null;
+    $colKataloska = $cols['kataloska']  ?? null;
 
     if (!$colNaziv) jdie("Tablica `$T_MARKA` nema kolonu za naziv.");
 
@@ -96,6 +146,28 @@ try {
         $ph[]     = '?';
         $vals[]   = $model;
         $types   .= 's';
+    }
+
+    $optionalFields = [
+        [$colSerija, $serija, 's'],
+        [$colOblik, $oblik, 's'],
+        [$colVrata, $vrata, 'i'],
+        [$colMjenjac, $mjenjac, 's'],
+        [$colPogon, $pogon, 's'],
+        [$colSnaga, $snaga, 'i'],
+        [$colZapremina, $zapremina, 'i'],
+        [$colGodModela, $godModela, 'i'],
+        [$colGodKraj, $godKraj, 'i'],
+        [$colKataloska, $kataloska, 'd']
+    ];
+
+    foreach ($optionalFields as [$col, $val, $type]) {
+        if ($col && $val !== null && ($type !== 's' || $val !== '')) {
+            $fields[] = "`$col`";
+            $ph[]     = '?';
+            $vals[]   = $val;
+            $types   .= $type;
+        }
     }
 
     // vrsta_id ako postoji kolona i vrijednost
