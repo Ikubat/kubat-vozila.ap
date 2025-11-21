@@ -73,20 +73,20 @@ body.marke #list { display: grid; gap: 6px; }
 body.marke .head-row,
 body.marke .card-row {
   display: grid;
-  grid-template-columns: repeat(13, minmax(120px, 1fr)) 110px;
-  gap: 8px;
+  grid-template-columns: repeat(13, minmax(78px, 1fr)) 88px;
+  gap: 6px;
   align-items: center;
   padding: 7px 9px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   font-size: 13px;
-  min-width: 1400px;
+  min-width: 1200px;
 }
 body.marke .head-row { background: #f3f4ff; font-weight: 600; }
 body.marke .card-row { background: #fff; align-items: flex-start; }
 body.marke .acts { display: flex; justify-content: flex-end; gap: 4px; }
 body.marke .act {
-  padding: 5px 7px;
+  padding: 4px 6px;
   border-radius: 7px;
   background: #eef2ff;
   color: #111827;
