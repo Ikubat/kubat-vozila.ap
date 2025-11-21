@@ -34,6 +34,19 @@ $naziv = null;
 $model = null;
 $vrstaId = null;
 $hasVrsta = false;
+$optionalValues = [
+    'serija'     => null,
+    'oblik'      => null,
+    'vrata'      => null,
+    'mjenjac'    => null,
+    'pogon'      => null,
+    'snaga'      => null,
+    'zapremina'  => null,
+    'god_modela' => null,
+    'god_kraj'   => null,
+    'kataloska'  => null,
+];
+$optProvided = [];
 
 if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     $raw = file_get_contents('php://input');
@@ -46,6 +59,19 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
         $hasVrsta = true;
         $vrstaId = ($in['vrsta_id'] !== '' && $in['vrsta_id'] !== null) ? (int)$in['vrsta_id'] : null;
     }
+    foreach ($optionalValues as $k => $_) {
+        if (array_key_exists($k, $in)) {
+            $optProvided[$k] = true;
+            $val = $in[$k];
+            if (in_array($k, ['vrata','snaga','zapremina','god_modela','god_kraj'], true)) {
+                $optionalValues[$k] = $val !== '' && $val !== null ? (int)$val : null;
+            } elseif ($k === 'kataloska') {
+                $optionalValues[$k] = $val !== '' && $val !== null ? (float)$val : null;
+            } else {
+                $optionalValues[$k] = $val !== null ? trim((string)$val) : null;
+            }
+        }
+    }
 } elseif ($method === 'POST') {
     $id    = (int)($_POST['id'] ?? 0);
     if (isset($_POST['naziv']))   $naziv   = trim((string)$_POST['naziv']);
@@ -53,6 +79,19 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     if (isset($_POST['vrsta_id'])) {
         $hasVrsta = true;
         $vrstaId = $_POST['vrsta_id'] !== '' ? (int)$_POST['vrsta_id'] : null;
+    }
+    foreach ($optionalValues as $k => $_) {
+        if (isset($_POST[$k])) {
+            $optProvided[$k] = true;
+            $val = $_POST[$k];
+            if (in_array($k, ['vrata','snaga','zapremina','god_modela','god_kraj'], true)) {
+                $optionalValues[$k] = $val !== '' ? (int)$val : null;
+            } elseif ($k === 'kataloska') {
+                $optionalValues[$k] = $val !== '' ? (float)$val : null;
+            } else {
+                $optionalValues[$k] = $val !== null ? trim((string)$val) : null;
+            }
+        }
     }
 } else {
     // GET test: ?id=5&naziv=NovoIme&model=X&vrsta_id=2
@@ -62,6 +101,19 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     if (isset($_GET['vrsta_id'])) {
         $hasVrsta = true;
         $vrstaId = $_GET['vrsta_id'] !== '' ? (int)$_GET['vrsta_id'] : null;
+    }
+    foreach ($optionalValues as $k => $_) {
+        if (isset($_GET[$k])) {
+            $optProvided[$k] = true;
+            $val = $_GET[$k];
+            if (in_array($k, ['vrata','snaga','zapremina','god_modela','god_kraj'], true)) {
+                $optionalValues[$k] = $val !== '' ? (int)$val : null;
+            } elseif ($k === 'kataloska') {
+                $optionalValues[$k] = $val !== '' ? (float)$val : null;
+            } else {
+                $optionalValues[$k] = $val !== null ? trim((string)$val) : null;
+            }
+        }
     }
 }
 
@@ -79,10 +131,20 @@ try {
     }
     if (!$cols) jdie("Tablica `$T_MARKA` ne postoji.");
 
-    $colId    = $cols['id']         ?? $cols['id_marka']  ?? null;
-    $colNaziv = $cols['naziv']      ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
-    $colModel = $cols['model']      ?? $cols['tip']       ?? null;
-    $colVrsta = $cols['vrsta_id']   ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;
+    $colId        = $cols['id']         ?? $cols['id_marka']  ?? null;
+    $colNaziv     = $cols['naziv']      ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
+    $colModel     = $cols['model']      ?? $cols['tip']       ?? null;
+    $colVrsta     = $cols['vrsta_id']   ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;
+    $colSerija    = $cols['serija']     ?? null;
+    $colOblik     = $cols['oblik']      ?? null;
+    $colVrata     = $cols['vrata']      ?? null;
+    $colMjenjac   = $cols['mjenjac']    ?? null;
+    $colPogon     = $cols['pogon']      ?? null;
+    $colSnaga     = $cols['snaga']      ?? null;
+    $colZapremina = $cols['zapremina']  ?? null;
+    $colGodModela = $cols['god_modela'] ?? null;
+    $colGodKraj   = $cols['god_kraj']   ?? null;
+    $colKataloska = $cols['kataloska']  ?? null;
 
     if (!$colId) jdie("Tablica `$T_MARKA` nema ID kolonu.");
 
@@ -115,6 +177,32 @@ try {
         $sets[] = "`$colModel` = ?";
         $vals[] = $model;
         $types .= 's';
+    }
+
+    $optionalCols = [
+        'serija'     => [$colSerija, 's'],
+        'oblik'      => [$colOblik, 's'],
+        'vrata'      => [$colVrata, 'i'],
+        'mjenjac'    => [$colMjenjac, 's'],
+        'pogon'      => [$colPogon, 's'],
+        'snaga'      => [$colSnaga, 'i'],
+        'zapremina'  => [$colZapremina, 'i'],
+        'god_modela' => [$colGodModela, 'i'],
+        'god_kraj'   => [$colGodKraj, 'i'],
+        'kataloska'  => [$colKataloska, 'd'],
+    ];
+
+    foreach ($optionalCols as $key => [$col, $type]) {
+        if ($col && ($optProvided[$key] ?? false)) {
+            $val = $optionalValues[$key];
+            if ($val !== null) {
+                $sets[] = "`$col` = ?";
+                $vals[] = $val;
+                $types .= $type;
+            } else {
+                $sets[] = "`$col` = NULL";
+            }
+        }
     }
 
     if ($colVrsta && $hasVrsta) {
