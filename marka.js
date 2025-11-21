@@ -83,7 +83,7 @@
       let rows = Array.isArray(out) ? out : (out.data||[]);
       if(!rows.length){
         // fallback na stariji endpoint
-        r = await fetch(new URL('vrsta_list.php?all=1', ROOT_URL), {cache:'no-store'});
+        r = await fetch(new URL('vrsta_list.php?all=1', location.href), {cache:'no-store'});
         out = await r.json();
         rows = Array.isArray(out) ? out : (out.data||[]);
       }
@@ -119,14 +119,14 @@
         <div>${valOrDash(m.naziv || '')}</div>
         <div>${valOrDash(m.model || '')}</div>
         <div>${valOrDash(m.serija)}</div>
-        <div>${valOrDash(m.oblik)}</div>
-        <div>${numOrDash(m.vrata)}</div>
-        <div>${valOrDash(m.mjenjac)}</div>
-        <div>${valOrDash(m.pogon)}</div>
-        <div>${numOrDash(m.snaga)}</div>
-        <div>${numOrDash(m.zapremina)}</div>
         <div>${numOrDash(m.god_modela)}</div>
         <div>${numOrDash(m.god_kraj)}</div>
+        <div>${valOrDash(m.oblik)}</div>
+        <div>${numOrDash(m.vrata)}</div>
+        <div>${numOrDash(m.snaga)}</div>
+        <div>${numOrDash(m.zapremina)}</div>
+        <div>${valOrDash(m.pogon)}</div>
+        <div>${valOrDash(m.mjenjac)}</div>
         <div>${numOrDash(m.kataloska)}</div>
         <div class="acts">
           ${PICK ? '' : `
@@ -216,8 +216,8 @@
   function closeModal(){ $wrap.classList.remove('show'); }
   $addTop?.addEventListener('click', openNew);
   $cancel?.addEventListener('click', closeModal);
-  $close ?.addEventListener('click', closeModal);
-  $wrap  ?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
+  $close?.addEventListener('click', closeModal);
+  $wrap?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
   async function resolveVrstaPickerUrl(){
