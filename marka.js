@@ -15,6 +15,7 @@
     create : baseApi + 'marka_create.php',
     update : baseApi + 'marka_update.php',
     delete : baseApi + 'marka_delete.php',
+    marke  : baseApi + 'marka_distinct.php',
     vrste  : baseApi + 'vrsta_list_auto.php',    // GET ?all=1 (fallback na vrsta_list.php ispod)
     vrsteFallback: baseApi + 'vrsta_list.php'
   };
@@ -36,7 +37,7 @@
   const $id          = document.getElementById('m_id');
   const $vrsta       = document.getElementById('m_vrsta');
   const $serija      = document.getElementById('m_serija');
-  const $naziv       = document.getElementById('m_naziv');
+  const $nazivSelect = document.getElementById('m_naziv_select');
   const $model       = document.getElementById('m_model');
   const $oblik       = document.getElementById('m_oblik');
   const $mjenjac     = document.getElementById('m_mjenjac');
@@ -49,6 +50,7 @@
   const $kataloska   = document.getElementById('m_kataloska');
 
   const $addTop = document.getElementById('btnAddTop');
+  const $addMarka = document.getElementById('btnAddMarka');
   const $pickVrsta = document.getElementById('btnPickVrsta');
   const vrstaPickerCandidates = location.pathname.includes('/app/')
     ? ['../vrsta.html', 'vrsta.html', '../app/vrsta.html', './vrsta.html']
@@ -58,6 +60,11 @@
   // util
   const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
   const escAttr = esc;
+  const escCss = s => {
+    if(!s && s!==0) return '';
+    if(window.CSS?.escape) return CSS.escape(String(s));
+    return String(s).replace(/(["'\\])/g, '\\$1').replace(/\0/g,'\uFFFD');
+  };
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
   // -------- stanje liste --------
@@ -99,6 +106,53 @@
       $vrsta.innerHTML = '<option value="">(greška kod učitavanja)</option>';
       console.error('loadVrste:', e);
     }
+  }
+
+  // -------- marke (select) --------
+  async function loadMarke(preselectNaziv=''){
+    if(!$nazivSelect) return;
+    try{
+      const r = await fetch(API.marke, {cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const rows = await r.json();
+      const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+      $nazivSelect.innerHTML = '<option value="">— odaberi marku —</option>' +
+        list.map(n => `<option value="${escAttr(n)}">${esc(n)}</option>`).join('');
+
+      if(preselectNaziv){
+        const val = escCss(preselectNaziv);
+        if(val && !$nazivSelect.querySelector(`option[value="${val}"]`)){
+          const opt = document.createElement('option');
+          opt.value = preselectNaziv;
+          opt.textContent = preselectNaziv;
+          $nazivSelect.appendChild(opt);
+        }
+        $nazivSelect.value = preselectNaziv;
+      }
+    }catch(e){
+      $nazivSelect.innerHTML = '<option value="">(greška kod učitavanja)</option>';
+      console.error('loadMarke:', e);
+    }
+  }
+
+  function addMarkaToSelect(){
+    if(!$nazivSelect) return;
+    const proposed = ($nazivSelect.value || '').trim();
+    const naziv = prompt('Naziv nove marke', proposed) || '';
+    const clean = naziv.trim();
+    if(!clean) return;
+
+    const existing = Array.from($nazivSelect.options).find(o => o.value.toLowerCase() === clean.toLowerCase());
+    if(existing){
+      $nazivSelect.value = existing.value;
+      return;
+    }
+
+    const opt = document.createElement('option');
+    opt.value = clean;
+    opt.textContent = clean;
+    $nazivSelect.appendChild(opt);
+    $nazivSelect.value = clean;
   }
 
   // -------- render reda (sve kolone) --------
@@ -182,21 +236,22 @@
     if(PICK) return; // u pick modu nema dodavanja
     $title.textContent='Nova marka';
     $id.value='';
-    $serija.value=''; $naziv.value=''; $model.value='';
+    $serija.value=''; $nazivSelect.value=''; $model.value='';
     $oblik.value=''; $mjenjac.value=''; $pogon.value='';
     $snaga.value=''; $zapremina.value=''; $vrata.value='';
     $god_modela.value=''; $god_kraj.value=''; $kataloska.value='';
     loadVrste('');
+    loadMarke('');
     $msg.style.display='none';
     $wrap.classList.add('show');
-    $naziv.focus();
+    $nazivSelect.focus();
   }
   function openEdit(row){
     if(PICK) return;
     const d = row.dataset;
     $title.textContent='Uredi marku / vozilo';
     $id.value = d.id || '';
-    $naziv.value = d.naziv || '';
+    $nazivSelect.value = d.naziv || '';
     $model.value = d.model || '';
     $serija.value = d.serija || '';
     $oblik.value = d.oblik || '';
@@ -209,12 +264,14 @@
     $god_kraj.value = d.god_kraj || '';
     $kataloska.value = d.kataloska || '';
     loadVrste(row.dataset.vrsta_id || '');
+    loadMarke(d.naziv || '');
     $msg.style.display='none';
     $wrap.classList.add('show');
-    $naziv.focus();
+    $nazivSelect.focus();
   }
   function closeModal(){ $wrap.classList.remove('show'); }
   $addTop?.addEventListener('click', openNew);
+  $addMarka?.addEventListener('click', addMarkaToSelect);
   $cancel?.addEventListener('click', closeModal);
   $close ?.addEventListener('click', closeModal);
   $wrap  ?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
@@ -253,15 +310,19 @@
     if(w) w.focus(); else location.href = url;
   }
   $pickVrsta?.addEventListener('click', openVrstaPicker);
-  window.addEventListener('focus', ()=>{ loadVrste($vrsta?.value || ''); });
+  window.addEventListener('focus', ()=>{
+    loadVrste($vrsta?.value || '');
+    loadMarke($nazivSelect?.value || '');
+  });
 
   // -------- spremi (create/update) --------
   async function saveMarka(){
+    const naziv = ($nazivSelect?.value || '').trim();
     const body = {
       id: $id.value ? +$id.value : undefined,
       vrsta_id: $vrsta.value ? +$vrsta.value : null,
       serija: $serija.value.trim(),
-      naziv:  $naziv.value.trim(),
+      naziv,
       model:  $model.value.trim(),
       oblik:  $oblik.value.trim(),
       mjenjac:$mjenjac.value.trim(),
@@ -349,6 +410,9 @@
   }
 
   // -------- init --------
-  if(!PICK) loadVrste('');
+  if(!PICK){
+    loadVrste('');
+    loadMarke('');
+  }
   resetAndLoad('');
 })();
