@@ -73,14 +73,14 @@ body.marke #list { display: grid; gap: 6px; }
 body.marke .head-row,
 body.marke .card-row {
   display: grid;
-  grid-template-columns: repeat(13, minmax(120px, 1fr)) 110px;
+  grid-template-columns: repeat(13, minmax(90px, 1fr)) 100px;
   gap: 8px;
   align-items: center;
   padding: 7px 9px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   font-size: 13px;
-  min-width: 1400px;
+  min-width: 1280px;
 }
 body.marke .head-row { background: #f3f4ff; font-weight: 600; }
 body.marke .card-row { background: #fff; align-items: flex-start; }
