@@ -58,6 +58,7 @@
 
   // util
   const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const escAttr = esc;
   const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
   // -------- stanje liste --------
@@ -101,32 +102,33 @@
     }
   }
 
-  // -------- render reda (5 kolona) --------
+  // -------- render reda (sve kolone) --------
   function rowToHTML(m){
-    const vrstaSerija = `${esc(m.vrsta_naz || m.vrsta || '')}${m.serija ? ' · '+esc(m.serija) : ''}`;
-    const markaModel  = `${esc(m.naziv || '')}${m.model ? ' '+esc(m.model) : ''}`;
-    const pogonMj     = [m.pogon, m.mjenjac].filter(Boolean).map(esc).join(' · ');
-    const snagaOblik  = [m.snaga ? (esc(m.snaga)+' kW') : '', m.oblik ? esc(m.oblik):''].filter(Boolean).join(' · ');
+    const valOrDash = v => (v ?? v === 0) && String(v).trim() !== '' ? esc(v) : '—';
+    const numOrDash = v => (v ?? v === 0) && String(v).trim() !== '' ? esc(v) : '—';
+
     return `
       <div class="card-row" data-id="${m.id}"
            data-vrsta_id="${m.vrsta_id||''}"
-           data-naziv="${esc(m.naziv||'')}" data-model="${esc(m.model||'')}">
-        <div>
-          <div class="main">${vrstaSerija || '—'}</div>
-          <div class="sub">${esc(m.serija || '')}</div>
-        </div>
-        <div>
-          <div class="main">${markaModel || '—'}</div>
-          <div class="sub">${esc(m.oblik || '')}</div>
-        </div>
-        <div>
-          <div class="main">${pogonMj || '—'}</div>
-          <div class="sub">${esc(m.mjenjac || '')}</div>
-        </div>
-        <div>
-          <div class="main">${snagaOblik || '—'}</div>
-          <div class="sub">${m.vrata ? esc(m.vrata)+' vrata' : ''}</div>
-        </div>
+           data-naziv="${escAttr(m.naziv||'')}" data-model="${escAttr(m.model||'')}"
+           data-serija="${escAttr(m.serija||'')}" data-oblik="${escAttr(m.oblik||'')}"
+           data-vrata="${escAttr(m.vrata??'')}" data-mjenjac="${escAttr(m.mjenjac||'')}"
+           data-pogon="${escAttr(m.pogon||'')}" data-snaga="${escAttr(m.snaga??'')}"
+           data-zapremina="${escAttr(m.zapremina??'')}" data-god_modela="${escAttr(m.god_modela??'')}"
+           data-god_kraj="${escAttr(m.god_kraj??'')}" data-kataloska="${escAttr(m.kataloska??'')}">
+        <div>${valOrDash(m.vrsta_naz || m.vrsta || '')}</div>
+        <div>${valOrDash(m.naziv || '')}</div>
+        <div>${valOrDash(m.model || '')}</div>
+        <div>${valOrDash(m.serija)}</div>
+        <div>${valOrDash(m.oblik)}</div>
+        <div>${numOrDash(m.vrata)}</div>
+        <div>${valOrDash(m.mjenjac)}</div>
+        <div>${valOrDash(m.pogon)}</div>
+        <div>${numOrDash(m.snaga)}</div>
+        <div>${numOrDash(m.zapremina)}</div>
+        <div>${numOrDash(m.god_modela)}</div>
+        <div>${numOrDash(m.god_kraj)}</div>
+        <div>${numOrDash(m.kataloska)}</div>
         <div class="acts">
           ${PICK ? '' : `
             <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
@@ -195,15 +197,18 @@
     const d = row.dataset;
     $title.textContent='Uredi marku / vozilo';
     $id.value = d.id || '';
-    $naziv.value = d.naziv || row.querySelector('.main')?.textContent.trim().split(' ')[0] || '';
+    $naziv.value = d.naziv || '';
     $model.value = d.model || '';
-    const cols = row.querySelectorAll('.main');
-    const detailCols = row.querySelectorAll('.sub');
-    $pogon.value   = (cols[2]?.textContent.split('·')[0]||'').trim();
-    $mjenjac.value = (cols[2]?.textContent.split('·')[1]||'').trim();
-    $snaga.value   = (cols[3]?.textContent.match(/\d+/)||[''])[0];
-    $oblik.value   = (cols[1]?.textContent.includes('·') ? cols[1].textContent.split('·')[1].trim() : detailCols[1]?.textContent.trim() || '');
-    $vrata.value   = (detailCols[3]?.textContent.match(/\d+/)||[''])[0];
+    $serija.value = d.serija || '';
+    $oblik.value = d.oblik || '';
+    $vrata.value = d.vrata || '';
+    $mjenjac.value = d.mjenjac || '';
+    $pogon.value = d.pogon || '';
+    $snaga.value = d.snaga || '';
+    $zapremina.value = d.zapremina || '';
+    $god_modela.value = d.god_modela || '';
+    $god_kraj.value = d.god_kraj || '';
+    $kataloska.value = d.kataloska || '';
     loadVrste(row.dataset.vrsta_id || '');
     $msg.style.display='none';
     $wrap.classList.add('show');

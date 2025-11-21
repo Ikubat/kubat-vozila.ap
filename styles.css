@@ -68,18 +68,19 @@ body.marke .btn.sec { background: #eef2ff; color: #111827; }
 body.marke .btn.warn { background: #fee2e2; color: #991b1b; }
 body.marke .btn:disabled { opacity: .6; cursor: not-allowed; }
 
-body.marke .list { display: grid; gap: 6px; margin-top: 8px; }
+body.marke .list { display: grid; gap: 6px; margin-top: 8px; overflow-x: auto; }
 body.marke #list { display: grid; gap: 6px; }
 body.marke .head-row,
 body.marke .card-row {
   display: grid;
-  grid-template-columns: 1.3fr 1.3fr 1.1fr 1.1fr 100px;
+  grid-template-columns: repeat(13, minmax(120px, 1fr)) 110px;
   gap: 8px;
   align-items: center;
   padding: 7px 9px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   font-size: 13px;
+  min-width: 1400px;
 }
 body.marke .head-row { background: #f3f4ff; font-weight: 600; }
 body.marke .card-row { background: #fff; align-items: flex-start; }
