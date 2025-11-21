@@ -17,7 +17,11 @@ body.marke {
 }
 
 body.marke * { box-sizing: border-box; }
-body.marke .wrap { max-width: 1100px; margin: 0 auto; }
+body.marke .wrap {
+  max-width: 1400px;
+  width: min(1400px, 100%);
+  margin: 0 auto;
+}
 body.marke .card {
   background: #fff;
   border-radius: 16px;
