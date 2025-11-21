@@ -17,7 +17,7 @@ body.marke {
 }
 
 body.marke * { box-sizing: border-box; }
-body.marke .wrap { max-width: 1100px; margin: 0 auto; }
+body.marke .wrap { max-width: 1400px; margin: 0 auto; }
 body.marke .card {
   background: #fff;
   border-radius: 16px;
@@ -176,4 +176,5 @@ body.marke .actions {
 @media (max-width: 640px){
   body.marke .head-row,
   body.marke .card-row { grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); }
+
 }
