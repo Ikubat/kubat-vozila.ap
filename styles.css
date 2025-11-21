@@ -176,5 +176,4 @@ body.marke .actions {
 @media (max-width: 640px){
   body.marke .head-row,
   body.marke .card-row { grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); }
-
 }

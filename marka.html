@@ -26,18 +26,18 @@
       <div class="list" aria-live="polite">
         <div class="head-row">
           <div>Vrsta</div>
-          <div>Marka</div>
+          <div>Marka vozila</div>
           <div>Model</div>
           <div>Serija</div>
-          <div>Oblik</div>
-          <div>Vrata</div>
-          <div>Mjenjač</div>
-          <div>Pogon</div>
-          <div>Snaga</div>
-          <div>Zapremina</div>
           <div>Modelska godina</div>
           <div>Godina prestanka proizvodnje</div>
-          <div>Kataloška vrijednost</div>
+          <div>Oblik</div>
+          <div>Broj vrata</div>
+          <div>Snaga</div>
+          <div>Zapremina</div>
+          <div>Pogon</div>
+          <div>Mjenjač</div>
+          <div>Kataloška vrijednost (KM)</div>
           <div style="text-align:right">Akcije</div>
         </div>
         <div id="list"></div>
@@ -73,40 +73,21 @@
           </div>
         </div>
         <div>
-          <label for="m_serija">Serija</label>
-          <input id="m_serija" type="text" placeholder="npr. W204" />
-        </div>
-        <div>
-          <label for="m_naziv">Marka</label>
+          <label for="m_naziv">Marka vozila</label>
           <input id="m_naziv" type="text" placeholder="npr. Mercedes-Benz" />
         </div>
         <div>
-          <label for="m_model">Model</label>
-          <input id="m_model" type="text" placeholder="npr. C-klasa" />
+          <label for="m_naziv_select">Marka</label>
+          <div class="inline-field">
+            <select id="m_naziv_select"></select>
+            <button id="btnAddMarka" class="btn sec" type="button" title="Dodaj marku" aria-label="Dodaj marku">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
-          <label for="m_oblik">Oblik</label>
-          <input id="m_oblik" type="text" placeholder="npr. limuzina / karavan" />
-        </div>
-        <div>
-          <label for="m_pogon">Pogon</label>
-          <input id="m_pogon" type="text" placeholder="npr. 2.0 dizel" />
-        </div>
-        <div>
-          <label for="m_mjenjac">Mjenjač</label>
-          <input id="m_mjenjac" type="text" placeholder="npr. automatik (7G-Tronic)" />
-        </div>
-        <div>
-          <label for="m_vrata">Broj vrata</label>
-          <input id="m_vrata" type="number" min="2" max="8" step="1" inputmode="numeric" />
-        </div>
-        <div>
-          <label for="m_snaga">Snaga (kW)</label>
-          <input id="m_snaga" type="number" min="1" max="2000" step="1" inputmode="numeric" />
-        </div>
-        <div>
-          <label for="m_zapremina">Zapremina (ccm)</label>
-          <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric" />
+          <label for="m_serija">Serija</label>
+          <input id="m_serija" type="text" placeholder="npr. W204" />
         </div>
         <div>
           <label for="m_god_modela">Modelska godina</label>
@@ -117,7 +98,31 @@
           <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric" />
         </div>
         <div>
-          <label for="m_kataloska">Kataloška vrijednost (EUR)</label>
+          <label for="m_oblik">Oblik</label>
+          <input id="m_oblik" type="text" placeholder="npr. limuzina / karavan" />
+        </div>
+        <div>
+          <label for="m_vrata">Broj vrata</label>
+          <input id="m_vrata" type="number" min="2" max="8" step="1" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="m_snaga">Snaga (kW)</label>
+          <input id="m_snaga" type="number" min="1" max="2000" step="1" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="m_zapremina">Zapremina (ccm)</label>␊
+          <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="m_pogon">Pogon</label>
+          <input id="m_pogon" type="text" placeholder="npr. 2.0 dizel" />
+        </div>
+        <div>
+          <label for="m_mjenjac">Mjenjač</label>
+          <input id="m_mjenjac" type="text" placeholder="npr. automatik (7G-Tronic)" />
+        </div>
+        <div>
+          <label for="m_kataloska">Kataloška vrijednost (KM)</label>
           <input id="m_kataloska" type="number" min="0" step="0.01" inputmode="decimal" />
         </div>
       </div>
@@ -132,7 +137,7 @@
   </div>
 
   <script src="common.js?v=777"></script>
-  <script src="marka.js?v=9002"></script>
+  <script src="marka.js?v=9003"></script>
 </body>
 </html>
 
