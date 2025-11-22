@@ -5,7 +5,7 @@
 // (naziv/mjesto/naziv_mjesta i sifra/porezna_sifra) jednako kao mjesta_create.php.
 
 header('Content-Type: application/json; charset=utf-8');
-require __DIR__ . '/db.php';
+require_once __DIR__ . '/config.php';
 
 function jdie($msg, $code = 200) {
     http_response_code($code);

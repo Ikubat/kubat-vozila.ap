@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-require __DIR__ . '/db.php';
+require_once __DIR__ . '/config.php';
 
 $in = json_decode(file_get_contents('php://input'), true) ?: [];
 $id = (int)($in['id'] ?? ($_GET['id'] ?? 0));

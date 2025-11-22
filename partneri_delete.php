@@ -2,7 +2,7 @@
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
-require __DIR__ . '/db.php'; // u ovom db.php MORA postojati $pdo (PDO konekcija)
+require_once __DIR__ . '/config.php';
 
 try {
     $raw = file_get_contents('php://input');

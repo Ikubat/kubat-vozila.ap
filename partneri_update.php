@@ -13,11 +13,7 @@
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$DB_HOST = 'localhost';
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'kubatapp';
-$TABLE   = 'partneri';
+require_once __DIR__ . '/config.php';
 
 function jdie($m, $c=400){
   http_response_code($c);

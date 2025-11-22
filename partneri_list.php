@@ -8,10 +8,7 @@
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$DB_HOST = 'localhost';
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'kubatapp';
+require_once __DIR__ . '/config.php';
 
 $T_PARTNERI = 'partneri';
 $T_MJESTA   = 'mjesta';

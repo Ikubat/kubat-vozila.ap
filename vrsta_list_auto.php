@@ -9,6 +9,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 function jdie($msg, $code=500){ http_response_code($code); echo json_encode(['ok'=>false,'error'=>$msg], JSON_UNESCAPED_UNICODE); exit; }
 function jout($data){ echo json_encode($data, JSON_UNESCAPED_UNICODE); exit; }
+require_once __DIR__ . '/config.php';
 
 // ======= DB KONFIG (prilagodi po potrebi) =======
 $DB_HOST='localhost';

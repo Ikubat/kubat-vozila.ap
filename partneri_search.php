@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');␊
-require __DIR__ . '/db.php';
+require_once __DIR__ . '/config.php';
 
 $q         = isset($_GET['q']) ? trim($_GET['q']) : '';
 $page      = max(1, (int)($_GET['page'] ?? 1));

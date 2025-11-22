@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');␊
-require __DIR__ . '/db.php';
+require_once __DIR__ . '/config.php';
 
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 $sql = "SELECT id, naziv, oznaka FROM vrsta_vozila";

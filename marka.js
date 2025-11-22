@@ -9,17 +9,24 @@
     if (PICK) document.body.classList.add('pick');
 
     // -------- API --------
-    const baseApi = location.pathname.includes('/app/') ? '../' : './';
+    const apiRoots = (() => {
+      const prefix = location.pathname.includes('/app/') ? '../' : './';
+      const roots = [prefix];
+      const apiPrefix = prefix.endsWith('/') ? `${prefix}api/` : `${prefix}/api/`;
+      roots.push(apiPrefix);
+      return roots;
+    })();
 
     const API = {
-      search : baseApi + 'marka_search.php',      // GET ?q=&page=&page_size=
-      create : baseApi + 'marka_create.php',
-      update : baseApi + 'marka_update.php',
-      delete : baseApi + 'marka_delete.php',
-      marke  : baseApi + 'marka_distinct.php',
-      vrste  : baseApi + 'vrsta_list_auto.php',    // GET ?all=1 (fallback na vrsta_list.php ispod)
-      vrsteFallback: baseApi + 'vrsta_list.php'
+      search : apiRoots.map(r => r + 'marka_search.php'),      // GET ?q=&page=&page_size=
+      create : apiRoots.map(r => r + 'marka_create.php'),
+      update : apiRoots.map(r => r + 'marka_update.php'),
+      delete : apiRoots.map(r => r + 'marka_delete.php'),
+      marke  : apiRoots.map(r => r + 'marka_distinct.php'),
+      vrste  : apiRoots.map(r => r + 'vrsta_list_auto.php'),    // GET ?all=1 (fallback na vrsta_list.php ispod)
+      vrsteFallback: apiRoots.map(r => r + 'vrsta_list.php')
     };
+    // ---
     // -------- elementi --------
     const $q          = document.getElementById('q');
     const $list       = document.getElementById('list');
@@ -86,19 +93,34 @@
       }
     }
 
+    async function fetchJsonWithFallback(urls, options={}){
+      const list = Array.isArray(urls) ? urls : [urls];
+      let lastErr = null;
+      for(const url of list){
+        try{
+          const res = await fetch(url, options);
+          if(!res.ok){
+            lastErr = new Error('HTTP '+res.status);
+            continue;
+          }
+          const data = await res.json();
+          return {url, data};
+        }catch(err){
+          lastErr = err;
+        }
+      }
+      throw lastErr || new Error('Nepoznata greška');
+    }
+
     // -------- vrste (select) --------
     async function loadVrste(preselectId=null){
       if(!$vrsta) return;
       try{
-        let r = await fetch(API.vrste + '?all=1', {cache:'no-store'});
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        let out = await r.json();
-        let rows = Array.isArray(out) ? out : (out.data||[]);
+        const res = await fetchJsonWithFallback(API.vrste.map(u=>u+'?all=1'), {cache:'no-store'});
+        let rows = Array.isArray(res.data) ? res.data : (res.data?.data||[]);
         if(!rows.length){
-          // fallback na stariji endpoint
-          r = await fetch(new URL('vrsta_list.php?all=1', location.href), {cache:'no-store'});
-          out = await r.json();
-          rows = Array.isArray(out) ? out : (out.data||[]);
+          const fallback = await fetchJsonWithFallback(API.vrsteFallback.map(u=>u+'?all=1'), {cache:'no-store'});
+          rows = Array.isArray(fallback.data) ? fallback.data : (fallback.data?.data||[]);
         }
         rows = rows.map(v=>({
           id: v.id ?? v.ID ?? v.vrsta_id ?? v.Id,
@@ -118,10 +140,8 @@
     async function loadMarke(preselectNaziv=''){
       if(!$nazivSelect) return;
       try{
-        const r = await fetch(API.marke, {cache:'no-store'});
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        const rows = await r.json();
-        const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+        const res = await fetchJsonWithFallback(API.marke, {cache:'no-store'});
+        const list = Array.isArray(res.data) ? res.data.filter(Boolean) : [];
         $nazivSelect.innerHTML = '<option value="">— odaberi marku —</option>' +
           list.map(n => `<option value="${escAttr(n)}">${esc(n)}</option>`).join('');
 
@@ -205,9 +225,8 @@
 
     const qs = new URLSearchParams({ q: state.q, page:String(state.page), page_size:String(state.pageSize) });
     try{
-      const r = await fetch(API.search + '?' + qs.toString(), {cache:'no-store'});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      const out = await r.json();
+      const res = await fetchJsonWithFallback(API.search.map(u=>u+'?'+qs.toString()), {cache:'no-store'});
+      const out = res.data;
       const rows = Array.isArray(out) ? out : (out.data||[]);
       state.total = Array.isArray(out) ? rows.length : (out.total ?? 0);
       state.pages = Array.isArray(out) ? 1 : (out.pages ?? 0);
@@ -346,9 +365,8 @@
     }
     const url = body.id ? API.update : API.create;
     try{
-      const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-      const text = await r.text();
-      let out; try{ out=JSON.parse(text); }catch(_){ throw new Error('Neispravan JSON: '+text); }
+      const res = await fetchJsonWithFallback(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+      const out = res.data;
       if(!out.ok){ throw new Error(out.error||'Greška.'); }
       closeModal();
       state.page=1; $list.innerHTML=''; fetchPage();
@@ -376,8 +394,8 @@
       const id = +row.dataset.id;
       if(!confirm('Obrisati marku #'+id+'?')) return;
       try{
-        const r = await fetch(API.delete, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
-        const out = await r.json();
+        const res = await fetchJsonWithFallback(API.delete, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
+        const out = res.data;
         if(!out.ok) throw new Error(out.error||'Greška pri brisanju.');
         row.remove(); updateInfo();
       }catch(err){ alert(err.message||'Greška pri brisanju.'); }

@@ -2,7 +2,7 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // prilagodi putanju do konekcije
-require __DIR__ . '/db.php'; // isto kao kod marke
+require_once __DIR__ . '/config.php';
 
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 
