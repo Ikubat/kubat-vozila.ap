@@ -73,14 +73,19 @@
           </div>
         </div>
         <div>
-          <label for="m_naziv">Marka vozila</label>
-          <input id="m_naziv" type="text" placeholder="npr. Mercedes-Benz" />
-        </div>
-        <div>
           <label for="m_naziv_select">Marka</label>
           <div class="inline-field">
             <select id="m_naziv_select"></select>
             <button id="btnAddMarka" class="btn sec" type="button" title="Dodaj marku" aria-label="Dodaj marku">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_model">Model</label>
+          <div class="inline-field">
+            <select id="m_model"></select>
+            <button id="btnAddModel" class="btn sec" type="button" title="Dodaj model" aria-label="Dodaj model">
               <i class="fa-solid fa-plus"></i>
             </button>
           </div>
@@ -91,19 +96,29 @@
         </div>
         <div>
           <label for="m_god_modela">Modelska godina</label>
-          <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric" />
+          <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric" placeholder="npr. 2018" />
         </div>
         <div>
           <label for="m_god_kraj">God. prestanka proizvodnje</label>
-          <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric" />
+          <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric" placeholder="npr. 2020" />
         </div>
         <div>
           <label for="m_oblik">Oblik</label>
-          <input id="m_oblik" type="text" placeholder="npr. limuzina / karavan" />
+          <div class="inline-field">
+            <select id="m_oblik"></select>
+            <button id="btnAddOblik" class="btn sec" type="button" title="Dodaj oblik" aria-label="Dodaj oblik">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
           <label for="m_vrata">Broj vrata</label>
-          <input id="m_vrata" type="number" min="2" max="8" step="1" inputmode="numeric" />
+          <div class="inline-field">
+            <select id="m_vrata"></select>
+            <button id="btnAddVrata" class="btn sec" type="button" title="Dodaj broj vrata" aria-label="Dodaj broj vrata">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
           <label for="m_snaga">Snaga (kW)</label>
@@ -114,12 +129,23 @@
           <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric" />
         </div>
         <div>
+        <div>
           <label for="m_pogon">Pogon</label>
-          <input id="m_pogon" type="text" placeholder="npr. 2.0 dizel" />
+          <div class="inline-field">
+            <select id="m_pogon"></select>
+            <button id="btnAddPogon" class="btn sec" type="button" title="Dodaj pogon" aria-label="Dodaj pogon">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
           <label for="m_mjenjac">Mjenjač</label>
-          <input id="m_mjenjac" type="text" placeholder="npr. automatik (7G-Tronic)" />
+          <div class="inline-field">
+            <select id="m_mjenjac"></select>
+            <button id="btnAddMjenjac" class="btn sec" type="button" title="Dodaj mjenjač" aria-label="Dodaj mjenjač">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
           <label for="m_kataloska">Kataloška vrijednost (KM)</label>

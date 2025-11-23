@@ -1,71 +1,74 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');␊
+header('Content-Type: application/json; charset=utf-8');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once __DIR__ . '/config.php';
 
-$q         = isset($_GET['q']) ? trim($_GET['q']) : '';
-$page      = max(1, (int)($_GET['page'] ?? 1));
-$pageSize  = min(100, max(1, (int)($_GET['page_size'] ?? 20)));
-$offset    = ($page - 1) * $pageSize;
+$q        = isset($_GET['q']) ? trim($_GET['q']) : '';
+$page     = max(1, (int)($_GET['page'] ?? 1));
+$pageSize = min(100, max(1, (int)($_GET['page_size'] ?? 20)));
+$offset   = ($page - 1) * $pageSize;
 
-// Validacija za stranice i veličinu stranice
-if ($page < 1) $page = 1;
-if ($pageSize < 1) $pageSize = 20;
-
-// Slaganje LIKE za pretraživanje
-$like = '%' . $q . '%';
-
+$where = '';
 $whereParts = [];
 $args = [];
+$types = '';
 
 if ($q !== '') {
-    $whereParts[] = "p.ime LIKE :q";
-    $whereParts[] = "p.prezime LIKE :q";
-    $whereParts[] = "p.kontakt LIKE :q";
-    $whereParts[] = "p.email LIKE :q";
-    $whereParts[] = "p.adresa LIKE :q";
-    $whereParts[] = "m.naziv_mjesta LIKE :q";
-    $where = "WHERE " . implode(" OR ", $whereParts);
-    $args[':q'] = $like;
-} else {
-    $where = '';
+    $like = '%' . $q . '%';
+    $whereParts = [
+        'p.ime LIKE ?',
+        'p.prezime LIKE ?',
+        'p.kontakt LIKE ?',
+        'p.email LIKE ?',
+        'p.adresa LIKE ?',
+        'm.naziv_mjesta LIKE ?'
+    ];
+    $where = 'WHERE ' . implode(' OR ', $whereParts);
+    $args = array_fill(0, count($whereParts), $like);
+    $types = str_repeat('s', count($whereParts));
 }
 
-/* 1) Ukupan broj */
+// 1) Ukupan broj
 $sqlTotal = "
-  SELECT COUNT(*)
-  FROM partneri p
-  LEFT JOIN mjesta m ON m.id = p.mjesto_id
-  $where
+    SELECT COUNT(*)
+    FROM partneri p
+    LEFT JOIN mjesta m ON m.id = p.mjesto_id
+    $where
 ";
-$stTot = $pdo->prepare($sqlTotal);
-foreach ($args as $k => $v) $stTot->bindValue($k, $v, PDO::PARAM_STR);
+$stTot = $conn->prepare($sqlTotal);
+if ($args) {
+    $stTot->bind_param($types, ...$args);
+}
 $stTot->execute();
-$total = (int)$stTot->fetchColumn();
+$stTot->bind_result($total);
+$stTot->fetch();
+$stTot->close();
 
-/* 2) Podaci za trenutnu stranu */
+// 2) Podaci za trenutnu stranicu
 $sqlData = "
-  SELECT
-    p.id, p.ime, p.prezime, p.kontakt, p.email, p.adresa, p.mjesto_id,
-    m.naziv_mjesta AS mjesto_naz
-  FROM partneri p
-  LEFT JOIN mjesta m ON m.id = p.mjesto_id
-  $where
-  ORDER BY p.prezime ASC, p.ime ASC
-  LIMIT :lim OFFSET :off
+    SELECT
+      p.id, p.ime, p.prezime, p.kontakt, p.email, p.adresa, p.mjesto_id,
+      m.naziv_mjesta AS mjesto_naz
+    FROM partneri p
+    LEFT JOIN mjesta m ON m.id = p.mjesto_id
+    $where
+    ORDER BY p.prezime ASC, p.ime ASC
+    LIMIT ? OFFSET ?
 ";
-$st = $pdo->prepare($sqlData);
-foreach ($args as $k => $v) $st->bindValue($k, $v, PDO::PARAM_STR);
-$st->bindValue(':lim', $pageSize, PDO::PARAM_INT);
-$st->bindValue(':off', $offset, PDO::PARAM_INT);
+$st = $conn->prepare($sqlData);
+$dataTypes = $types . 'ii';
+$dataArgs = array_merge($args, [$pageSize, $offset]);
+$st->bind_param($dataTypes, ...$dataArgs);
 $st->execute();
-$rows = $st->fetchAll(PDO::FETCH_ASSOC);
+$res = $st->get_result();
+$rows = $res->fetch_all(MYSQLI_ASSOC);
+$st->close();
 
-/* 3) Odgovor */
+// 3) Odgovor
 echo json_encode([
-  'data'      => $rows,
-  'total'     => $total,
-  'page'      => $page,
-  'page_size' => $pageSize,
-  'pages'     => (int)ceil($total / $pageSize),
+    'data'      => $rows,
+    'total'     => (int)$total,
+    'page'      => $page,
+    'page_size' => $pageSize,
+    'pages'     => (int)ceil($total / $pageSize),
 ], JSON_UNESCAPED_UNICODE);
-

@@ -57,6 +57,14 @@
     const $god_kraj    = document.getElementById('m_god_kraj');
     const $kataloska   = document.getElementById('m_kataloska');
 
+    // Ukloni eventualno zastarjelo tekstualno polje za marku ako je ostalo u DOM-u
+    const $staroPoljeMarka = document.getElementById('m_naziv');
+    if ($staroPoljeMarka?.closest('div')) {
+      $staroPoljeMarka.closest('div').remove();
+    } else if ($staroPoljeMarka) {
+      $staroPoljeMarka.remove();
+    }
+
     if(!$wrap || !$id || !$nazivSelect){
       console.error('Nedostaju elementi modala za marke.');
       return;
@@ -64,6 +72,11 @@
 
     const $addTop = document.getElementById('btnAddTop');
     const $addMarka = document.getElementById('btnAddMarka');
+    const $addModel = document.getElementById('btnAddModel');
+    const $addOblik = document.getElementById('btnAddOblik');
+    const $addVrata = document.getElementById('btnAddVrata');
+    const $addPogon = document.getElementById('btnAddPogon');
+    const $addMjenjac = document.getElementById('btnAddMjenjac');
     const $pickVrsta = document.getElementById('btnPickVrsta');
     const vrstaPickerCandidates = location.pathname.includes('/app/')
       ? ['../vrsta.html', 'vrsta.html', '../app/vrsta.html', './vrsta.html']
@@ -91,6 +104,52 @@
         const shown = ($list?.querySelectorAll('.card-row').length || 0);
         $pageInfo.textContent = `Prikazano: ${shown} od ukupno ${state.total || '…'}`;
       }
+    }
+
+    function registerOption(field, value){
+      const map = optionMaps[field];
+      if(!map) return;
+      const clean = normalizeVal(value);
+      if(!clean) return;
+      const key = toKey(clean);
+      if(!map.has(key)) map.set(key, clean);
+    }
+
+    function setSelectOptions($sel, map, placeholder, preselect=''){
+      if(!$sel || !map) return;
+      const seen = new Set();
+      const unique = [];
+      for(const val of map.values()){
+        const key = toKey(val);
+        if(!key || seen.has(key)) continue;
+        seen.add(key);
+        unique.push(val);
+      }
+      $sel.innerHTML = `<option value="">${placeholder}</option>` +
+        unique.map(v=>`<option value="${escAttr(v)}">${esc(v)}</option>`).join('');
+
+      const preVal = normalizeVal(preselect);
+      if(preVal){
+        const key = toKey(preVal);
+        if(!map.has(key)) map.set(key, preVal);
+        if(!$sel.querySelector(`option[value="${escCss(preVal)}"]`)){
+          const opt = document.createElement('option');
+          opt.value = preVal;
+          opt.textContent = preVal;
+          $sel.appendChild(opt);
+        }
+        $sel.value = preVal;
+      } else {
+        $sel.value = '';
+      }
+    }
+
+    function refreshDynamicSelects(preselects={}){
+      setSelectOptions($model, optionMaps.model, placeholders.model, preselects.model ?? $model?.value ?? '');
+      setSelectOptions($oblik, optionMaps.oblik, placeholders.oblik, preselects.oblik ?? $oblik?.value ?? '');
+      setSelectOptions($vrata, optionMaps.vrata, placeholders.vrata, preselects.vrata ?? $vrata?.value ?? '');
+      setSelectOptions($pogon, optionMaps.pogon, placeholders.pogon, preselects.pogon ?? $pogon?.value ?? '');
+      setSelectOptions($mjenjac, optionMaps.mjenjac, placeholders.mjenjac, preselects.mjenjac ?? $mjenjac?.value ?? '');
     }
 
     async function fetchJsonWithFallback(urls, options={}){
@@ -141,7 +200,17 @@
       if(!$nazivSelect) return;
       try{
         const res = await fetchJsonWithFallback(API.marke, {cache:'no-store'});
-        const list = Array.isArray(res.data) ? res.data.filter(Boolean) : [];
+        const seen = new Set();
+        const list = [];
+        const rows = Array.isArray(res.data) ? res.data : [];
+        for(const n of rows){
+          const clean = normalizeVal(n);
+          if(!clean) continue;
+          const key = toKey(clean);
+          if(seen.has(key)) continue;
+          seen.add(key);
+          list.push(clean);
+        }
         $nazivSelect.innerHTML = '<option value="">— odaberi marku —</option>' +
           list.map(n => `<option value="${escAttr(n)}">${esc(n)}</option>`).join('');
 
@@ -179,6 +248,30 @@
     opt.textContent = clean;
     $nazivSelect.appendChild(opt);
     $nazivSelect.value = clean;
+  }
+
+  function promptAddOption(field, $select, promptText, validator=null){
+    if(!$select) return;
+    const proposed = normalizeVal($select.value);
+    const val = normalizeVal(prompt(promptText, proposed) || '');
+    if(!val) return;
+    if(typeof validator === 'function'){
+      const valid = validator(val);
+      if(valid !== true){
+        alert(valid || 'Vrijednost nije valjana.');
+        return;
+      }
+    }
+    const map = optionMaps[field];
+    if(map){
+      const key = toKey(val);
+      if(map.has(key)){
+        $select.value = map.get(key);
+        return;
+      }
+      map.set(key, val);
+    }
+    refreshDynamicSelects({ [field]: val });
   }
 
   // -------- render reda (sve kolone) --------
@@ -232,6 +325,20 @@
       state.pages = Array.isArray(out) ? 1 : (out.pages ?? 0);
 
       $list.innerHTML = rows.map(rowToHTML).join('');
+      rows.forEach(r => {
+        registerOption('model', r.model);
+        registerOption('oblik', r.oblik);
+        registerOption('vrata', r.vrata);
+        registerOption('pogon', r.pogon);
+        registerOption('mjenjac', r.mjenjac);
+      });
+      refreshDynamicSelects({
+        model: $model?.value || '',
+        oblik: $oblik?.value || '',
+        vrata: $vrata?.value || '',
+        pogon: $pogon?.value || '',
+        mjenjac: $mjenjac?.value || ''
+      });
       show($empty, rows.length===0);
       updateInfo();
     }catch(e){
@@ -262,9 +369,10 @@
     $title.textContent='Nova marka';
     $id.value='';
     $serija.value=''; $nazivSelect.value=''; $model.value='';
-    $oblik.value=''; $mjenjac.value=''; $pogon.value='';
+    $mjenjac.value=''; $pogon.value='';
     $snaga.value=''; $zapremina.value=''; $vrata.value='';
     $god_modela.value=''; $god_kraj.value=''; $kataloska.value='';
+    refreshDynamicSelects({model:'', oblik:'', vrata:'', pogon:'', mjenjac:''});
     loadVrste('');
     loadMarke('');
     $msg.style.display='none';
@@ -288,6 +396,18 @@
     $god_modela.value = d.god_modela || '';
     $god_kraj.value = d.god_kraj || '';
     $kataloska.value = d.kataloska || '';
+    registerOption('model', d.model);
+    registerOption('oblik', d.oblik);
+    registerOption('vrata', d.vrata);
+    registerOption('pogon', d.pogon);
+    registerOption('mjenjac', d.mjenjac);
+    refreshDynamicSelects({
+      model: d.model || '',
+      oblik: d.oblik || '',
+      vrata: d.vrata || '',
+      pogon: d.pogon || '',
+      mjenjac: d.mjenjac || ''
+    });
     loadVrste(row.dataset.vrsta_id || '');
     loadMarke(d.naziv || '');
     $msg.style.display='none';
@@ -297,6 +417,11 @@
   function closeModal(){ $wrap.classList.remove('show'); }
   $addTop?.addEventListener('click', openNew);
   $addMarka?.addEventListener('click', addMarkaToSelect);
+  $addModel?.addEventListener('click', ()=>promptAddOption('model', $model, 'Naziv novog modela'));
+  $addOblik?.addEventListener('click', ()=>promptAddOption('oblik', $oblik, 'Naziv novog oblika'));
+  $addVrata?.addEventListener('click', ()=>promptAddOption('vrata', $vrata, 'Broj vrata', v => /^\d{1,2}$/.test(v) ? true : 'Unesi broj vrata (1-2 znamenke).'));
+  $addPogon?.addEventListener('click', ()=>promptAddOption('pogon', $pogon, 'Opis pogona'));
+  $addMjenjac?.addEventListener('click', ()=>promptAddOption('mjenjac', $mjenjac, 'Opis mjenjača'));
   $cancel?.addEventListener('click', closeModal);
   $close ?.addEventListener('click', closeModal);
   $wrap?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
@@ -435,6 +560,8 @@
   }
 
     // -------- init --------
+    // -------- init --------
+    refreshDynamicSelects();
     if(!PICK){
       loadVrste('');
       loadMarke('');

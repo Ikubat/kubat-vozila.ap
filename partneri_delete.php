@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
@@ -19,15 +20,17 @@ try {
         exit;
     }
 
-    $stmt = $pdo->prepare('DELETE FROM partneri WHERE id = :id');
-    $stmt->execute([':id' => $id]);
+    $stmt = $conn->prepare('DELETE FROM partneri WHERE id = ?');
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
 
-    if ($stmt->rowCount() > 0) {
+    if ($stmt->affected_rows > 0) {
         echo json_encode(['ok' => true]);
     } else {
         echo json_encode(['error' => 'Ne postoji ili je već obrisan.']);
     }
-} catch (PDOException $e) {
+
+    $stmt->close();
+} catch (mysqli_sql_exception $e) {
     echo json_encode(['error' => 'Brisanje nije uspjelo: ' . $e->getMessage()]);
 }
-

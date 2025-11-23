@@ -16,6 +16,8 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
+// Fallback nazivi tablica ako nisu definirani u okruženju
+$T_MARKA = $T_MARKA ?? 'marka_vozila';
 
 function jdie($m, $c = 400) {
     http_response_code($c);
@@ -51,8 +53,7 @@ if ($id <= 0) {
 
 // ---- DB & STRUKTURA ----
 try {
-    $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-    $db->set_charset('utf8mb4');
+    $db = $conn;
 
     // autodetekcija naziva ID kolone
     $cols = [];

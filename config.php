@@ -63,4 +63,17 @@ if ($isLocal) {
    3. KONEKCIJA (MYSQLI)
    ============================ */
 
-$conn = mysqli_connect(DB_HOST, DB_USER, DB_
+$conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+
+if (!$conn) {
+    http_response_code(500);
+    die('Neuspjela konekcija na bazu: ' . mysqli_connect_error());
+}
+
+mysqli_set_charset($conn, 'utf8mb4');
+
+// Kompatibilni $DB_* varijable za stare skripte koje ih očekuju.
+$DB_HOST = DB_HOST;
+$DB_USER = DB_USER;
+$DB_PASS = DB_PASS;
+$DB_NAME = DB_NAME;
