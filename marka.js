@@ -57,6 +57,14 @@
     const $god_kraj    = document.getElementById('m_god_kraj');
     const $kataloska   = document.getElementById('m_kataloska');
 
+    // Ukloni eventualno zastarjelo tekstualno polje za marku ako je ostalo u DOM-u
+    const $staroPoljeMarka = document.getElementById('m_naziv');
+    if ($staroPoljeMarka?.closest('div')) {
+      $staroPoljeMarka.closest('div').remove();
+    } else if ($staroPoljeMarka) {
+      $staroPoljeMarka.remove();
+    }
+
     if(!$wrap || !$id || !$nazivSelect){
       console.error('Nedostaju elementi modala za marke.');
       return;
