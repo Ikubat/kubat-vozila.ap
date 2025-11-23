@@ -1,22 +1,26 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+require_once __DIR__ . '/config.php';
 
 try {
-    require_once __DIR__ . '/config.php';
-
-    // — detektuj koju tablicu / kolonu za naziv imamo —
     $tableCandidates = ['marka_vozila', 'marke', 'marka'];
     $table = null;
     $colNaziv = null;
 
     foreach ($tableCandidates as $candidate) {
         try {
-            $cols = $pdo->query("SHOW COLUMNS FROM `$candidate`")->fetchAll(PDO::FETCH_ASSOC);
+            $res = $conn->query("SHOW COLUMNS FROM `$candidate`");
+            $cols = $res->fetch_all(MYSQLI_ASSOC);
+            $res->free();
         } catch (Throwable $e) {
             continue; // tablica ne postoji
         }
 
-        if (!$cols) continue;
+        if (!$cols) {
+            continue;
+        }
 
         $map = [];
         foreach ($cols as $c) {
@@ -34,10 +38,19 @@ try {
         throw new RuntimeException('Nije pronađena tablica s nazivom marke.');
     }
 
-    $stmt = $pdo->query("SELECT DISTINCT `$colNaziv` AS naziv FROM `$table` WHERE TRIM(`$colNaziv`) <> '' ORDER BY `$colNaziv` ASC");
-    $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $sql = sprintf(
+        'SELECT DISTINCT `%1$s` AS naziv FROM `%2$s` WHERE TRIM(`%1$s`) <> "" ORDER BY `%1$s` ASC',
+        $conn->real_escape_string($colNaziv),
+        $conn->real_escape_string($table)
+    );
 
-    echo json_encode($rows, JSON_UNESCAPED_UNICODE);
+    $res = $conn->query($sql);
+    $rows = $res->fetch_all(MYSQLI_ASSOC);
+    $res->free();
+
+    $nazivi = array_map(static fn($row) => $row['naziv'], $rows);
+
+    echo json_encode($nazivi, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
