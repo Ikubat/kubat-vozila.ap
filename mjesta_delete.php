@@ -1,5 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 require_once __DIR__ . '/config.php';
 
 $in = json_decode(file_get_contents('php://input'), true) ?: [];
@@ -9,23 +11,26 @@ if ($id <= 0) {
     http_response_code(422);
     echo json_encode([
         'ok'     => false,
-        'errors' => ['Nevažeći ID.']
+        'errors' => ['Nevažeći ID.'],
     ]);
     exit;
 }
 
 try {
-    $stmt = $pdo->prepare("DELETE FROM mjesta WHERE id=?");
-    $stmt->execute([$id]);
+    $stmt = $conn->prepare('DELETE FROM mjesta WHERE id = ?');
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $deleted = $stmt->affected_rows;
+    $stmt->close();
+
     echo json_encode([
         'ok'      => true,
-        'deleted' => $stmt->rowCount()
+        'deleted' => $deleted,
     ]);
-} catch (PDOException $e) {
-    // Ako kasnije dodamo FK na partnere, ovdje može pasti – vratimo poruku
+} catch (mysqli_sql_exception $e) {
     http_response_code(400);
     echo json_encode([
         'ok'    => false,
-        'error' => $e->getMessage()
+        'error' => $e->getMessage(),
     ]);
 }
