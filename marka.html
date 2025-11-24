@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vozila / Marke</title>
+  <title>Vozila / Marke</title>␊
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=9002">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="styles.css?v=9002">␊
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body class="marke">
   <div class="wrap">
@@ -16,7 +17,7 @@
 
       <div class="toolbar">
         <div class="grow">
-          <input id="q" type="search" placeholder="Filtriraj po marki, modelu, seriji…" aria-label="Pretraži marke" />
+            <input id="q" type="search" placeholder="Filtriraj po marki, modelu, seriji…" aria-label="Pretraži marke" />
         </div>
         <button id="btnAddTop" class="btn" title="Dodaj marku" aria-label="Dodaj marku">
           <i class="fa-solid fa-plus"></i> Nova marka
@@ -36,7 +37,7 @@
           <div>Snaga</div>
           <div>Zapremina</div>
           <div>Pogon</div>
-          <div>Mjenjač</div>
+            <div>Mjenjač</div>
           <div>Kataloška vrijednost (KM)</div>
           <div style="text-align:right">Akcije</div>
         </div>
@@ -57,7 +58,7 @@
     <div class="box">
       <header>
         <h2 id="mTitle">Uredi marku / vozilo</h2>
-        <button id="mClose" class="close-x" aria-label="Zatvori" type="button">✕</button>
+        <button id="mClose" class="close-x" aria-label="Zatvori" type="button"></button>
       </header>
 
       <input type="hidden" id="m_id" />
@@ -125,10 +126,9 @@
           <input id="m_snaga" type="number" min="1" max="2000" step="1" inputmode="numeric" />
         </div>
         <div>
-          <label for="m_zapremina">Zapremina (ccm)</label>␊
+          <label for="m_zapremina">Zapremina (ccm)</label>
           <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric" />
         </div>
-        <div>
         <div>
           <label for="m_pogon">Pogon</label>
           <div class="inline-field">
@@ -166,4 +166,3 @@
   <script src="marka.js?v=9003"></script>
 </body>
 </html>
-

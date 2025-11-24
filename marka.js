@@ -26,7 +26,7 @@
       vrste  : apiRoots.map(r => r + 'vrsta_list_auto.php'),    // GET ?all=1 (fallback na vrsta_list.php ispod)
       vrsteFallback: apiRoots.map(r => r + 'vrsta_list.php')
     };
-    // ---
+
     // -------- elementi --------
     const $q          = document.getElementById('q');
     const $list       = document.getElementById('list');
@@ -93,6 +93,32 @@
     };
     const show = (el,on) => { if(!el) return; el.style.display = on ? '' : 'none'; };
 
+    // ===== DODANO: MAPE I PLACEHOLDERI ZA DINAMIČKE LISTE =====
+    const optionMaps = {
+      model:   new Map(),
+      oblik:   new Map(),
+      vrata:   new Map(),
+      pogon:   new Map(),
+      mjenjac: new Map()
+    };
+
+    const placeholders = {
+      model:   '— odaberi model —',
+      oblik:   '— odaberi oblik —',
+      vrata:   '— odaberi —',
+      pogon:   '— odaberi pogon —',
+      mjenjac: '— odaberi mjenjač —'
+    };
+
+    function normalizeVal(v){
+      return (v ?? '').toString().trim();
+    }
+
+    function toKey(v){
+      return normalizeVal(v).toLowerCase();
+    }
+    // ===== KRAJ DODANOG BLOKA =====
+
     // -------- stanje liste --------
     const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false };
 
@@ -145,10 +171,10 @@
     }
 
     function refreshDynamicSelects(preselects={}){
-      setSelectOptions($model, optionMaps.model, placeholders.model, preselects.model ?? $model?.value ?? '');
-      setSelectOptions($oblik, optionMaps.oblik, placeholders.oblik, preselects.oblik ?? $oblik?.value ?? '');
-      setSelectOptions($vrata, optionMaps.vrata, placeholders.vrata, preselects.vrata ?? $vrata?.value ?? '');
-      setSelectOptions($pogon, optionMaps.pogon, placeholders.pogon, preselects.pogon ?? $pogon?.value ?? '');
+      setSelectOptions($model,   optionMaps.model,   placeholders.model,   preselects.model   ?? $model?.value   ?? '');
+      setSelectOptions($oblik,   optionMaps.oblik,   placeholders.oblik,   preselects.oblik   ?? $oblik?.value   ?? '');
+      setSelectOptions($vrata,   optionMaps.vrata,   placeholders.vrata,   preselects.vrata   ?? $vrata?.value   ?? '');
+      setSelectOptions($pogon,   optionMaps.pogon,   placeholders.pogon,   preselects.pogon   ?? $pogon?.value   ?? '');
       setSelectOptions($mjenjac, optionMaps.mjenjac, placeholders.mjenjac, preselects.mjenjac ?? $mjenjac?.value ?? '');
     }
 
@@ -230,56 +256,56 @@
       }
     }
 
-  function addMarkaToSelect(){
-    if(!$nazivSelect) return;
-    const proposed = ($nazivSelect.value || '').trim();
-    const naziv = prompt('Naziv nove marke', proposed) || '';
-    const clean = naziv.trim();
-    if(!clean) return;
+    function addMarkaToSelect(){
+      if(!$nazivSelect) return;
+      const proposed = ($nazivSelect.value || '').trim();
+      const naziv = prompt('Naziv nove marke', proposed) || '';
+      const clean = naziv.trim();
+      if(!clean) return;
 
-    const existing = Array.from($nazivSelect.options).find(o => o.value.toLowerCase() === clean.toLowerCase());
-    if(existing){
-      $nazivSelect.value = existing.value;
-      return;
-    }
-
-    const opt = document.createElement('option');
-    opt.value = clean;
-    opt.textContent = clean;
-    $nazivSelect.appendChild(opt);
-    $nazivSelect.value = clean;
-  }
-
-  function promptAddOption(field, $select, promptText, validator=null){
-    if(!$select) return;
-    const proposed = normalizeVal($select.value);
-    const val = normalizeVal(prompt(promptText, proposed) || '');
-    if(!val) return;
-    if(typeof validator === 'function'){
-      const valid = validator(val);
-      if(valid !== true){
-        alert(valid || 'Vrijednost nije valjana.');
+      const existing = Array.from($nazivSelect.options).find(o => o.value.toLowerCase() === clean.toLowerCase());
+      if(existing){
+        $nazivSelect.value = existing.value;
         return;
       }
+
+      const opt = document.createElement('option');
+      opt.value = clean;
+      opt.textContent = clean;
+      $nazivSelect.appendChild(opt);
+      $nazivSelect.value = clean;
     }
-    const map = optionMaps[field];
-    if(map){
-      const key = toKey(val);
-      if(map.has(key)){
-        $select.value = map.get(key);
-        return;
+
+    function promptAddOption(field, $select, promptText, validator=null){
+      if(!$select) return;
+      const proposed = normalizeVal($select.value);
+      const val = normalizeVal(prompt(promptText, proposed) || '');
+      if(!val) return;
+      if(typeof validator === 'function'){
+        const valid = validator(val);
+        if(valid !== true){
+          alert(valid || 'Vrijednost nije valjana.');
+          return;
+        }
       }
-      map.set(key, val);
+      const map = optionMaps[field];
+      if(map){
+        const key = toKey(val);
+        if(map.has(key)){
+          $select.value = map.get(key);
+          return;
+        }
+        map.set(key, val);
+      }
+      refreshDynamicSelects({ [field]: val });
     }
-    refreshDynamicSelects({ [field]: val });
-  }
 
-  // -------- render reda (sve kolone) --------
-  function rowToHTML(m){
-    const valOrDash = v => (v ?? v === 0) && String(v).trim() !== '' ? esc(v) : '—';
-    const numOrDash = v => (v ?? v === 0) && String(v).trim() !== '' ? esc(v) : '—';
+    // -------- render reda (sve kolone) --------
+    function rowToHTML(m){
+      const valOrDash = v => (v ?? v === 0) && String(v).trim() !== '' ? esc(v) : '—';
+      const numOrDash = v => (v ?? v === 0) && String(v).trim() !== '' ? esc(v) : '—';
 
-    return `
+      return `
       <div class="card-row" data-id="${m.id}"
            data-vrsta_id="${m.vrsta_id||''}"
            data-naziv="${escAttr(m.naziv||'')}" data-model="${escAttr(m.model||'')}"
@@ -309,257 +335,255 @@
         </div>
       </div>
     `;
-  }
-
-  // -------- dohvat jedne stranice --------
-  async function fetchPage(){
-    if(state.loading) return;
-    state.loading = true;
-
-    const qs = new URLSearchParams({ q: state.q, page:String(state.page), page_size:String(state.pageSize) });
-    try{
-      const res = await fetchJsonWithFallback(API.search.map(u=>u+'?'+qs.toString()), {cache:'no-store'});
-      const out = res.data;
-      const rows = Array.isArray(out) ? out : (out.data||[]);
-      state.total = Array.isArray(out) ? rows.length : (out.total ?? 0);
-      state.pages = Array.isArray(out) ? 1 : (out.pages ?? 0);
-
-      $list.innerHTML = rows.map(rowToHTML).join('');
-      rows.forEach(r => {
-        registerOption('model', r.model);
-        registerOption('oblik', r.oblik);
-        registerOption('vrata', r.vrata);
-        registerOption('pogon', r.pogon);
-        registerOption('mjenjac', r.mjenjac);
-      });
-      refreshDynamicSelects({
-        model: $model?.value || '',
-        oblik: $oblik?.value || '',
-        vrata: $vrata?.value || '',
-        pogon: $pogon?.value || '',
-        mjenjac: $mjenjac?.value || ''
-      });
-      show($empty, rows.length===0);
-      updateInfo();
-    }catch(e){
-      console.error(e);
-      $list.innerHTML = '';
-      if($empty){
-        show($empty,true);
-        $empty.textContent = 'Greška pri dohvaćanju podataka.';
-      }
-    }finally{
-      state.loading = false;
     }
-  }
 
-  // -------- search --------
-  let t=null;
-  function resetAndLoad(q){
-    state.q = q||'';
-    state.page=1; state.loading=false;
-    fetchPage();
-  }
-  $q?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>resetAndLoad($q.value.trim()), 250); });
-  $q?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); resetAndLoad($q.value.trim()); } });
+    // -------- dohvat jedne stranice --------
+    async function fetchPage(){
+      if(state.loading) return;
+      state.loading = true;
 
-  // -------- modal open/close --------
-  function openNew(){
-    if(PICK) return; // u pick modu nema dodavanja
-    $title.textContent='Nova marka';
-    $id.value='';
-    $serija.value=''; $nazivSelect.value=''; $model.value='';
-    $mjenjac.value=''; $pogon.value='';
-    $snaga.value=''; $zapremina.value=''; $vrata.value='';
-    $god_modela.value=''; $god_kraj.value=''; $kataloska.value='';
-    refreshDynamicSelects({model:'', oblik:'', vrata:'', pogon:'', mjenjac:''});
-    loadVrste('');
-    loadMarke('');
-    $msg.style.display='none';
-    $wrap.classList.add('show');
-    $nazivSelect.focus();
-  }
-  function openEdit(row){
-    if(PICK) return;
-    const d = row.dataset;
-    $title.textContent='Uredi marku / vozilo';
-    $id.value = d.id || '';
-    $nazivSelect.value = d.naziv || '';
-    $model.value = d.model || '';
-    $serija.value = d.serija || '';
-    $oblik.value = d.oblik || '';
-    $vrata.value = d.vrata || '';
-    $mjenjac.value = d.mjenjac || '';
-    $pogon.value = d.pogon || '';
-    $snaga.value = d.snaga || '';
-    $zapremina.value = d.zapremina || '';
-    $god_modela.value = d.god_modela || '';
-    $god_kraj.value = d.god_kraj || '';
-    $kataloska.value = d.kataloska || '';
-    registerOption('model', d.model);
-    registerOption('oblik', d.oblik);
-    registerOption('vrata', d.vrata);
-    registerOption('pogon', d.pogon);
-    registerOption('mjenjac', d.mjenjac);
-    refreshDynamicSelects({
-      model: d.model || '',
-      oblik: d.oblik || '',
-      vrata: d.vrata || '',
-      pogon: d.pogon || '',
-      mjenjac: d.mjenjac || ''
-    });
-    loadVrste(row.dataset.vrsta_id || '');
-    loadMarke(d.naziv || '');
-    $msg.style.display='none';
-    $wrap.classList.add('show');
-    $nazivSelect.focus();
-  }
-  function closeModal(){ $wrap.classList.remove('show'); }
-  $addTop?.addEventListener('click', openNew);
-  $addMarka?.addEventListener('click', addMarkaToSelect);
-  $addModel?.addEventListener('click', ()=>promptAddOption('model', $model, 'Naziv novog modela'));
-  $addOblik?.addEventListener('click', ()=>promptAddOption('oblik', $oblik, 'Naziv novog oblika'));
-  $addVrata?.addEventListener('click', ()=>promptAddOption('vrata', $vrata, 'Broj vrata', v => /^\d{1,2}$/.test(v) ? true : 'Unesi broj vrata (1-2 znamenke).'));
-  $addPogon?.addEventListener('click', ()=>promptAddOption('pogon', $pogon, 'Opis pogona'));
-  $addMjenjac?.addEventListener('click', ()=>promptAddOption('mjenjac', $mjenjac, 'Opis mjenjača'));
-  $cancel?.addEventListener('click', closeModal);
-  $close ?.addEventListener('click', closeModal);
-  $wrap?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
-
-  async function resolveVrstaPickerUrl(){
-    if(vrstaPickerBaseUrl) return vrstaPickerBaseUrl;
-    for(const candidate of vrstaPickerCandidates){
+      const qs = new URLSearchParams({ q: state.q, page:String(state.page), page_size:String(state.pageSize) });
       try{
-        const testUrl = new URL(candidate, location.href);
-        let res = await fetch(testUrl, {method:'HEAD', cache:'no-store'});
-        if(res.status === 405){
-          res = await fetch(testUrl, {method:'GET', cache:'no-store'});
-        }
-        if(res.ok){
-          vrstaPickerBaseUrl = testUrl.href;
-          return vrstaPickerBaseUrl;
-        }
-      }catch(err){
-        console.debug('Vrsta picker candidate failed:', candidate, err);
-      }
-    }
-    return null;
-  }
-
-  async function openVrstaPicker(){
-    const base = await resolveVrstaPickerUrl();
-    if(!base){
-      alert('Stranica s vrstama vozila nije pronađena.');
-      return;
-    }
-    const pickerUrl = new URL(base);
-    pickerUrl.searchParams.set('pick','1');
-    const url = pickerUrl.toString();
-    const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
-    if(w) w.focus(); else location.href = url;
-  }
-  $pickVrsta?.addEventListener('click', openVrstaPicker);
-  window.addEventListener('focus', ()=>{
-    loadVrste($vrsta?.value || '');
-    loadMarke($nazivSelect?.value || '');
-  });
-
-  // -------- spremi (create/update) --------
-  async function saveMarka(){
-    const naziv = ($nazivSelect?.value || '').trim();
-    const body = {
-      id: $id.value ? +$id.value : undefined,
-      vrsta_id: $vrsta.value ? +$vrsta.value : null,
-      serija: $serija.value.trim(),
-      naziv,
-      model:  $model.value.trim(),
-      oblik:  $oblik.value.trim(),
-      mjenjac:$mjenjac.value.trim(),
-      pogon:  $pogon.value.trim(),
-      snaga:  $snaga.value ? +$snaga.value : null,
-      zapremina: $zapremina.value ? +$zapremina.value : null,
-      vrata:  $vrata.value ? +$vrata.value : null,
-      god_modela: $god_modela.value ? +$god_modela.value : null,
-      god_kraj:   $god_kraj.value ? +$god_kraj.value : null,
-      kataloska:  $kataloska.value ? +$kataloska.value : null
-    };
-    if(!body.naziv){
-      $msg.textContent='Marka je obavezna.'; $msg.style.display='block'; return;
-
-    }
-    const url = body.id ? API.update : API.create;
-    try{
-      const res = await fetchJsonWithFallback(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-      const out = res.data;
-      if(!out.ok){ throw new Error(out.error||'Greška.'); }
-      closeModal();
-      state.page=1; $list.innerHTML=''; fetchPage();
-    }catch(e){
-      $msg.textContent = e.message || 'Greška pri spremanju.'; $msg.style.display='block';
-      console.error(e);
-    }
-  }
-  $save?.addEventListener('click', saveMarka);
-
-  // -------- delegacija klikova na listu --------
-  document.addEventListener('click', async (e)=>{
-    const row = e.target.closest('.card-row[data-id]');
-    if(!row) return;
-
-    // PICK: odabir za mobilne i desktop
-    if(PICK && !e.target.closest('.acts')){
-      selectRow(row);
-      if (e.detail === 2) commitPick(row);    // dvoklik desktop
-      return;
-    }
-
-    if(!PICK && e.target.closest('.act.edit')) { openEdit(row); return; }
-    if(!PICK && e.target.closest('.act.del'))  {
-      const id = +row.dataset.id;
-      if(!confirm('Obrisati marku #'+id+'?')) return;
-      try{
-        const res = await fetchJsonWithFallback(API.delete, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
+        const res = await fetchJsonWithFallback(API.search.map(u=>u+'?'+qs.toString()), {cache:'no-store'});
         const out = res.data;
-        if(!out.ok) throw new Error(out.error||'Greška pri brisanju.');
-        row.remove(); updateInfo();
-      }catch(err){ alert(err.message||'Greška pri brisanju.'); }
-      return;
-    }
-  });
+        const rows = Array.isArray(out) ? out : (out.data||[]);
+        state.total = Array.isArray(out) ? rows.length : (out.total ?? 0);
+        state.pages = Array.isArray(out) ? 1 : (out.pages ?? 0);
 
-  // Single-tap/Enter potvrda u PICK modu
-  let tapTimer=null;
-  document.addEventListener('pointerup', (e)=>{
-    if(!PICK) return;
-    const row = e.target.closest('.card-row[data-id]');
-    if(!row || e.target.closest('.acts')) return;
-    selectRow(row);
-    clearTimeout(tapTimer);
-    tapTimer = setTimeout(()=>commitPick(row), 220); // “tap to pick”
-  });
-  document.addEventListener('keydown', (e)=>{
-    if(!PICK) return;
-    if(e.key==='Enter'){
-      const row = $list.querySelector('.card-row.selected');
-      if(row) commitPick(row);
+        $list.innerHTML = rows.map(rowToHTML).join('');
+        rows.forEach(r => {
+          registerOption('model', r.model);
+          registerOption('oblik', r.oblik);
+          registerOption('vrata', r.vrata);
+          registerOption('pogon', r.pogon);
+          registerOption('mjenjac', r.mjenjac);
+        });
+        refreshDynamicSelects({
+          model: $model?.value || '',
+          oblik: $oblik?.value || '',
+          vrata: $vrata?.value || '',
+          pogon: $pogon?.value || '',
+          mjenjac: $mjenjac?.value || ''
+        });
+        show($empty, rows.length===0);
+        updateInfo();
+      }catch(e){
+        console.error(e);
+        $list.innerHTML = '';
+        if($empty){
+          show($empty,true);
+          $empty.textContent = 'Greška pri dohvaćanju podataka.';
+        }
+      }finally{
+        state.loading = false;
+      }
     }
-  });
 
-  function selectRow(row){
-    $list.querySelectorAll('.card-row.selected').forEach(r=>r.classList.remove('selected'));
-    row.classList.add('selected');
-  }
-  function commitPick(row){
-    const id = row.dataset.id;
-    const label = (row.querySelector('.main')?.textContent || '').trim();
-    if(window.opener && typeof window.opener.setSelectedVozilo === 'function'){
-      window.opener.setSelectedVozilo(id, label);
-      window.close();
+    // -------- search --------
+    let t=null;
+    function resetAndLoad(q){
+      state.q = q||'';
+      state.page=1; state.loading=false;
+      fetchPage();
     }
-  }
+    $q?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>resetAndLoad($q.value.trim()), 250); });
+    $q?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); resetAndLoad($q.value.trim()); } });
 
-    // -------- init --------
+    // -------- modal open/close --------
+    function openNew(){
+      if(PICK) return; // u pick modu nema dodavanja
+      $title.textContent='Nova marka';
+      $id.value='';
+      $serija.value=''; $nazivSelect.value=''; $model.value='';
+      $mjenjac.value=''; $pogon.value='';
+      $snaga.value=''; $zapremina.value=''; $vrata.value='';
+      $god_modela.value=''; $god_kraj.value=''; $kataloska.value='';
+      refreshDynamicSelects({model:'', oblik:'', vrata:'', pogon:'', mjenjac:''});
+      loadVrste('');
+      loadMarke('');
+      $msg.style.display='none';
+      $wrap.classList.add('show');
+      $nazivSelect.focus();
+    }
+    function openEdit(row){
+      if(PICK) return;
+      const d = row.dataset;
+      $title.textContent='Uredi marku / vozilo';
+      $id.value = d.id || '';
+      $nazivSelect.value = d.naziv || '';
+      $model.value = d.model || '';
+      $serija.value = d.serija || '';
+      $oblik.value = d.oblik || '';
+      $vrata.value = d.vrata || '';
+      $mjenjac.value = d.mjenjac || '';
+      $pogon.value = d.pogon || '';
+      $snaga.value = d.snaga || '';
+      $zapremina.value = d.zapremina || '';
+      $god_modela.value = d.god_modela || '';
+      $god_kraj.value = d.god_kraj || '';
+      $kataloska.value = d.kataloska || '';
+      registerOption('model', d.model);
+      registerOption('oblik', d.oblik);
+      registerOption('vrata', d.vrata);
+      registerOption('pogon', d.pogon);
+      registerOption('mjenjac', d.mjenjac);
+      refreshDynamicSelects({
+        model: d.model || '',
+        oblik: d.oblik || '',
+        vrata: d.vrata || '',
+        pogon: d.pogon || '',
+        mjenjac: d.mjenjac || ''
+      });
+      loadVrste(row.dataset.vrsta_id || '');
+      loadMarke(d.naziv || '');
+      $msg.style.display='none';
+      $wrap.classList.add('show');
+      $nazivSelect.focus();
+    }
+    function closeModal(){ $wrap.classList.remove('show'); }
+    $addTop?.addEventListener('click', openNew);
+    $addMarka?.addEventListener('click', addMarkaToSelect);
+    $addModel?.addEventListener('click', ()=>promptAddOption('model', $model, 'Naziv novog modela'));
+    $addOblik?.addEventListener('click', ()=>promptAddOption('oblik', $oblik, 'Naziv novog oblika'));
+    $addVrata?.addEventListener('click', ()=>promptAddOption('vrata', $vrata, 'Broj vrata', v => /^\d{1,2}$/.test(v) ? true : 'Unesi broj vrata (1-2 znamenke).'));
+    $addPogon?.addEventListener('click', ()=>promptAddOption('pogon', $pogon, 'Opis pogona'));
+    $addMjenjac?.addEventListener('click', ()=>promptAddOption('mjenjac', $mjenjac, 'Opis mjenjača'));
+    $cancel?.addEventListener('click', closeModal);
+    $close?.addEventListener('click', closeModal);
+    $wrap?.addEventListener('click', e=>{ if(e.target===$wrap) closeModal(); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+    async function resolveVrstaPickerUrl(){
+      if(vrstaPickerBaseUrl) return vrstaPickerBaseUrl;
+      for(const candidate of vrstaPickerCandidates){
+        try{
+          const testUrl = new URL(candidate, location.href);
+          let res = await fetch(testUrl, {method:'HEAD', cache:'no-store'});
+          if(res.status === 405){
+            res = await fetch(testUrl, {method:'GET', cache:'no-store'});
+          }
+          if(res.ok){
+            vrstaPickerBaseUrl = testUrl.href;
+            return vrstaPickerBaseUrl;
+          }
+        }catch(err){
+          console.debug('Vrsta picker candidate failed:', candidate, err);
+        }
+      }
+      return null;
+    }
+
+    async function openVrstaPicker(){
+      const base = await resolveVrstaPickerUrl();
+      if(!base){
+        alert('Stranica s vrstama vozila nije pronađena.');
+        return;
+      }
+      const pickerUrl = new URL(base);
+      pickerUrl.searchParams.set('pick','1');
+      const url = pickerUrl.toString();
+      const w = window.open(url, 'vrstePicker', 'width=1100,height=760,menubar=no,toolbar=no');
+      if(w) w.focus(); else location.href = url;
+    }
+    $pickVrsta?.addEventListener('click', openVrstaPicker);
+    window.addEventListener('focus', ()=>{
+      loadVrste($vrsta?.value || '');
+      loadMarke($nazivSelect?.value || '');
+    });
+
+    // -------- spremi (create/update) --------
+    async function saveMarka(){
+      const naziv = ($nazivSelect?.value || '').trim();
+      const body = {
+        id: $id.value ? +$id.value : undefined,
+        vrsta_id: $vrsta.value ? +$vrsta.value : null,
+        serija: $serija.value.trim(),
+        naziv,
+        model:  $model.value.trim(),
+        oblik:  $oblik.value.trim(),
+        mjenjac:$mjenjac.value.trim(),
+        pogon:  $pogon.value.trim(),
+        snaga:  $snaga.value ? +$snaga.value : null,
+        zapremina: $zapremina.value ? +$zapremina.value : null,
+        vrata:  $vrata.value ? +$vrata.value : null,
+        god_modela: $god_modela.value ? +$god_modela.value : null,
+        god_kraj:   $god_kraj.value ? +$god_kraj.value : null,
+        kataloska:  $kataloska.value ? +$kataloska.value : null
+      };
+      if(!body.naziv){
+        $msg.textContent='Marka je obavezna.'; $msg.style.display='block'; return;
+      }
+      const url = body.id ? API.update : API.create;
+      try{
+        const res = await fetchJsonWithFallback(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+        const out = res.data;
+        if(!out.ok){ throw new Error(out.error||'Greška.'); }
+        closeModal();
+        state.page=1; $list.innerHTML=''; fetchPage();
+      }catch(e){
+        $msg.textContent = e.message || 'Greška pri spremanju.'; $msg.style.display='block';
+        console.error(e);
+      }
+    }
+    $save?.addEventListener('click', saveMarka);
+
+    // -------- delegacija klikova na listu --------
+    document.addEventListener('click', async (e)=>{
+      const row = e.target.closest('.card-row[data-id]');
+      if(!row) return;
+
+      // PICK: odabir za mobilne i desktop
+      if(PICK && !e.target.closest('.acts')){
+        selectRow(row);
+        if (e.detail === 2) commitPick(row);    // dvoklik desktop
+        return;
+      }
+
+      if(!PICK && e.target.closest('.act.edit')) { openEdit(row); return; }
+      if(!PICK && e.target.closest('.act.del'))  {
+        const id = +row.dataset.id;
+        if(!confirm('Obrisati marku #'+id+'?')) return;
+        try{
+          const res = await fetchJsonWithFallback(API.delete, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
+          const out = res.data;
+          if(!out.ok) throw new Error(out.error||'Greška pri brisanju.');
+          row.remove(); updateInfo();
+        }catch(err){ alert(err.message||'Greška pri brisanju.'); }
+        return;
+      }
+    });
+
+    // Single-tap/Enter potvrda u PICK modu
+    let tapTimer=null;
+    document.addEventListener('pointerup', (e)=>{
+      if(!PICK) return;
+      const row = e.target.closest('.card-row[data-id]');
+      if(!row || e.target.closest('.acts')) return;
+      selectRow(row);
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(()=>commitPick(row), 220); // “tap to pick”
+    });
+    document.addEventListener('keydown', (e)=>{
+      if(!PICK) return;
+      if(e.key==='Enter'){
+        const row = $list.querySelector('.card-row.selected');
+        if(row) commitPick(row);
+      }
+    });
+
+    function selectRow(row){
+      $list.querySelectorAll('.card-row.selected').forEach(r=>r.classList.remove('selected'));
+      row.classList.add('selected');
+    }
+    function commitPick(row){
+      const id = row.dataset.id;
+      const label = (row.querySelector('.main')?.textContent || '').trim();
+      if(window.opener && typeof window.opener.setSelectedVozilo === 'function'){
+        window.opener.setSelectedVozilo(id, label);
+        window.close();
+      }
+    }
+
     // -------- init --------
     refreshDynamicSelects();
     if(!PICK){
