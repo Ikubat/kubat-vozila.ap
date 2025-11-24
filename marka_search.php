@@ -131,6 +131,20 @@ try {
         }
     }
 
+    // helper: građenje uvjeta za modelske godine tako da obuhvati i mlađa godišta
+    $addYearCondition = function (int $year) use (&$params, &$types, $colGodModela, $colGodKraj) {
+        $yearParts = [];
+        if ($colGodModela) {
+            $yearParts[] = "m.`$colGodModela` >= ?";
+            $params[] = $year; $types .= 'i';
+        }
+        if ($colGodKraj) {
+            $yearParts[] = "m.`$colGodKraj` >= ?";
+            $params[] = $year; $types .= 'i';
+        }
+        return $yearParts ? '(' . implode(' OR ', $yearParts) . ')' : null;
+    };
+
     if ($q !== '') {
         $likeParts = [];
 
@@ -152,10 +166,12 @@ try {
         $likeParts[] = "IFNULL(v.oznaka,'') LIKE CONCAT('%',?,'%')";
         $params[] = $q; $types .= 's';
 
-        // po modelskoj godini (godište >= tražene vrijednosti)
-        if ($colGodModela && $yearFilter !== null) {
-            $likeParts[] = "m.`$colGodModela` >= ?";
-            $params[] = $yearFilter; $types .= 'i';
+        // po modelskoj godini (godište >= tražene vrijednosti) uzimajući u obzir i kraj proizvodnje
+        if ($yearFilter !== null) {
+            $yearCond = $addYearCondition($yearFilter);
+            if ($yearCond) {
+                $likeParts[] = $yearCond;
+            }
         }
 
         $whereParts[] = '(' . implode(' OR ', $likeParts) . ')';
@@ -202,9 +218,11 @@ try {
         $whereParts[] = "m.`$colZapremina` = ?";
         $params[] = $fZapremina; $types .= 'd';
     }
-    if ($colGodModela && $fGodModela !== null) {
-        $whereParts[] = "m.`$colGodModela` = ?";
-        $params[] = $fGodModela; $types .= 'i';
+    if ($fGodModela !== null) {
+        $yearCond = $addYearCondition($fGodModela);
+        if ($yearCond) {
+            $whereParts[] = $yearCond;
+        }
     }
     if ($colGodKraj && $fGodKraj !== null) {
         $whereParts[] = "m.`$colGodKraj` = ?";
@@ -216,9 +234,11 @@ try {
     }
 
     // Ako je traženje samo godine, bez teksta, a kolona postoji, primijeni filter i bez LIKE izraza
-    if ($colGodModela && $yearFilter !== null && $q === (string)$yearFilter) {
-        $whereParts[] = "m.`$colGodModela` >= ?";
-        $params[] = $yearFilter; $types .= 'i';
+    if ($yearFilter !== null && $q === (string)$yearFilter) {
+        $yearCond = $addYearCondition($yearFilter);
+        if ($yearCond) {
+            $whereParts[] = $yearCond;
+        }
     }
 
     $where = $whereParts ? implode(' AND ', $whereParts) : '1=1';
