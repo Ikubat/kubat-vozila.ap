@@ -203,7 +203,8 @@ try {
         $params[] = $fZapremina; $types .= 'd';
     }
     if ($colGodModela && $fGodModela !== null) {
-        $whereParts[] = "m.`$colGodModela` = ?";
+        // prikazuj modele od zadane modelske godine pa nadalje
+        $whereParts[] = "m.`$colGodModela` >= ?";
         $params[] = $fGodModela; $types .= 'i';
     }
     if ($colGodKraj && $fGodKraj !== null) {
