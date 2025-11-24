@@ -83,6 +83,18 @@ body.marke .card-row {
   min-width: 1200px;
 }
 body.marke .head-row { background: #f3f4ff; font-weight: 600; }
+body.marke .filter-row {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(78px, 1fr)) 88px;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 9px;
+  border-radius: var(--radius);
+  border: 1px dashed #d5d9e3;
+  background: #fbfcff;
+  min-width: 1200px;
+}
+body.marke .filter-row input { font-size: 13px; padding: 7px 9px; }
 body.marke .card-row { background: #fff; align-items: flex-start; }
 body.marke .acts { display: flex; justify-content: flex-end; gap: 4px; }
 body.marke .act {

@@ -21,10 +21,23 @@ function jout($d) {
 }
 
 // ulaz
-$q     = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
-$page  = max(1, (int)($_GET['page'] ?? 1));
-$pp    = max(1, (int)($_GET['page_size'] ?? 50));
-$off   = ($page - 1) * $pp;
+$q           = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+$page        = max(1, (int)($_GET['page'] ?? 1));
+$pp          = max(1, (int)($_GET['page_size'] ?? 50));
+$off         = ($page - 1) * $pp;
+$fNaziv      = isset($_GET['naziv']) ? trim((string)$_GET['naziv']) : '';
+$fModel      = isset($_GET['model']) ? trim((string)$_GET['model']) : '';
+$fSerija     = isset($_GET['serija']) ? trim((string)$_GET['serija']) : '';
+$fVrsta      = isset($_GET['vrsta']) ? trim((string)$_GET['vrsta']) : '';
+$fOblik      = isset($_GET['oblik']) ? trim((string)$_GET['oblik']) : '';
+$fPogon      = isset($_GET['pogon']) ? trim((string)$_GET['pogon']) : '';
+$fMjenjac    = isset($_GET['mjenjac']) ? trim((string)$_GET['mjenjac']) : '';
+$fVrata      = (isset($_GET['vrata']) && $_GET['vrata'] !== '') ? (int)$_GET['vrata'] : null;
+$fSnaga      = (isset($_GET['snaga']) && $_GET['snaga'] !== '') ? (float)$_GET['snaga'] : null;
+$fZapremina  = (isset($_GET['zapremina']) && $_GET['zapremina'] !== '') ? (float)$_GET['zapremina'] : null;
+$fGodModela  = (isset($_GET['god_modela']) && $_GET['god_modela'] !== '') ? (int)$_GET['god_modela'] : null;
+$fGodKraj    = (isset($_GET['god_kraj']) && $_GET['god_kraj'] !== '') ? (int)$_GET['god_kraj'] : null;
+$fKataloska  = (isset($_GET['kataloska']) && $_GET['kataloska'] !== '') ? (float)$_GET['kataloska'] : null;
 
 try {
     $db = $conn;
@@ -93,7 +106,7 @@ try {
     $select = implode(",\n       ", $sel);
 
     // --- WHERE za pretragu ---
-    $where = '1=1';
+    $whereParts = [];
     $params = [];
     $types  = '';
 
@@ -118,8 +131,64 @@ try {
         $likeParts[] = "IFNULL(v.oznaka,'') LIKE CONCAT('%',?,'%')";
         $params[] = $q; $types .= 's';
 
-        $where = '(' . implode(' OR ', $likeParts) . ')';
+        $whereParts[] = '(' . implode(' OR ', $likeParts) . ')';
     }
+
+    if ($fNaziv !== '') {
+        $whereParts[] = "m.`$colNaziv` LIKE CONCAT('%',?,'%')";
+        $params[] = $fNaziv; $types .= 's';
+    }
+    if ($colModel && $fModel !== '') {
+        $whereParts[] = "m.`$colModel` LIKE CONCAT('%',?,'%')";
+        $params[] = $fModel; $types .= 's';
+    }
+    if ($colSerija && $fSerija !== '') {
+        $whereParts[] = "m.`$colSerija` LIKE CONCAT('%',?,'%')";
+        $params[] = $fSerija; $types .= 's';
+    }
+    if ($fVrsta !== '') {
+        $whereParts[] = "(v.naziv LIKE CONCAT('%',?,'%') OR IFNULL(v.oznaka,'') LIKE CONCAT('%',?,'%'))";
+        $params[] = $fVrsta; $types .= 's';
+        $params[] = $fVrsta; $types .= 's';
+    }
+    if ($colOblik && $fOblik !== '') {
+        $whereParts[] = "m.`$colOblik` LIKE CONCAT('%',?,'%')";
+        $params[] = $fOblik; $types .= 's';
+    }
+    if ($colPogon && $fPogon !== '') {
+        $whereParts[] = "m.`$colPogon` LIKE CONCAT('%',?,'%')";
+        $params[] = $fPogon; $types .= 's';
+    }
+    if ($colMjenjac && $fMjenjac !== '') {
+        $whereParts[] = "m.`$colMjenjac` LIKE CONCAT('%',?,'%')";
+        $params[] = $fMjenjac; $types .= 's';
+    }
+    if ($colVrata && $fVrata !== null) {
+        $whereParts[] = "m.`$colVrata` = ?";
+        $params[] = $fVrata; $types .= 'i';
+    }
+    if ($colSnaga && $fSnaga !== null) {
+        $whereParts[] = "m.`$colSnaga` = ?";
+        $params[] = $fSnaga; $types .= 'd';
+    }
+    if ($colZapremina && $fZapremina !== null) {
+        $whereParts[] = "m.`$colZapremina` = ?";
+        $params[] = $fZapremina; $types .= 'd';
+    }
+    if ($colGodModela && $fGodModela !== null) {
+        $whereParts[] = "m.`$colGodModela` = ?";
+        $params[] = $fGodModela; $types .= 'i';
+    }
+    if ($colGodKraj && $fGodKraj !== null) {
+        $whereParts[] = "m.`$colGodKraj` = ?";
+        $params[] = $fGodKraj; $types .= 'i';
+    }
+    if ($colKataloska && $fKataloska !== null) {
+        $whereParts[] = "m.`$colKataloska` = ?";
+        $params[] = $fKataloska; $types .= 'd';
+    }
+
+    $where = $whereParts ? implode(' AND ', $whereParts) : '1=1';
 
     // --- total ---
     if ($params) {
