@@ -33,6 +33,7 @@
     const $empty      = document.getElementById('empty');
     const $pageInfo   = document.getElementById('pageInfo');
     const $infoFilter = document.getElementById('infoFilter');
+    const $filters    = Array.from(document.querySelectorAll('.filter-row [data-filter]'));
 
     // modal
     const $wrap   = document.getElementById('mWrap');
@@ -120,11 +121,21 @@
     // ===== KRAJ DODANOG BLOKA =====
 
     // -------- stanje liste --------
-    const state = { q:'', page:1, pageSize:50, total:0, pages:0, loading:false };
+    const state = { q:'', filters:{}, page:1, pageSize:50, total:0, pages:0, loading:false };
 
     function updateInfo() {
       if($infoFilter){
-        $infoFilter.textContent = state.q ? `Filter: "${state.q}"` : '';
+        const labels = {
+          vrsta:'Vrsta', naziv:'Marka', model:'Model', serija:'Serija', god_modela:'Modelska godina', god_kraj:'Kraj proizvodnje',
+          oblik:'Oblik', vrata:'Vrata', snaga:'Snaga', zapremina:'Zapremina', pogon:'Pogon', mjenjac:'Mjenjač', kataloska:'Kataloška'
+        };
+        const parts = [];
+        if(state.q) parts.push(`Tekst: "${state.q}"`);
+        Object.entries(state.filters || {}).forEach(([key,val])=>{
+          if(!val) return;
+          parts.push(`${labels[key]||key}: "${val}"`);
+        });
+        $infoFilter.textContent = parts.length ? `Filteri: ${parts.join(', ')}` : '';
       }
       if($pageInfo){
         const shown = ($list?.querySelectorAll('.card-row').length || 0);
@@ -139,6 +150,17 @@
       if(!clean) return;
       const key = toKey(clean);
       if(!map.has(key)) map.set(key, clean);
+    }
+
+    function readFiltersFromUI(){
+      const filters = {};
+      $filters.forEach(inp=>{
+        const key = inp.dataset.filter;
+        if(!key) return;
+        const val = (inp.value||'').trim();
+        filters[key] = val;
+      });
+      return filters;
     }
 
     function setSelectOptions($sel, map, placeholder, preselect=''){
@@ -343,6 +365,7 @@
       state.loading = true;
 
       const qs = new URLSearchParams({ q: state.q, page:String(state.page), page_size:String(state.pageSize) });
+      Object.entries(state.filters||{}).forEach(([k,v])=>{ if(v) qs.set(k,v); });
       try{
         const res = await fetchJsonWithFallback(API.search.map(u=>u+'?'+qs.toString()), {cache:'no-store'});
         const out = res.data;
@@ -388,6 +411,18 @@
     }
     $q?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>resetAndLoad($q.value.trim()), 250); });
     $q?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(t); resetAndLoad($q.value.trim()); } });
+
+    // -------- filters --------
+    let ft=null;
+    function resetFiltersAndLoad(){
+      state.filters = readFiltersFromUI();
+      state.page=1; state.loading=false;
+      fetchPage();
+    }
+    $filters.forEach(inp=>{
+      inp.addEventListener('input', ()=>{ clearTimeout(ft); ft=setTimeout(resetFiltersAndLoad, 250); });
+      inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(ft); resetFiltersAndLoad(); } });
+    });
 
     // -------- modal open/close --------
     function openNew(){
@@ -586,6 +621,7 @@
 
     // -------- init --------
     refreshDynamicSelects();
+    state.filters = readFiltersFromUI();
     if(!PICK){
       loadVrste('');
       loadMarke('');
