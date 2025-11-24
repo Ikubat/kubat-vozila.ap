@@ -117,12 +117,12 @@ try {
     $colVrata     = $cols['vrata']      ?? null;
     $colMjenjac   = $cols['mjenjac']    ?? null;
     $colPogon     = $cols['pogon']      ?? null;
-    $colSnaga     = $cols['snaga']      ?? null;
-    $colZapremina = $cols['zapremina']  ?? null;
-    $colGodModela = $cols['god_modela'] ?? null;
-    $colGodKraj   = $cols['god_kraj']   ?? null;
-    $colKataloska = $cols['kataloska']  ?? null;
-
+    $colSnaga     = $cols['snaga']      ?? null;␊
+    $colZapremina = $cols['zapremina']  ?? null;␊
+    $colGodModela = $cols['god_modela'] ?? $cols['godina_od'] ?? $cols['god_od'] ?? null;
+    $colGodKraj   = $cols['god_kraj']   ?? $cols['godina_do'] ?? $cols['god_do'] ?? null;
+    $colKataloska = $cols['kataloska']  ?? null;␊
+    
     if (!$colNaziv) jdie("Tablica `$T_MARKA` nema kolonu za naziv.");
 
     // ---- PRIPREMA INSERTA ----
