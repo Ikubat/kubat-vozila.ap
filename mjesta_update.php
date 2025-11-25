@@ -1,3 +1,5 @@
+<?php
+
 $bootstrapPath = __DIR__ . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
     $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
