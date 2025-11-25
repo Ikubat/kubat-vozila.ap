@@ -27,8 +27,6 @@ kubatapp_require_api('mjesta_update.php');
 
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
-// Poveži se na bazu putem PDO konekcije koju koristi ostatak API-ja
-require_once __DIR__ . '/db.php';
 
 function jdie($msg, $code = 200) {
     http_response_code($code);
@@ -72,8 +70,9 @@ if ($naziv === '') {
 
 try {
     // Čitanje stvarnih naziva kolona u tablici
+    $colsRes = $conn->query('SHOW COLUMNS FROM mjesta');
     $cols = [];
-    foreach ($pdo->query('SHOW COLUMNS FROM mjesta') as $c) {
+    while ($c = $colsRes->fetch_assoc()) {
         $cols[strtolower($c['Field'])] = $c['Field'];
     }
 
@@ -92,25 +91,31 @@ try {
     $colKanton = $cols['kanton'] ?? null;
 
     $fields = ["`$colNaziv` = ?"];
+    $types  = 's';
     $params = [$naziv];
 
     if ($colSifra !== null) {
         $fields[] = "`$colSifra` = ?";
+        $types   .= 's';
         $params[] = ($sifra !== '') ? $sifra : null;
     }
 
     if ($colKanton !== null) {
         $fields[] = "`$colKanton` = ?";
+        $types   .= 's';
         $params[] = ($kanton !== '') ? $kanton : null;
     }
 
+    $fields = implode(', ', $fields);
+    $sql = "UPDATE mjesta SET $fields WHERE `$colId` = ?";
+    $types .= 'i';
     $params[] = $id;
 
-    $sql = "UPDATE mjesta SET " . implode(', ', $fields) . " WHERE `$colId` = ?";
-    $st  = $pdo->prepare($sql);
-    $st->execute($params);
+    $st = $conn->prepare($sql);
+    $st->bind_param($types, ...$params);
+    $st->execute();
 
     jok(['id' => $id]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     jdie('Greška pri ažuriranju: ' . $e->getMessage());
 }
