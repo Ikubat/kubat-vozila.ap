@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('mjesta_create.php');
+
 // Dodaje novo mjesto u tablicu `mjesta`.
 //
 // Prihvaća POST JSON ili klasični POST:

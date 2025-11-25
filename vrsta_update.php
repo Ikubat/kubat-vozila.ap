@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('vrsta_update.php');
+
 // vrsta_update.php
 // Ažurira postojeću vrstu vozila u tablici vrsta_vozila.
 // Očekuje (POST ili JSON):

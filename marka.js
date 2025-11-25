@@ -1,6 +1,7 @@
 // marka.js — lista + modal + pick-mode (?pick=1) + paginacija
 (function () {
   function init(){
+    
     if (!document.body.classList.contains('marke')) return;
 
     // -------- pick mode --------

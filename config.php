@@ -67,7 +67,17 @@ $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
 if (!$conn) {
     http_response_code(500);
-    die('Neuspjela konekcija na bazu: ' . mysqli_connect_error());
+
+    $message = 'Neuspjela konekcija na bazu: ' . mysqli_connect_error();
+    if (defined('KUBATAPP_JSON_API')) {
+        echo json_encode([
+            'ok'    => false,
+            'error' => $message,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    die($message);
 }
 
 mysqli_set_charset($conn, 'utf8mb4');

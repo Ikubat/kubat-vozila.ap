@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('vrsta_delete.php');
+
 // Briše vrstu vozila ako je ne koristi nijedna marka_vozila.
 // Očekuje: { "id": 3 } (POST JSON) ili klasični POST id=3.
 

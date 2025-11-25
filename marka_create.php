@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('marka_create.php');
+
 // Dodavanje nove marke u tablicu marka_vozila.
 // Očekuje (idealno JSON POST):
 // { "naziv": "...", "model": "...", "vrsta_id": 2 }
@@ -10,7 +13,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
-// Fallback nazivi tablica ako nisu definirani u okruženju
+// Fallback nazivi tablica ako nisu definirani u okruženju␊
 $T_MARKA = $T_MARKA ?? 'marka_vozila';
 
 function jdie($m, $c = 400) {
@@ -23,7 +26,7 @@ function jok($x = []) {
     exit;
 }
 
-// ---- UČITAVANJE PODATAKA ----
+// ---- UČITAVANJE PODATAKA ----␊
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $ct = $_SERVER['CONTENT_TYPE'] ?? '';
 
@@ -69,7 +72,7 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     $serija    = trim((string)($_POST['serija'] ?? ''));
     $oblik     = trim((string)($_POST['oblik'] ?? ''));
     $mjenjac   = trim((string)($_POST['mjenjac'] ?? ''));
-    $pogon     = trim((string)($_POST['pogon'] ?? ''));
+    $pogon     = trim((string)($_POST['pogon'] ?? ''));␊
     $vrata     = isset($_POST['vrata']) && $_POST['vrata'] !== '' ? (int)$_POST['vrata'] : null;
     $snaga     = isset($_POST['snaga']) && $_POST['snaga'] !== '' ? (int)$_POST['snaga'] : null;
     $zapremina = isset($_POST['zapremina']) && $_POST['zapremina'] !== '' ? (int)$_POST['zapremina'] : null;
@@ -97,7 +100,7 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
 
 if ($naziv === '') jdie('Naziv je obavezan.');
 
-// ---- DB & STRUKTURA ----
+// ---- DB & STRUKTURA ----␊
 try {
     $db = $conn;
 
@@ -117,11 +120,11 @@ try {
     $colVrata     = $cols['vrata']      ?? null;
     $colMjenjac   = $cols['mjenjac']    ?? null;
     $colPogon     = $cols['pogon']      ?? null;
-    $colSnaga     = $cols['snaga']      ?? null;␊
-    $colZapremina = $cols['zapremina']  ?? null;␊
+    $colSnaga     = $cols['snaga']      ?? null;
+    $colZapremina = $cols['zapremina']  ?? null;
     $colGodModela = $cols['god_modela'] ?? $cols['godina_od'] ?? $cols['god_od'] ?? null;
     $colGodKraj   = $cols['god_kraj']   ?? $cols['godina_do'] ?? $cols['god_do'] ?? null;
-    $colKataloska = $cols['kataloska']  ?? null;␊
+    $colKataloska = $cols['kataloska']  ?? null;
     
     if (!$colNaziv) jdie("Tablica `$T_MARKA` nema kolonu za naziv.");
 
@@ -131,13 +134,13 @@ try {
     $vals   = [];
     $types  = '';
 
-    // naziv je uvijek tu
+    // naziv je uvijek tu␊
     $fields[] = "`$colNaziv`";
     $ph[]     = '?';
     $vals[]   = $naziv;
     $types   .= 's';
 
-    // model ako postoji kolona
+    // model ako postoji kolona␊
     if ($colModel && $model !== '') {
         $fields[] = "`$colModel`";
         $ph[]     = '?';

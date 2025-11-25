@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('obracun_list.php');
+
 // Vraća popis obračuna iz obracun_vozila bez kompliciranih joinova,
 // tako da radi s bilo kojom postojećom shemom partnera/vozila.
 

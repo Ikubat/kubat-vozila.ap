@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('vrsta_list_auto.php');
+
 // GET parametri:
 //   table=vrsta_vozila (default)   -> ime tabele
 //   all=1                          -> vrati sve bez paginacije

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('mjesta_update.php');
+
 // Ažurira zapis u tablici `mjesta`.
 //
 // Prihvaća JSON ili klasični POST. Podržava više naziva kolona

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('partneri_update.php');
+
 // partneri_update.php
 // Ažurira postojeći zapis u `partneri`.
 // Podržava:

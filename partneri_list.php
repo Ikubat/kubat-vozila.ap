@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('partneri_list.php');
+
 // partneri_list.php
 // Robusna lista partnera za frontend (partneri.js).
 // Podržava:

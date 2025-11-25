@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('marka_search.php');
+
 // Lista marki iz tablice marka_vozila + vrsta_vozila, bez pretpostavke da postoji "model" kolona.
 
 header('Content-Type: application/json; charset=utf-8');
@@ -38,19 +41,6 @@ $fZapremina  = (isset($_GET['zapremina']) && $_GET['zapremina'] !== '') ? (float
 $fGodModela  = (isset($_GET['god_modela']) && $_GET['god_modela'] !== '') ? (int)$_GET['god_modela'] : null;
 $fGodKraj    = (isset($_GET['god_kraj']) && $_GET['god_kraj'] !== '') ? (int)$_GET['god_kraj'] : null;
 $fKataloska  = (isset($_GET['kataloska']) && $_GET['kataloska'] !== '') ? (float)$_GET['kataloska'] : null;
-$fNaziv      = isset($_GET['naziv']) ? trim((string)$_GET['naziv']) : '';
-$fModel      = isset($_GET['model']) ? trim((string)$_GET['model']) : '';
-$fSerija     = isset($_GET['serija']) ? trim((string)$_GET['serija']) : '';
-$fVrsta      = isset($_GET['vrsta']) ? trim((string)$_GET['vrsta']) : '';
-$fOblik      = isset($_GET['oblik']) ? trim((string)$_GET['oblik']) : '';
-$fPogon      = isset($_GET['pogon']) ? trim((string)$_GET['pogon']) : '';
-$fMjenjac    = isset($_GET['mjenjac']) ? trim((string)$_GET['mjenjac']) : '';
-$fVrata      = (isset($_GET['vrata']) && $_GET['vrata'] !== '') ? (int)$_GET['vrata'] : null;
-$fSnaga      = (isset($_GET['snaga']) && $_GET['snaga'] !== '') ? (float)$_GET['snaga'] : null;
-$fZapremina  = (isset($_GET['zapremina']) && $_GET['zapremina'] !== '') ? (float)$_GET['zapremina'] : null;
-$fGodModela  = (isset($_GET['god_modela']) && $_GET['god_modela'] !== '') ? (int)$_GET['god_modela'] : null;
-$fGodKraj    = (isset($_GET['god_kraj']) && $_GET['god_kraj'] !== '') ? (int)$_GET['god_kraj'] : null;
-$fKataloska  = (isset($_GET['kataloska']) && $_GET['kataloska'] !== '') ? (float)$_GET['kataloska'] : null;
 
 try {
     $db = $conn;
@@ -76,11 +66,11 @@ try {
     $colVrata     = $cols['vrata']       ?? null;
     $colMjenjac   = $cols['mjenjac']     ?? null;
     $colPogon     = $cols['pogon']       ?? null;
-    $colSnaga     = $cols['snaga']       ?? null;␊
-    $colZapremina = $cols['zapremina']   ?? null;␊
+    $colSnaga     = $cols['snaga']       ?? null;
+    $colZapremina = $cols['zapremina']   ?? null;
     $colGodModela = $cols['god_modela']  ?? $cols['godina_od'] ?? $cols['god_od'] ?? null;
     $colGodKraj   = $cols['god_kraj']    ?? $cols['godina_do'] ?? $cols['god_do'] ?? null;
-    $colKataloska = $cols['kataloska']   ?? null;␊
+    $colKataloska = $cols['kataloska']   ?? null;
     
     if (!$colId || !$colNaziv) {
         jdie("Tablica `$T_MARKA` nema očekivane kolone (id, naziv).");
@@ -131,6 +121,20 @@ try {
         }
     }
 
+    // helper: građenje uvjeta za modelske godine tako da obuhvati i mlađa godišta
+    $addYearCondition = function (int $year) use (&$params, &$types, $colGodModela, $colGodKraj) {
+        $yearParts = [];
+        if ($colGodModela) {
+            $yearParts[] = "m.`$colGodModela` >= ?";
+            $params[] = $year; $types .= 'i';
+        }
+        if ($colGodKraj) {
+            $yearParts[] = "m.`$colGodKraj` >= ?";
+            $params[] = $year; $types .= 'i';
+        }
+        return $yearParts ? '(' . implode(' OR ', $yearParts) . ')' : null;
+    };
+
     if ($q !== '') {
         $likeParts = [];
 
@@ -152,10 +156,12 @@ try {
         $likeParts[] = "IFNULL(v.oznaka,'') LIKE CONCAT('%',?,'%')";
         $params[] = $q; $types .= 's';
 
-        // po modelskoj godini (godište >= tražene vrijednosti)
-        if ($colGodModela && $yearFilter !== null) {
-            $likeParts[] = "m.`$colGodModela` >= ?";
-            $params[] = $yearFilter; $types .= 'i';
+        // po modelskoj godini (godište >= tražene vrijednosti) uzimajući u obzir i kraj proizvodnje
+        if ($yearFilter !== null) {
+            $yearCond = $addYearCondition($yearFilter);
+            if ($yearCond) {
+                $likeParts[] = $yearCond;
+            }
         }
 
         $whereParts[] = '(' . implode(' OR ', $likeParts) . ')';
@@ -202,9 +208,11 @@ try {
         $whereParts[] = "m.`$colZapremina` = ?";
         $params[] = $fZapremina; $types .= 'd';
     }
-    if ($colGodModela && $fGodModela !== null) {
-        $whereParts[] = "m.`$colGodModela` = ?";
-        $params[] = $fGodModela; $types .= 'i';
+    if ($fGodModela !== null) {
+        $yearCond = $addYearCondition($fGodModela);
+        if ($yearCond) {
+            $whereParts[] = $yearCond;
+        }
     }
     if ($colGodKraj && $fGodKraj !== null) {
         $whereParts[] = "m.`$colGodKraj` = ?";
@@ -216,9 +224,11 @@ try {
     }
 
     // Ako je traženje samo godine, bez teksta, a kolona postoji, primijeni filter i bez LIKE izraza
-    if ($colGodModela && $yearFilter !== null && $q === (string)$yearFilter) {
-        $whereParts[] = "m.`$colGodModela` >= ?";
-        $params[] = $yearFilter; $types .= 'i';
+    if ($yearFilter !== null && $q === (string)$yearFilter) {
+        $yearCond = $addYearCondition($yearFilter);
+        if ($yearCond) {
+            $whereParts[] = $yearCond;
+        }
     }
 
     $where = $whereParts ? implode(' AND ', $whereParts) : '1=1';

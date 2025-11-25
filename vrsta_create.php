@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('vrsta_create.php');
+
 // vrsta_create.php - doda novu vrstu u vrsta_vozila
 // prima JSON ili form-data: naziv, oznaka
 

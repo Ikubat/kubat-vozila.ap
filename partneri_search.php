@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('partneri_search.php');
+
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once __DIR__ . '/config.php';

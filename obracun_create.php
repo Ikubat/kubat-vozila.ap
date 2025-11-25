@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('obracun_create.php');
+
 // Prima JSON iz obracun.js i upisuje zapis u tablicu obračuna.
 //
 // Očekuje minimalno:

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/_bootstrap.php';
+kubatapp_require_api('marka_delete.php');
+
 // Briše marku iz tablice marka_vozila po ID-u.
 //
 // Prihvaća:
