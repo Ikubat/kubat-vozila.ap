@@ -25,6 +25,8 @@ kubatapp_require_api('mjesta_update.php');
 
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
+// Poveži se na bazu putem PDO konekcije koju koristi ostatak API-ja
+require_once __DIR__ . '/db.php';
 
 function jdie($msg, $code = 200) {
     http_response_code($code);
@@ -90,14 +92,14 @@ try {
     $fields = ["`$colNaziv` = ?"];
     $params = [$naziv];
 
-    if ($colSifra !== null && $sifra !== '') {
+    if ($colSifra !== null) {
         $fields[] = "`$colSifra` = ?";
-        $params[] = $sifra;
+        $params[] = ($sifra !== '') ? $sifra : null;
     }
 
-    if ($colKanton !== null && $kanton !== '') {
+    if ($colKanton !== null) {
         $fields[] = "`$colKanton` = ?";
-        $params[] = $kanton;
+        $params[] = ($kanton !== '') ? $kanton : null;
     }
 
     $params[] = $id;
