@@ -1,5 +1,22 @@
 <?php
-require_once __DIR__ . '/_bootstrap.php';
+$bootstrapPath = __DIR__ . '/_bootstrap.php';
+if (!is_file($bootstrapPath)) {
+    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+}
+if (!is_file($bootstrapPath)) {
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    http_response_code(500);
+    echo json_encode([
+        'ok'    => false,
+        'error' => 'API bootstrap nije pronađen.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+require_once $bootstrapPath;
+
 kubatapp_require_api('mjesta_create.php');
 
 // Dodaje novo mjesto u tablicu `mjesta`.
@@ -43,14 +60,14 @@ if (stripos($ct, 'application/json') !== false) {
         jdie('Neispravan JSON.');
     }
     $naziv  = trim((string)($in['naziv']  ?? $in['m_naziv']  ?? $in['naziv_mjesta'] ?? ''));
-    $sifra  = trim((string)($in['sifra']  ?? $in['m_sifra']  ?? ''));
+    $sifra  = trim((string)($in['sifra']  ?? $in['m_sifra']  ?? $in['porezna_sifra'] ?? ''));
     $kanton = trim((string)($in['kanton'] ?? $in['m_kanton'] ?? ''));
 
 // Klasični POST
 } else {
     $naziv  = trim((string)($_POST['naziv']  ?? $_POST['m_naziv']  ?? $_POST['naziv_mjesta'] ?? ''));
-    $sifra  = trim((string)($_POST['sifra']  ?? $_POST['m_sifra']  ?? ''));
-    $kanton = trim((string)($_POST['kanton'] ?? $_POST['m_kanton'] ?? ''));
+    $sifra  = trim((string)($_POST['sifra']  ?? $_POST['m_sifra']  ?? $_POST['porezna_sifra'] ?? ''));
+    $kanton = trim((string)($_POST['kanton'] ?? $_POST['m_kanton'] ?? ''));␊
 }
 
 if ($naziv === '') {
