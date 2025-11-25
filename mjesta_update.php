@@ -1,3 +1,5 @@
+<?php
+
 $bootstrapPath = __DIR__ . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
     $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
@@ -68,8 +70,9 @@ if ($naziv === '') {
 
 try {
     // Čitanje stvarnih naziva kolona u tablici
+    $colsRes = $conn->query('SHOW COLUMNS FROM mjesta');
     $cols = [];
-    foreach ($pdo->query('SHOW COLUMNS FROM mjesta') as $c) {
+    while ($c = $colsRes->fetch_assoc()) {
         $cols[strtolower($c['Field'])] = $c['Field'];
     }
 
@@ -88,25 +91,31 @@ try {
     $colKanton = $cols['kanton'] ?? null;
 
     $fields = ["`$colNaziv` = ?"];
+    $types  = 's';
     $params = [$naziv];
 
-    if ($colSifra !== null && $sifra !== '') {
+    if ($colSifra !== null) {
         $fields[] = "`$colSifra` = ?";
-        $params[] = $sifra;
+        $types   .= 's';
+        $params[] = ($sifra !== '') ? $sifra : null;
     }
 
-    if ($colKanton !== null && $kanton !== '') {
+    if ($colKanton !== null) {
         $fields[] = "`$colKanton` = ?";
-        $params[] = $kanton;
+        $types   .= 's';
+        $params[] = ($kanton !== '') ? $kanton : null;
     }
 
+    $fields = implode(', ', $fields);
+    $sql = "UPDATE mjesta SET $fields WHERE `$colId` = ?";
+    $types .= 'i';
     $params[] = $id;
 
-    $sql = "UPDATE mjesta SET " . implode(', ', $fields) . " WHERE `$colId` = ?";
-    $st  = $pdo->prepare($sql);
-    $st->execute($params);
+    $st = $conn->prepare($sql);
+    $st->bind_param($types, ...$params);
+    $st->execute();
 
     jok(['id' => $id]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     jdie('Greška pri ažuriranju: ' . $e->getMessage());
 }
