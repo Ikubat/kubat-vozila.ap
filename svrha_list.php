@@ -1,6 +1,4 @@
 <?php
-// Wrapper za /api/ putanju – prosljeđuje na glavni svrha_list.php
-require_once __DIR__ . '/../svrha_list.php';
 
 // /kubatapp/api/svrha_list.php
 require_once __DIR__ . '/config.php';
