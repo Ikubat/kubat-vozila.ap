@@ -28,6 +28,9 @@ $respond = function (bool $ok, array $extra = [], int $status = 200) {
     exit;
 };
 
+// mysqli će baciti izuzetak umjesto upozorenja
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 try {
     $in = json_decode(file_get_contents('php://input'), true) ?: [];
 
@@ -48,10 +51,11 @@ try {
 
     $sql = "INSERT INTO partneri (ime, prezime, kontakt, email, adresa, mjesto_id)
             VALUES (?, ?, ?, ?, ?, ?)";
-    $st = $pdo->prepare($sql);
-    $ok = $st->execute([$ime, $prezime, $kontakt, $email, $adresa, $mjesto_id]);
+    $st = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($st, 'sssssi', $ime, $prezime, $kontakt, $email, $adresa, $mjesto_id);
+    mysqli_stmt_execute($st);
 
-    $respond($ok, ['id' => $pdo->lastInsertId()]);
+    $respond(true, ['id' => mysqli_insert_id($conn)]);
 } catch (Throwable $e) {
     $respond(false, ['error' => 'Greška na serveru: ' . $e->getMessage()], 500);
 }

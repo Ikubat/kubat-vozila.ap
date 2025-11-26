@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 $bootstrapPath = __DIR__ . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
     $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
@@ -18,8 +19,6 @@ if (!is_file($bootstrapPath)) {
 require_once $bootstrapPath;
 
 kubatapp_require_api('partneri_delete.php');
-
-declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

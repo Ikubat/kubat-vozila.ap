@@ -35,6 +35,8 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
+$TABLE = 'partneri';
+
 function jdie($m, $c=400){
   http_response_code($c);
   echo json_encode(['ok'=>false,'error'=>$m], JSON_UNESCAPED_UNICODE);

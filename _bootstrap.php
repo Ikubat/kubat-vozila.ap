@@ -45,11 +45,8 @@ function kubatapp_json_error($message, $status = 500)
  */
 function kubatapp_require_api(string $relativeScript): void
 {
-    // Use the repository root as the base. dirname(__DIR__) jumps outside the
-    // project and prevents files from being found when the app is deployed in
-    // a subdirectory (e.g. `/workspace/kubat-vozila.ap`).
+    // Kod tebe su svi API fajlovi u istom folderu kao _bootstrap.php (api/)
     $baseDirs = [
-        __DIR__ . '/api',
         __DIR__,
     ];
 
