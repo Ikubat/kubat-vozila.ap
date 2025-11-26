@@ -6,8 +6,6 @@ kubatapp_require_api('svrha_list.php');
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-require_once __DIR__ . '/config.php';
-
 // AKO si u config.php definirao npr. $T_SVRHA = 'svrhe_uplate', koristi se to,
 // inače pada na 'svrhe_uplate' kao default.
 $T_SVRHA = $T_SVRHA ?? 'svrhe_uplate';

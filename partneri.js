@@ -12,7 +12,11 @@ loadMjesta();
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
   }[m]));
 }
 
@@ -462,6 +466,69 @@ loadMjesta();
   $dlgMj?.addEventListener('click', e => { if (e.target === $dlgMj) closeMjestoModal(); });
   $mSave?.addEventListener('click', saveMjesto);
 
+ype': 'application/json' },
+          body: JSON.stringify({ id: parseInt(id, 10) })
+        });
+        const text = await res.text();
+        let out;
+        try { out = JSON.parse(text); }
+        catch (e2) {
+          console.error('delete nije JSON:', text);
+          alert('Greška pri brisanju.');
+          return;
+        }
+        if (!out.ok) {
+          alert(out.error || 'Greška pri brisanju.');
+          return;
+        }
+        allRows = allRows.filter(p => String(p.id) !== String(id));
+        renderList(allRows);
+      } catch (err) {
+        console.error('Greška pri brisanju:', e  function pickPartner(row) {
+    const ime     = row.dataset.ime || row.querySelector('.c-ime')?.textContent.trim() || '';
+    const prezime = row.dataset.prezime || row.querySelector('.c-prezime')?.textContent.trim() || '';
+    const label   = row.dataset.label || (ime + ' ' + prezime).trim() || '';
+
+    const partner = {
+      id: row.dataset.id,
+      label,
+      ime,
+      prezime,
+      kontakt: row.dataset.kontakt || row.querySelector('.c-kontakt')?.textContent.trim() || '',
+      email:   row.dataset.email   || row.querySelector('.c-email')?.textContent.trim()   || '',
+      adresa:  row.dataset.adresa  || row.querySelector('.c-adresa')?.textContent.trim()  || '',
+      mjesto:  row.dataset.mjesto  || row.querySelector('.c-mjesto')?.textContent.trim()  || ''
+    };
+
+    let sent = false;
+
+    if (window.opener && typeof window.opener.setSelectedPartner === 'function') {
+      try {
+        window.opener.setSelectedPartner(partner.id, partner.label, partner);
+        sent = true;
+      } catch (err) {
+        console.warn('window.opener.setSelectedPartner error:', err);
+      }
+    }
+    if (!sent && window.parent && window.parent !== window &&
+        typeof window.parent.setSelectedPartner === 'function') {
+      try {
+        window.parent.setSelectedPartner(partner.id, partner.label, partner);
+        sent = true;
+      } catch (err) {
+        console.warn('window.parent.setSelectedPartner error:', err);
+      }
+    }
+
+    if (!sent) {
+      console.warn('[PICK] Nije moguće vratiti partnera (nema opener/parent handlera).');
+      alert('Partner odabran, ali nije moguće vratiti podatke u obrazac. '
+          + 'Provjeri da je otvoreno iz obrasca obračuna.');
+    }
+
+    try { window.close(); } catch (e2) {}
+  }
+
   // -------- klikovi na listi (pick + edit/delete) --------
   document.addEventListener('click', async (e) => {
     if (!$list) return;
@@ -472,48 +539,7 @@ loadMjesta();
 
     // PICK MODE: klik na red (izvan akcija) = odaberi partnera
     if (pickMode && !e.target.closest('.acts') && !e.target.closest('.act')) {
-      const ime     = row.dataset.ime || row.querySelector('.c-ime')?.textContent.trim() || '';
-      const prezime = row.dataset.prezime || row.querySelector('.c-prezime')?.textContent.trim() || '';
-      const label   = row.dataset.label || (ime + ' ' + prezime).trim() || '';
-
-      const partner = {
-        id,
-        label,
-        ime,
-        prezime,
-        kontakt: row.dataset.kontakt || row.querySelector('.c-kontakt')?.textContent.trim() || '',
-        email:   row.dataset.email   || row.querySelector('.c-email')?.textContent.trim()   || '',
-        adresa:  row.dataset.adresa  || row.querySelector('.c-adresa')?.textContent.trim()  || '',
-        mjesto:  row.dataset.mjesto  || row.querySelector('.c-mjesto')?.textContent.trim()  || ''
-      };
-
-      let sent = false;
-
-      if (window.opener && typeof window.opener.setSelectedPartner === 'function') {
-        try {
-          window.opener.setSelectedPartner(partner.id, partner.label, partner);
-          sent = true;
-        } catch (err) {
-          console.warn('window.opener.setSelectedPartner error:', err);
-        }
-      }
-      if (!sent && window.parent && window.parent !== window &&
-          typeof window.parent.setSelectedPartner === 'function') {
-        try {
-          window.parent.setSelectedPartner(partner.id, partner.label, partner);
-          sent = true;
-        } catch (err) {
-          console.warn('window.parent.setSelectedPartner error:', err);
-        }
-      }
-
-      if (!sent) {
-        console.warn('[PICK] Nije moguće vratiti partnera (nema opener/parent handlera).');
-        alert('Partner odabran, ali nije moguće vratiti podatke u obrazac. '
-            + 'Provjeri da je otvoreno iz obrasca obračuna.');
-      }
-
-      try { window.close(); } catch (e2) {}
+      pickPartner(row);
       return;
     }
 
@@ -554,9 +580,18 @@ loadMjesta();
     }
   });
 
+  // double-click za povrat u pick modu
+  $list?.addEventListener('dblclick', (e) => {
+    if (!pickMode) return;
+    const row = e.target.closest('.card-row[data-id]');
+    if (!row || e.target.closest('.acts') || e.target.closest('.act')) return;
+    pickPartner(row);
+  });
+
   // -------- init --------
   loadMjesta();
   loadList();
 
 })();
+
 

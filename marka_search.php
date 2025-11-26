@@ -318,3 +318,4 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     jdie('DB greška: '.$e->getMessage(), 500);
+}

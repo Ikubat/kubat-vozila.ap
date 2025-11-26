@@ -3,10 +3,11 @@
   function init() {
     if (!document.body.classList.contains('uplatnice')) return;
 
-    // API baza: ../api/ kad je u /app/, inače ./api/
-    const baseApi = location.pathname.includes('/app/')
-      ? '../api/'
-      : './api/';
+    // API baza: datoteke su u istom rootu (nema /api/ poddirektorija)
+    const baseRoot = location.pathname.includes('/app/')
+      ? '../'
+      : './';
+    const baseApi = baseRoot;
 
     const API = {
       list:    baseApi + 'uplatnica_list.php',
@@ -36,6 +37,8 @@
     const $id            = document.getElementById('u_id');
     const $uplatilacSel  = document.getElementById('u_uplatilac_id');
     const $primateljSel  = document.getElementById('u_primatelj_id');
+    const $btnPickUplat  = document.getElementById('u_pick_uplatilac');
+    const $btnPickPrim   = document.getElementById('u_pick_primatelj');
     const $svrhaSel      = document.getElementById('u_svrha_id');
 
     const $svrha         = document.getElementById('u_svrha');
@@ -59,6 +62,8 @@
       partners: new Map(), // id -> partner
       svrhe: new Map()     // id -> svrha
     };
+
+    let pickTarget = 'uplatilac';
 
     const esc = s =>
       String(s ?? '').replace(/[&<>"']/g, m => ({
@@ -166,7 +171,7 @@
     function onSvrhaChange() {
       const id = parseInt($svrhaSel.value, 10);
       const s = state.svrhe.get(id);
-      if (!s) return;
+      if (!s) return
 
       if (!$svrha.value)   $svrha.value = s.naziv || '';
       if (!$svrha1.value)  $svrha1.value = s.naziv2 || '';
@@ -175,9 +180,61 @@
       if (!$poziv.value)        $poziv.value = s.poziv || '';
     }
 
+    function ensureOption(select, id, label) {
+      if (!select) return;
+      const exists = Array.from(select.options).some(o => o.value === String(id));
+      if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = String(id);
+        opt.textContent = label || ('Partner #' + id);
+        select.appendChild(opt);
+      }
+    }
+
+    window.setSelectedPartner = function (id, naziv, partner) {
+      if (!id) return;
+      const target = pickTarget === 'primatelj' ? $primateljSel : $uplatilacSel;
+      const label  = naziv || (partner && partner.label) || ('Partner #' + id);
+
+      ensureOption(target, id, label);
+      if (target) {
+        target.value = String(id);
+        target.dispatchEvent(new Event('change'));
+      }
+
+      if (partner && partner.id) {
+        state.partners.set(Number(partner.id), {
+          id: Number(partner.id),
+          label: label,
+          racun: partner.racun || partner.racun_pos || '',
+          porezni_broj: partner.porezni_broj || partner.porezni || '',
+          opcina_sifra: partner.opcina_sifra || '',
+          mjesto_naziv: partner.mjesto || partner.mjesto_naziv || ''
+        });
+      }
+
+      if (pickTarget === 'uplatilac') {
+        onUplatilacChange();
+      } else {
+        onPrimateljChange();
+      }
+    };
+
+    function openPartnerPicker(target) {
+      pickTarget = target;
+      const w = 1100, h = 800;
+      const x = Math.max(0, (screen.width - w) / 2);
+      const y = Math.max(0, (screen.height - h) / 2);
+      const url = baseRoot + 'partneri.html?pick=1';
+      window.open(url, 'pick_partner_' + target,
+        `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
+    }
+
     $uplatilacSel.addEventListener('change', onUplatilacChange);
     $primateljSel.addEventListener('change', onPrimateljChange);
     $svrhaSel.addEventListener('change', onSvrhaChange);
+    $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
+    $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
 
     // ---- lista uplatnica ----
     function setEmpty(on) {
@@ -203,17 +260,17 @@
       }
       setEmpty(false);
 
-      const html = state.all.map(u => `
-        <div class="row" data-id="${u.id}">
-          <div>${esc(u.datum || u.datum_uplate || '')}</div>
-          <div>${esc(u.uplatilac_naziv || u.uplatilac || '')}</div>
-          <div>${esc(u.primatelj_naziv || u.primatelj || '')}</div>
-          <div>${esc(u.svrha_tekst || u.svrha || '')}</div>
-          <div class="acts">
-            <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
-            <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </div>
+      const html = state.all.map(u => `␊
+        <div class="row" data-id="${u.id}">␊
+          <div>${esc(u.datum || '')}</div>
+          <div>${esc(u.uplatilac_naziv || '')}</div>
+          <div>${esc(u.primatelj_naziv || '')}</div>
+          <div>${esc(u.svrha_tekst || '')}</div>
+          <div class="acts">␊
+            <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>␊
+            <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>␊
+          </div>␊
+        </div>␊
       `).join('');
 
       $list.innerHTML = html;
@@ -226,13 +283,31 @@
         if (state.q) qs.set('q', state.q);
         const out = await fetchJson(API.list + (state.q ? ('?' + qs.toString()) : ''));
         const rows = Array.isArray(out) ? out : (out.data || out.rows || []);
-        state.all = rows.map(r => ({
+        state.all = rows.map(r => {
+          const iznosVal = r.iznos !== undefined ? parseFloat(r.iznos) : null;
+          return {
           id: parseInt(r.id, 10),
           datum: r.datum || r.datum_uplate || '',
+          uplatilac_id: r.uplatilac_id ? parseInt(r.uplatilac_id, 10) : null,
           uplatilac_naziv: r.uplatilac_naziv || r.uplatilac || '',
+          primatelj_id: r.primatelj_id ? parseInt(r.primatelj_id, 10) : null,
           primatelj_naziv: r.primatelj_naziv || r.primatelj || '',
-          svrha_tekst: r.svrha_tekst || r.svrha || ''
-        }));
+          svrha_id: r.svrha_id ? parseInt(r.svrha_id, 10) : null,
+          svrha_tekst: r.svrha_tekst || r.svrha || '',
+          svrha1: r.svrha1 || '',
+          mjesto: r.mjesto_uplate || r.mjesto || '',
+          iznos: Number.isFinite(iznosVal) ? iznosVal : null,
+          valuta: r.valuta || '',
+          racun_posiljaoca: r.racun_posiljaoca || r.racun_platioca || '',
+          racun_primatelja: r.racun_primatelja || r.racun_primaoca || '',
+          broj_poreskog_obv: r.broj_poreskog_obv || r.porezni_broj || '',
+          vrsta_prihoda_sifra: r.vrsta_prihoda_sifra || r.vrsta_prihoda || '',
+          opcina_sifra: r.opcina_sifra || r.opcina || '',
+          budzetska_org_sifra: r.budzetska_org_sifra || r.budzetska || '',
+          poziv_na_broj: r.poziv_na_broj || r.poziv || '',
+          napomena: r.napomena || ''
+        };
+        });
         renderList();
       } catch (err) {
         console.error('loadUplatnice error', err);
@@ -294,14 +369,27 @@
       if (!item) return;
 
       $title.textContent = 'Uredi uplatnicu #' + id;
-      // ovdje koristimo dataset iz API-ja; pretpostavljam da ćeš
-      // u PHP vratiti sve potrebne kolone – samo primjeri:
-      // (ako želiš 100% popunu, u uplatnica_list.php vratiš sve vrijednosti)
       $id.value = id;
-      // za sada popunimo barem osnovno
+
+      $uplatilacSel.value = item.uplatilac_id || '';
+      $primateljSel.value = item.primatelj_id || '';
+      $svrhaSel.value = item.svrha_id || '';
+
       $svrha.value = item.svrha_tekst || '';
+      $svrha1.value = item.svrha1 || '';
+      $mjesto.value = item.mjesto || '';
       $datum.value = item.datum || '';
-      // ostala polja možeš dodatno popuniti kad proširiš API
+      $iznos.value = (item.iznos ?? '') === '' ? '' : String(item.iznos);
+      $valuta.value = item.valuta || 'KM';
+      $racunPos.value = item.racun_posiljaoca || '';
+      $racunPrim.value = item.racun_primatelja || '';
+      $brojPorezni.value = item.broj_poreskog_obv || '';
+      $vrstaPrihoda.value = item.vrsta_prihoda_sifra || '';
+      $opcina.value = item.opcina_sifra || '';
+      $budzetska.value = item.budzetska_org_sifra || '';
+      $poziv.value = item.poziv_na_broj || '';
+      $napomena.value = item.napomena || '';
+
       show($msg, false);
       $wrap.classList.add('show');
     }
