@@ -129,7 +129,15 @@
     $lBody.innerHTML = html;
     $lInfo.textContent = 'Prikazano: ' + rows.length;
   }
-  function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+  function esc(s){
+    return String(s ?? '').replace(/[&<>"']/g, m => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    }[m]));
+  }
 
   // lokalni filter
   let t=null;
