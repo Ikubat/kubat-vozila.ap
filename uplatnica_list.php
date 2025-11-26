@@ -1,6 +1,4 @@
 <?php
-// Wrapper za /api/ putanju – prosljeđuje na glavni uplatnica_list.php
-require_once __DIR__ . '/../uplatnica_list.php';
 
 // uplatnica_list.php — lista uplatnica sa paginacijom i jednostavnim filterom
 
