@@ -3,19 +3,20 @@
   function init() {
     if (!document.body.classList.contains('uplatnice')) return;
 
-    // API baza: datoteke su u istom rootu (nema /api/ poddirektorija)
-    const baseRoot = location.pathname.includes('/app/')
-      ? '../'
-      : './';
-    const baseApi = baseRoot;
+    // API baza: pokušaj prvo /api/ pa padni na root (radi lokacije /app/ i /)
+    const baseRoots = location.pathname.includes('/app/')
+      ? ['../api/', '../']
+      : ['./api/', './'];
+    // korištenje html baze (bez api/) za otvaranje novih prozora
+    const basePageRoot = baseRoots[0].replace(/api\/?$/, '');
 
     const API = {
-      list:    baseApi + 'uplatnica_list.php',
-      create:  baseApi + 'uplatnica_create.php',
-      update:  baseApi + 'uplatnica_update.php',
-      delete:  baseApi + 'uplatnica_delete.php',
-      partneri: baseApi + 'partneri_list.php',
-      svrhe:    baseApi + 'svrha_list.php'
+      list:    'uplatnica_list.php',
+      create:  'uplatnica_create.php',
+      update:  'uplatnica_update.php',
+      delete:  'uplatnica_delete.php',
+      partneri:'partneri_list.php',
+      svrhe:   'svrha_list.php'
     };
 
     // ---- DOM ----
@@ -79,10 +80,25 @@
     }
 
     // ---- helper za fetch JSON ----
-    async function fetchJson(url, options = {}) {
-      const res = await fetch(url, options);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return await res.json();
+    async function fetchJson(path, options = {}) {
+      let lastErr = null;
+
+      for (const base of baseRoots) {
+        const url = path.startsWith('http') || path.startsWith('/')
+          ? path
+          : base + path;
+        try {
+          const res = await fetch(url, options);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (err) {
+          lastErr = err;
+          // pokušaj idući base samo na mrežne greške / 404;
+          // ako smo već probali zadnji, baci grešku.
+        }
+      }
+
+      throw lastErr || new Error('Nepoznata greška pri fetchu.');
     }
 
     // ---- učitaj partnere (za selecte) ----
@@ -225,7 +241,7 @@
       const w = 1100, h = 800;
       const x = Math.max(0, (screen.width - w) / 2);
       const y = Math.max(0, (screen.height - h) / 2);
-      const url = baseRoot + 'partneri.html?pick=1';
+      const url = basePageRoot + 'partneri.html?pick=1';
       window.open(url, 'pick_partner_' + target,
         `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
     }
@@ -260,17 +276,17 @@
       }
       setEmpty(false);
 
-      const html = state.all.map(u => `␊
-        <div class="row" data-id="${u.id}">␊
-          <div>${esc(u.datum || '')}</div>
-          <div>${esc(u.uplatilac_naziv || '')}</div>
-          <div>${esc(u.primatelj_naziv || '')}</div>
-          <div>${esc(u.svrha_tekst || '')}</div>
-          <div class="acts">␊
-            <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>␊
-            <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>␊
-          </div>␊
-        </div>␊
+      const html = state.all.map(u => `
+        <div class="row" data-id="${u.id}">
+          <div>${esc(u.datum || '')}</div>␊
+          <div>${esc(u.uplatilac_naziv || '')}</div>␊
+          <div>${esc(u.primatelj_naziv || '')}</div>␊
+          <div>${esc(u.svrha_tekst || '')}</div>␊
+          <div class="acts">
+            <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
+            <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
       `).join('');
 
       $list.innerHTML = html;
@@ -454,11 +470,9 @@
         return;
       }
 
-      const url = id ? API.update : API.create;
-
       try {
         $save.disabled = true;
-        const out = await fetchJson(url, {
+        const out = await fetchJson((id ? API.update : API.create), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
