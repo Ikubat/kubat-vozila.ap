@@ -3,19 +3,18 @@
   function init() {
     if (!document.body.classList.contains('uplatnice')) return;
 
-    // API baza: datoteke su u istom rootu (nema /api/ poddirektorija)
-    const baseRoot = location.pathname.includes('/app/')
-      ? '../'
-      : './';
-    const baseApi = baseRoot;
+    // API baza: pokušaj prvo /api/ pa padni na root (radi lokacije /app/ i /)
+    const baseRoots = location.pathname.includes('/app/')
+      ? ['../api/', '../']
+      : ['./api/', './'];
 
     const API = {
-      list:    baseApi + 'uplatnica_list.php',
-      create:  baseApi + 'uplatnica_create.php',
-      update:  baseApi + 'uplatnica_update.php',
-      delete:  baseApi + 'uplatnica_delete.php',
-      partneri: baseApi + 'partneri_list.php',
-      svrhe:    baseApi + 'svrha_list.php'
+      list:    'uplatnica_list.php',
+      create:  'uplatnica_create.php',
+      update:  'uplatnica_update.php',
+      delete:  'uplatnica_delete.php',
+      partneri:'partneri_list.php',
+      svrhe:   'svrha_list.php'
     };
 
     // ---- DOM ----
@@ -79,10 +78,25 @@
     }
 
     // ---- helper za fetch JSON ----
-    async function fetchJson(url, options = {}) {
-      const res = await fetch(url, options);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return await res.json();
+    async function fetchJson(path, options = {}) {
+      let lastErr = null;
+
+      for (const base of baseRoots) {
+        const url = path.startsWith('http') || path.startsWith('/')
+          ? path
+          : base + path;
+        try {
+          const res = await fetch(url, options);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (err) {
+          lastErr = err;
+          // pokušaj idući base samo na mrežne greške / 404;
+          // ako smo već probali zadnji, baci grešku.
+        }
+      }
+
+      throw lastErr || new Error('Nepoznata greška pri fetchu.');
     }
 
     // ---- učitaj partnere (za selecte) ----
@@ -454,11 +468,9 @@
         return;
       }
 
-      const url = id ? API.update : API.create;
-
       try {
         $save.disabled = true;
-        const out = await fetchJson(url, {
+        const out = await fetchJson((id ? API.update : API.create), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)

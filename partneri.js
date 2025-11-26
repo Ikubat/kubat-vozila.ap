@@ -466,25 +466,8 @@ loadMjesta();
   $dlgMj?.addEventListener('click', e => { if (e.target === $dlgMj) closeMjestoModal(); });
   $mSave?.addEventListener('click', saveMjesto);
 
-ype': 'application/json' },
-          body: JSON.stringify({ id: parseInt(id, 10) })
-        });
-        const text = await res.text();
-        let out;
-        try { out = JSON.parse(text); }
-        catch (e2) {
-          console.error('delete nije JSON:', text);
-          alert('Greška pri brisanju.');
-          return;
-        }
-        if (!out.ok) {
-          alert(out.error || 'Greška pri brisanju.');
-          return;
-        }
-        allRows = allRows.filter(p => String(p.id) !== String(id));
-        renderList(allRows);
-      } catch (err) {
-        console.error('Greška pri brisanju:', e  function pickPartner(row) {
+  // -------- pick helper --------
+  function pickPartner(row) {
     const ime     = row.dataset.ime || row.querySelector('.c-ime')?.textContent.trim() || '';
     const prezime = row.dataset.prezime || row.querySelector('.c-prezime')?.textContent.trim() || '';
     const label   = row.dataset.label || (ime + ' ' + prezime).trim() || '';
