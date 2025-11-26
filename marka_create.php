@@ -89,7 +89,7 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     $serija    = trim((string)($_POST['serija'] ?? ''));
     $oblik     = trim((string)($_POST['oblik'] ?? ''));
     $mjenjac   = trim((string)($_POST['mjenjac'] ?? ''));
-    $pogon     = trim((string)($_POST['pogon'] ?? ''));␊
+    $pogon     = trim((string)($_POST['pogon'] ?? ''));
     $vrata     = isset($_POST['vrata']) && $_POST['vrata'] !== '' ? (int)$_POST['vrata'] : null;
     $snaga     = isset($_POST['snaga']) && $_POST['snaga'] !== '' ? (int)$_POST['snaga'] : null;
     $zapremina = isset($_POST['zapremina']) && $_POST['zapremina'] !== '' ? (int)$_POST['zapremina'] : null;

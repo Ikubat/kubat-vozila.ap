@@ -20,7 +20,7 @@ require_once $bootstrapPath;
 kubatapp_require_api('marka_update.php');
 
 // Ažuriranje postojeće marke u marka_vozila.
-// Očekuje (JSON ili POST):␊
+// Očekuje (JSON ili POST):
 // { "id": 5, "naziv": "...", "model": "...", "vrsta_id": 2 }
 //
 // Radi i ako tablica nema "model" ili "vrsta_id" - ažurira samo ono što postoji.
@@ -56,7 +56,6 @@ register_shutdown_function(function () {
 });
 
 require_once __DIR__ . '/config.php';
-␊
 // Fallback nazivi tablica ako nisu definirani u okruženju
 $T_MARKA = $T_MARKA ?? 'marka_vozila';
 
@@ -66,11 +65,11 @@ function jdie($m, $c = 400) {
     exit;
 }
 function jok($x = []) {
-    echo json_encode(['ok' => true] + $x, JSON_UNESCAPED_UNICODE);␊
+    echo json_encode(['ok' => true] + $x, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// ---- UČITAVANJE PODATAKA ----␊
+// ---- UČITAVANJE PODATAKA ----
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $ct = $_SERVER['CONTENT_TYPE'] ?? '';
 
@@ -139,7 +138,7 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
         }
     }
 } else {
-    // GET test: ?id=5&naziv=NovoIme&model=X&vrsta_id=2␊
+    // GET test: ?id=5&naziv=NovoIme&model=X&vrsta_id=2
     $id    = (int)($_GET['id'] ?? 0);
     if (isset($_GET['naziv']))   $naziv   = trim((string)$_GET['naziv']);
     if (isset($_GET['model']))   $model   = trim((string)$_GET['model']);
@@ -164,7 +163,7 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
 
 if ($id <= 0) jdie('ID je obavezan.');
 
-// ---- DB & STRUKTURA ----␊
+// ---- DB & STRUKTURA ----
 try {
     $db = $conn;
 
@@ -192,13 +191,13 @@ try {
     
     if (!$colId) jdie("Tablica `$T_MARKA` nema ID kolonu.");
 
-        // ako postoji kolona za model i klijent ju je poslao, ne dopuštamo prazan string␊
+        // ako postoji kolona za model i klijent ju je poslao, ne dopuštamo prazan string
     if ($colModel && $model !== null && $model === '') {
         jdie('Model ne može biti prazan.');
     }
 
 
-    // postoji li zapis?␊
+    // postoji li zapis?
     $st = $db->prepare("SELECT * FROM `$T_MARKA` WHERE `$colId`=?");
     $st->bind_param('i', $id);
     $st->execute();
@@ -275,3 +274,4 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     jdie('DB greška: ' . $e->getMessage(), 500);
+}
