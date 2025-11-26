@@ -205,10 +205,10 @@
 
       const html = state.all.map(u => `
         <div class="row" data-id="${u.id}">
-          <div>${esc(u.datum || u.datum_uplate || '')}</div>
-          <div>${esc(u.uplatilac_naziv || u.uplatilac || '')}</div>
-          <div>${esc(u.primatelj_naziv || u.primatelj || '')}</div>
-          <div>${esc(u.svrha_tekst || u.svrha || '')}</div>
+          <div>${esc(u.datum || '')}</div>
+          <div>${esc(u.uplatilac_naziv || '')}</div>
+          <div>${esc(u.primatelj_naziv || '')}</div>
+          <div>${esc(u.svrha_tekst || '')}</div>
           <div class="acts">
             <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
             <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
@@ -226,13 +226,31 @@
         if (state.q) qs.set('q', state.q);
         const out = await fetchJson(API.list + (state.q ? ('?' + qs.toString()) : ''));
         const rows = Array.isArray(out) ? out : (out.data || out.rows || []);
-        state.all = rows.map(r => ({
+        state.all = rows.map(r => {
+          const iznosVal = r.iznos !== undefined ? parseFloat(r.iznos) : null;
+          return {
           id: parseInt(r.id, 10),
           datum: r.datum || r.datum_uplate || '',
+          uplatilac_id: r.uplatilac_id ? parseInt(r.uplatilac_id, 10) : null,
           uplatilac_naziv: r.uplatilac_naziv || r.uplatilac || '',
+          primatelj_id: r.primatelj_id ? parseInt(r.primatelj_id, 10) : null,
           primatelj_naziv: r.primatelj_naziv || r.primatelj || '',
-          svrha_tekst: r.svrha_tekst || r.svrha || ''
-        }));
+          svrha_id: r.svrha_id ? parseInt(r.svrha_id, 10) : null,
+          svrha_tekst: r.svrha_tekst || r.svrha || '',
+          svrha1: r.svrha1 || '',
+          mjesto: r.mjesto_uplate || r.mjesto || '',
+          iznos: Number.isFinite(iznosVal) ? iznosVal : null,
+          valuta: r.valuta || '',
+          racun_posiljaoca: r.racun_posiljaoca || r.racun_platioca || '',
+          racun_primatelja: r.racun_primatelja || r.racun_primaoca || '',
+          broj_poreskog_obv: r.broj_poreskog_obv || r.porezni_broj || '',
+          vrsta_prihoda_sifra: r.vrsta_prihoda_sifra || r.vrsta_prihoda || '',
+          opcina_sifra: r.opcina_sifra || r.opcina || '',
+          budzetska_org_sifra: r.budzetska_org_sifra || r.budzetska || '',
+          poziv_na_broj: r.poziv_na_broj || r.poziv || '',
+          napomena: r.napomena || ''
+        };
+        });
         renderList();
       } catch (err) {
         console.error('loadUplatnice error', err);
@@ -294,14 +312,27 @@
       if (!item) return;
 
       $title.textContent = 'Uredi uplatnicu #' + id;
-      // ovdje koristimo dataset iz API-ja; pretpostavljam da ćeš
-      // u PHP vratiti sve potrebne kolone – samo primjeri:
-      // (ako želiš 100% popunu, u uplatnica_list.php vratiš sve vrijednosti)
       $id.value = id;
-      // za sada popunimo barem osnovno
+
+      $uplatilacSel.value = item.uplatilac_id || '';
+      $primateljSel.value = item.primatelj_id || '';
+      $svrhaSel.value = item.svrha_id || '';
+
       $svrha.value = item.svrha_tekst || '';
+      $svrha1.value = item.svrha1 || '';
+      $mjesto.value = item.mjesto || '';
       $datum.value = item.datum || '';
-      // ostala polja možeš dodatno popuniti kad proširiš API
+      $iznos.value = (item.iznos ?? '') === '' ? '' : String(item.iznos);
+      $valuta.value = item.valuta || 'KM';
+      $racunPos.value = item.racun_posiljaoca || '';
+      $racunPrim.value = item.racun_primatelja || '';
+      $brojPorezni.value = item.broj_poreskog_obv || '';
+      $vrstaPrihoda.value = item.vrsta_prihoda_sifra || '';
+      $opcina.value = item.opcina_sifra || '';
+      $budzetska.value = item.budzetska_org_sifra || '';
+      $poziv.value = item.poziv_na_broj || '';
+      $napomena.value = item.napomena || '';
+
       show($msg, false);
       $wrap.classList.add('show');
     }
