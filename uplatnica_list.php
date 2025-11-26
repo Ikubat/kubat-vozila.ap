@@ -33,8 +33,6 @@ register_shutdown_function(function () {
     }
 });
 
-require_once ___DIR__ . '/config.php';
-
 // Fallback naziv tablice ako nije definiran u config.php
 $T_UPLATNICE = $T_UPLATNICE ?? 'uplatnice';
 
