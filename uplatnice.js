@@ -3,10 +3,10 @@
   function init() {
     if (!document.body.classList.contains('uplatnice')) return;
 
-    // API baza: ../api/ kad je u /app/, inače ./api/
+    // API baza: datoteke su u istom rootu (nema /api/ poddirektorija)
     const baseApi = location.pathname.includes('/app/')
-      ? '../api/'
-      : './api/';
+      ? '../'
+      : './';
 
     const API = {
       list:    baseApi + 'uplatnica_list.php',
