@@ -1,4 +1,7 @@
 <?php
+// Wrapper za /api/ putanju – prosljeđuje na glavni uplatnica_list.php
+require_once __DIR__ . '/../uplatnica_list.php';
+
 // uplatnica_list.php — lista uplatnica sa paginacijom i jednostavnim filterom
 
 require_once __DIR__ . '/config.php';
@@ -32,8 +35,6 @@ register_shutdown_function(function () {
         ], JSON_UNESCAPED_UNICODE);
     }
 });
-
-require_once ___DIR__ . '/config.php';
 
 // Fallback naziv tablice ako nije definiran u config.php
 $T_UPLATNICE = $T_UPLATNICE ?? 'uplatnice';

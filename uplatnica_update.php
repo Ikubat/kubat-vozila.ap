@@ -1,7 +1,8 @@
 <?php
+// Wrapper za /api/ putanju – prosljeđuje na glavni uplatnica_update.php
+require_once __DIR__ . '/../uplatnica_update.php';
 require_once __DIR__ . '/config.php';
 kubatapp_require_api('uplatnica_update.php');
-
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
