@@ -113,7 +113,7 @@
       border:0;
     }
     .picker-row{display:flex;gap:8px;align-items:center}
-    .picker-row select{flex:1;min-width:0}
+    .picker-row .display-input{flex:1;min-width:0}
     .act.del{
       background:#fee2e2;
       color:#991b1b;
@@ -278,7 +278,8 @@
           <div class="field">
             <label for="u_uplatilac_id">Uplatilac (partner)</label>
             <div class="picker-row">
-              <select id="u_uplatilac_id"></select>
+              <input id="u_uplatilac_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
+              <input id="u_uplatilac_id" type="hidden">
               <button id="u_pick_uplatilac" class="btn sec" type="button">
                 <i class="fa-solid fa-user"></i> Partneri
               </button>
@@ -288,7 +289,8 @@
           <div class="field">
             <label for="u_primatelj_id">Primatelj (partner)</label>
             <div class="picker-row">
-              <select id="u_primatelj_id"></select>
+              <input id="u_primatelj_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
+              <input id="u_primatelj_id" type="hidden">
               <button id="u_pick_primatelj" class="btn sec" type="button">
                 <i class="fa-solid fa-user"></i> Partneri
               </button>
