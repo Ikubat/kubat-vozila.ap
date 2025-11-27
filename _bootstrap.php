@@ -77,9 +77,12 @@ function kubatapp_json_error($message, $status = 500)
  */
 function kubatapp_require_api(string $relativeScript): void
 {
-    // Kod tebe su svi API fajlovi u istom folderu kao _bootstrap.php (api/)
+    // Kod tebe su API fajlovi u /api dok je _bootstrap.php u glavnom folderu
+    // (npr. kubatapp/_bootstrap.php + kubatapp/api/*.php). Podrži i slučaj
+    // kada su skripte ipak pored _bootstrap.php radi kompatibilnosti.
     $baseDirs = [
-        __DIR__,
+        __DIR__,            // legacy: pored _bootstrap.php
+        __DIR__ . '/api',   // tipična struktura: api/partneri_list.php
     ];
 
     foreach ($baseDirs as $base) {
