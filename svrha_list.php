@@ -1,6 +1,24 @@
 <?php
 
 // /kubatapp/api/svrha_list.php
+$bootstrapPath = __DIR__ . '/_bootstrap.php';
+if (!is_file($bootstrapPath)) {
+    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+}
+if (!is_file($bootstrapPath)) {
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    http_response_code(500);
+    echo json_encode([
+        'ok'    => false,
+        'error' => 'API bootstrap nije pronađen.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+require_once $bootstrapPath;
+
 require_once __DIR__ . '/config.php';
 kubatapp_require_api('svrha_list.php');
 

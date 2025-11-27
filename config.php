@@ -26,17 +26,17 @@ $isLocal =
    ============================ */
 
 if ($isLocal) {
-    // ------------------------------
-    // LOKALNO (XAMPP)
-    // ------------------------------
+    // ------------------------------␊
+    // LOKALNO (XAMPP)␊
+    // ------------------------------␊
     define('DB_HOST', 'localhost');
     define('DB_USER', 'root');
     define('DB_PASS', '');
-    define('DB_NAME', 'kubatapp'); // ime tvoje lokalne baze
+    define('DB_NAME', 'kubatapp'); // ime tvoje lokalne baze␊
 
-    // Full error reporting lokalno
+    // Full error reporting lokalno; ne prikazuj PHP warninge u JSON API-ima
     error_reporting(E_ALL);
-    ini_set('display_errors', 1);
+    ini_set('display_errors', defined('KUBATAPP_JSON_API') ? 0 : 1);
 
 } else {
     // ------------------------------

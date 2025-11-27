@@ -35,12 +35,14 @@
     const $msg    = document.getElementById('u_msg');
 
     // polja u modalu
-    const $id            = document.getElementById('u_id');
-    const $uplatilacSel  = document.getElementById('u_uplatilac_id');
-    const $primateljSel  = document.getElementById('u_primatelj_id');
-    const $btnPickUplat  = document.getElementById('u_pick_uplatilac');
-    const $btnPickPrim   = document.getElementById('u_pick_primatelj');
-    const $svrhaSel      = document.getElementById('u_svrha_id');
+    const $id             = document.getElementById('u_id');
+    const $uplatilacId    = document.getElementById('u_uplatilac_id');
+    const $uplatilacLabel = document.getElementById('u_uplatilac_label');
+    const $primateljId    = document.getElementById('u_primatelj_id');
+    const $primateljLabel = document.getElementById('u_primatelj_label');
+    const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
+    const $btnPickPrim    = document.getElementById('u_pick_primatelj');
+    const $svrhaSel       = document.getElementById('u_svrha_id');
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
@@ -108,7 +110,6 @@
         const rows = Array.isArray(out) ? out : (out.data || out.rows || []);
         state.partners.clear();
 
-        let options = '<option value="">— odaberi —</option>';
         rows.forEach(p => {
           const id = parseInt(p.id, 10);
           if (!id) return;
@@ -124,15 +125,11 @@
             opcina_sifra: p.opcina_sifra || '',
             mjesto_naziv: p.mjesto_naziv || ''
           });
-          options += `<option value="${id}">${esc(label)}</option>`;
         });
 
-        $uplatilacSel.innerHTML = options;
-        $primateljSel.innerHTML = options;
+        refreshPartnerLabels();
       } catch (err) {
         console.error('loadPartneri error', err);
-        $uplatilacSel.innerHTML = '<option value="">(greška kod učitavanja)</option>';
-        $primateljSel.innerHTML = '<option value="">(greška kod učitavanja)</option>';
       }
     }
 
@@ -165,22 +162,16 @@
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
-    function onUplatilacChange() {
-      const id = parseInt($uplatilacSel.value, 10);
-      const p = state.partners.get(id);
+    function applyUplatilacDefaults(p) {
       if (!p) return;
-
       if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
       if (!$racunPos.value)      $racunPos.value = p.racun || '';
       if (!$brojPorezni.value)   $brojPorezni.value = p.porezni_broj || '';
       if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
     }
 
-    function onPrimateljChange() {
-      const id = parseInt($primateljSel.value, 10);
-      const p = state.partners.get(id);
+    function applyPrimateljDefaults(p) {
       if (!p) return;
-
       if (!$racunPrim.value) $racunPrim.value = p.racun || '';
     }
 
@@ -196,44 +187,52 @@
       if (!$poziv.value)        $poziv.value = s.poziv || '';
     }
 
-    function ensureOption(select, id, label) {
-      if (!select) return;
-      const exists = Array.from(select.options).some(o => o.value === String(id));
-      if (!exists) {
-        const opt = document.createElement('option');
-        opt.value = String(id);
-        opt.textContent = label || ('Partner #' + id);
-        select.appendChild(opt);
+    function setPartner(target, id, label, partnerData) {
+      const isPrimatelj = target === 'primatelj';
+      const $idField    = isPrimatelj ? $primateljId : $uplatilacId;
+      const $labelField = isPrimatelj ? $primateljLabel : $uplatilacLabel;
+
+      $idField.value = id ? String(id) : '';
+
+      let partner = null;
+      if (partnerData && partnerData.id) {
+        partner = {
+          id: Number(partnerData.id),
+          label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
+          racun: partnerData.racun || partnerData.racun_pos || '',
+          porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
+          opcina_sifra: partnerData.opcina_sifra || '',
+          mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
+        };
+        state.partners.set(partner.id, partner);
+      } else if (id) {
+        partner = state.partners.get(Number(id)) || null;
       }
+
+      if ($labelField) {
+        $labelField.value = (partner && partner.label) || label || '';
+      }
+
+      if (partner) {
+        if (isPrimatelj) {
+          applyPrimateljDefaults(partner);
+        } else {
+          applyUplatilacDefaults(partner);
+        }
+      }
+    }
+
+    function refreshPartnerLabels() {
+      setPartner('uplatilac', $uplatilacId.value ? parseInt($uplatilacId.value, 10) : null, $uplatilacLabel.value || '');
+      setPartner('primatelj', $primateljId.value ? parseInt($primateljId.value, 10) : null, $primateljLabel.value || '');
     }
 
     window.setSelectedPartner = function (id, naziv, partner) {
       if (!id) return;
-      const target = pickTarget === 'primatelj' ? $primateljSel : $uplatilacSel;
-      const label  = naziv || (partner && partner.label) || ('Partner #' + id);
+      const target = pickTarget === 'primatelj' ? 'primatelj' : 'uplatilac';
+      const label  = naziv || (partner && (partner.label || partner.naziv)) || ('Partner #' + id);
 
-      ensureOption(target, id, label);
-      if (target) {
-        target.value = String(id);
-        target.dispatchEvent(new Event('change'));
-      }
-
-      if (partner && partner.id) {
-        state.partners.set(Number(partner.id), {
-          id: Number(partner.id),
-          label: label,
-          racun: partner.racun || partner.racun_pos || '',
-          porezni_broj: partner.porezni_broj || partner.porezni || '',
-          opcina_sifra: partner.opcina_sifra || '',
-          mjesto_naziv: partner.mjesto || partner.mjesto_naziv || ''
-        });
-      }
-
-      if (pickTarget === 'uplatilac') {
-        onUplatilacChange();
-      } else {
-        onPrimateljChange();
-      }
+      setPartner(target, id, label, partner);
     };
 
     function openPartnerPicker(target) {
@@ -246,8 +245,6 @@
         `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
     }
 
-    $uplatilacSel.addEventListener('change', onUplatilacChange);
-    $primateljSel.addEventListener('change', onPrimateljChange);
     $svrhaSel.addEventListener('change', onSvrhaChange);
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
@@ -346,8 +343,10 @@
     // ---- modal open/close ----
     function clearForm() {
       $id.value = '';
-      $uplatilacSel.value = '';
-      $primateljSel.value = '';
+      $uplatilacId.value = '';
+      $uplatilacLabel.value = '';
+      $primateljId.value = '';
+      $primateljLabel.value = '';
       $svrhaSel.value = '';
       $svrha.value = '';
       $svrha1.value = '';
@@ -387,8 +386,8 @@
       $title.textContent = 'Uredi uplatnicu #' + id;
       $id.value = id;
 
-      $uplatilacSel.value = item.uplatilac_id || '';
-      $primateljSel.value = item.primatelj_id || '';
+      setPartner('uplatilac', item.uplatilac_id || null, item.uplatilac_naziv || '');
+      setPartner('primatelj', item.primatelj_id || null, item.primatelj_naziv || '');
       $svrhaSel.value = item.svrha_id || '';
 
       $svrha.value = item.svrha_tekst || '';
@@ -430,8 +429,8 @@
 
       const body = {
         id: id || undefined,
-        uplatilac_id:  $uplatilacSel.value ? parseInt($uplatilacSel.value, 10) : null,
-        primatelj_id:  $primateljSel.value ? parseInt($primateljSel.value, 10) : null,
+        uplatilac_id:  $uplatilacId.value ? parseInt($uplatilacId.value, 10) : null,
+        primatelj_id:  $primateljId.value ? parseInt($primateljId.value, 10) : null,
         svrha_id:      $svrhaSel.value ? parseInt($svrhaSel.value, 10) : null,
         svrha:         $svrha.value.trim(),
         svrha1:        $svrha1.value.trim(),

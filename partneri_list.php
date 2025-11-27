@@ -34,8 +34,7 @@ $T_PARTNERI = 'partneri';
 $T_MJESTA   = 'mjesta';
 
 function out($payload, $code = 200) {
-    http_response_code($code);
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+    kubatapp_json_response($payload, $code);
     exit;
 }
 
