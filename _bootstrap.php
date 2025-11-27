@@ -7,6 +7,11 @@ if (!headers_sent()) {
     header('Content-Type: application/json; charset=utf-8');
 }
 
+// Swallow any accidental output (warnings, notices) so responses stay valid JSON
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
 // Always report all errors but don't display native PHP HTML output
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
@@ -28,6 +33,9 @@ set_error_handler(function ($severity, $message, $file, $line) {
 // Standard JSON error payload
 function kubatapp_json_error($message, $status = 500)
 {
+    if (ob_get_length()) {
+        ob_clean();
+    }
     http_response_code($status);
     echo json_encode([
         'ok'    => false,
