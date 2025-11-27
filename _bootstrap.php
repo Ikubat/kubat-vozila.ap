@@ -7,7 +7,8 @@ if (!headers_sent()) {
     header('Content-Type: application/json; charset=utf-8');
 }
 
-// Swallow any accidental output (warnings, notices) so responses stay valid JSON
+// Swallow any accidental output (warnings, notices) so responses stay valid JSON.
+// Buffer is cleaned right before sending a JSON payload.
 if (ob_get_level() === 0) {
     ob_start();
 }
@@ -30,17 +31,23 @@ set_error_handler(function ($severity, $message, $file, $line) {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
-// Standard JSON error payload
-function kubatapp_json_error($message, $status = 500)
+function kubatapp_json_response(array $payload, int $status = 200): void
 {
     if (ob_get_length()) {
         ob_clean();
     }
+
     http_response_code($status);
-    echo json_encode([
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+}
+
+// Standard JSON error payload
+function kubatapp_json_error($message, $status = 500)
+{
+    kubatapp_json_response([
         'ok'    => false,
         'error' => $message,
-    ], JSON_UNESCAPED_UNICODE);
+    ], $status);
 }
 
 /**
