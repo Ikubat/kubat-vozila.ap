@@ -6,8 +6,8 @@
 
   if (!document.body.classList.contains('mjesta')) return;
 
-  // API baza: isto logika kao kod vrsta (app → ../api/, inače ./api/)
-  const baseApi = location.pathname.includes('/app/') ? '../api/' : './api/';
+  // API baza: kod nas su API skripte u rootu (app → ../, inače ./)
+  const baseApi = location.pathname.includes('/app/') ? '../' : './';
   const API = {
     search: baseApi + 'mjesta_search.php',
     create: baseApi + 'mjesta_create.php',

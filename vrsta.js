@@ -3,7 +3,8 @@
 (function () {
   if (!document.body.classList.contains('vrste')) return;
 
-  const baseApi = location.pathname.includes('/app/') ? '../api/' : './api/';
+  // API skripte su u rootu aplikacije (app → ../, inače ./)
+  const baseApi = location.pathname.includes('/app/') ? '../' : './';
   const API = {
     list: baseApi + 'vrsta_list.php',
     create: baseApi + 'vrsta_create.php',

@@ -5,7 +5,8 @@
 //   + u pick modu i dalje radi dodavanje/uređivanje
 
 // API baza: ista logika kao u mjesta.js i vrsta.js
-const ROOT_PATH = location.pathname.includes('/app/') ? '../api/' : './api/';
+// API skripte se trenutno nalaze u rootu; nema /api/ poddirektorija.
+const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
 const mjSelect = document.getElementById('p_mjesto');
 const MJ_API = ROOT_PATH + 'mjesta_list.php';
 loadMjesta();
@@ -76,7 +77,7 @@ loadMjesta();
   if (!document.body.classList.contains('partneri')) return;
 
   // -------- API base --------
-  const baseApi = ROOT_PATH;
+const baseApi = ROOT_PATH;
 
   const API = {
     list:        baseApi + 'partneri_list.php',
