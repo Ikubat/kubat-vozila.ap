@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,8 +19,8 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('vrsta_delete.php');
 
-// Briše vrstu vozila ako je ne koristi nijedna marka_vozila.
-// Očekuje: { "id": 3 } (POST JSON) ili klasični POST id=3.
+// Briše vrstu vozila ako je ne koristi nijedna marka_vozila.␊
+// Očekuje: { "id": 3 } (POST JSON) ili klasični POST id=3.␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -63,14 +63,14 @@ try {
     $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
     $db->set_charset('utf8mb4');
 
-    // postoji?
+    // postoji?␊
     $st = $db->prepare("SELECT id FROM vrsta_vozila WHERE id = ?");
     $st->bind_param('i', $id);
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
     if (!$row) jdie('Vrsta ne postoji.');
 
-    // koristi li je neka marka?
+    // koristi li je neka marka?␊
     $st = $db->prepare("SELECT COUNT(*) AS c FROM marka_vozila WHERE vrsta_id = ?");
     $st->bind_param('i', $id);
     $st->execute();
@@ -80,7 +80,7 @@ try {
         jdie("Vrstu nije moguće obrisati jer je povezana s $c marka(e/).");
     }
 
-    // obriši
+    // obriši␊
     $st = $db->prepare("DELETE FROM vrsta_vozila WHERE id = ?");
     $st->bind_param('i', $id);
     $st->execute();

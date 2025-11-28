@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,10 +19,10 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('vrsta_update.php');
 
-// vrsta_update.php
-// Ažurira postojeću vrstu vozila u tablici vrsta_vozila.
-// Očekuje (POST ili JSON):
-// { "id": 3, "naziv": "Putničko vozilo", "oznaka": "M1" }
+// vrsta_update.php␊
+// Ažurira postojeću vrstu vozila u tablici vrsta_vozila.␊
+// Očekuje (POST ili JSON):␊
+// { "id": 3, "naziv": "Putničko vozilo", "oznaka": "M1" }␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -64,7 +64,7 @@ try {
         if (isset($_POST['naziv']))  $naziv  = trim((string)$_POST['naziv']);
         if (isset($_POST['oznaka'])) $oznaka = trim((string)$_POST['oznaka']);
     } else {
-        // GET test: ?id=1&naziv=Novo&oznaka=X
+        // GET test: ?id=1&naziv=Novo&oznaka=X␊
         $id     = (int)($_GET['id'] ?? 0);
         if (isset($_GET['naziv']))  $naziv  = trim((string)$_GET['naziv']);
         if (isset($_GET['oznaka'])) $oznaka = trim((string)$_GET['oznaka']);
@@ -73,19 +73,19 @@ try {
     if ($id <= 0) jdie('ID je obavezan.');
 
     if ($naziv !== null && $naziv === '') jdie('Naziv ne može biti prazan.');
-    // oznaka može biti prazna, ali ako nije poslana ne diramo
+    // oznaka može biti prazna, ali ako nije poslana ne diramo␊
 
     $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
     $db->set_charset('utf8mb4');
 
-    // postoji li ta vrsta?
+    // postoji li ta vrsta?␊
     $st = $db->prepare("SELECT id FROM vrsta_vozila WHERE id = ?");
     $st->bind_param('i', $id);
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
     if (!$row) jdie('Vrsta ne postoji.');
 
-    // složi SET dio
+    // složi SET dio␊
     $sets = [];
     $vals = [];
     $types = '';

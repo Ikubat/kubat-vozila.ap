@@ -1,9 +1,7 @@
 <?php
-
-// /kubatapp/api/svrha_list.php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,7 +17,6 @@ if (!is_file($bootstrapPath)) {
 
 require_once $bootstrapPath;
 
-require_once __DIR__ . '/config.php';
 kubatapp_require_api('svrha_list.php');
 
 header('Content-Type: application/json; charset=utf-8');

@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -48,12 +48,12 @@ if ($q !== '') {
     $types = str_repeat('s', count($whereParts));
 }
 
-// 1) Ukupan broj
-$sqlTotal = "
-    SELECT COUNT(*)
-    FROM partneri p
-    LEFT JOIN mjesta m ON m.id = p.mjesto_id
-    $where
+// 1) Ukupan broj␊
+$sqlTotal = "␊
+    SELECT COUNT(*)␊
+    FROM partneri p␊
+    LEFT JOIN mjesta m ON m.id = p.mjesto_id␊
+    $where␊
 ";
 $stTot = $conn->prepare($sqlTotal);
 if ($args) {
@@ -64,16 +64,16 @@ $stTot->bind_result($total);
 $stTot->fetch();
 $stTot->close();
 
-// 2) Podaci za trenutnu stranicu
-$sqlData = "
-    SELECT
-      p.id, p.ime, p.prezime, p.kontakt, p.email, p.adresa, p.mjesto_id,
-      m.naziv_mjesta AS mjesto_naz
-    FROM partneri p
-    LEFT JOIN mjesta m ON m.id = p.mjesto_id
-    $where
-    ORDER BY p.prezime ASC, p.ime ASC
-    LIMIT ? OFFSET ?
+// 2) Podaci za trenutnu stranicu␊
+$sqlData = "␊
+    SELECT␊
+      p.id, p.ime, p.prezime, p.kontakt, p.email, p.adresa, p.mjesto_id,␊
+      m.naziv_mjesta AS mjesto_naz␊
+    FROM partneri p␊
+    LEFT JOIN mjesta m ON m.id = p.mjesto_id␊
+    $where␊
+    ORDER BY p.prezime ASC, p.ime ASC␊
+    LIMIT ? OFFSET ?␊
 ";
 $st = $conn->prepare($sqlData);
 $dataTypes = $types . 'ii';
@@ -84,7 +84,7 @@ $res = $st->get_result();
 $rows = $res->fetch_all(MYSQLI_ASSOC);
 $st->close();
 
-// 3) Odgovor
+// 3) Odgovor␊
 echo json_encode([
     'data'      => $rows,
     'total'     => (int)$total,

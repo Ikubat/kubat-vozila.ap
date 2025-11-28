@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,24 +19,24 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('marka_delete.php');
 
-// Briše marku iz tablice marka_vozila po ID-u.
-//
-// Prihvaća:
-// - JSON POST: { "id": 5 }
-// - ili form POST: id=5
-// - ili GET: ?id=5 (korisno za test u browseru)
-//
-// Vraća:
-// {"ok":true}
-// ili
-// {"ok":false,"error":"..."} po potrebi
+// Briše marku iz tablice marka_vozila po ID-u.␊
+//␊
+// Prihvaća:␊
+// - JSON POST: { "id": 5 }␊
+// - ili form POST: id=5␊
+// - ili GET: ?id=5 (korisno za test u browseru)␊
+//␊
+// Vraća:␊
+// {"ok":true}␊
+// ili␊
+// {"ok":false,"error":"..."} po potrebi␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
-// Fallback nazivi tablica ako nisu definirani u okruženju
+// Fallback nazivi tablica ako nisu definirani u okruženju␊
 $T_MARKA = $T_MARKA ?? 'marka_vozila';
 
 function jdie($m, $c = 400) {
@@ -49,7 +49,7 @@ function jok($x = []) {
     exit;
 }
 
-// ---- UČITAVANJE ID-a ----
+// ---- UČITAVANJE ID-a ----␊
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $ct = $_SERVER['CONTENT_TYPE'] ?? '';
 
@@ -63,7 +63,7 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
 } elseif ($method === 'POST') {
     $id = (int)($_POST['id'] ?? 0);
 } else {
-    // GET test: ?id=5
+    // GET test: ?id=5␊
     $id = (int)($_GET['id'] ?? 0);
 }
 
@@ -71,11 +71,11 @@ if ($id <= 0) {
     jdie('ID je obavezan.');
 }
 
-// ---- DB & STRUKTURA ----
+// ---- DB & STRUKTURA ----␊
 try {
     $db = $conn;
 
-    // autodetekcija naziva ID kolone
+    // autodetekcija naziva ID kolone␊
     $cols = [];
     $rs = $db->query("SHOW COLUMNS FROM `$T_MARKA`");
     while ($c = $rs->fetch_assoc()) {
@@ -90,7 +90,7 @@ try {
         jdie("Tablica `$T_MARKA` nema ID kolonu (id / id_marka).");
     }
 
-    // postoji li taj zapis?
+    // postoji li taj zapis?␊
     $st = $db->prepare("SELECT `$colId` FROM `$T_MARKA` WHERE `$colId`=?");
     $st->bind_param('i', $id);
     $st->execute();
@@ -98,7 +98,7 @@ try {
         jdie('Marka ne postoji.');
     }
 
-    // pokušaj brisanja
+    // pokušaj brisanja␊
     $st = $db->prepare("DELETE FROM `$T_MARKA` WHERE `$colId`=?");
     $st->bind_param('i', $id);
     $st->execute();
@@ -106,6 +106,6 @@ try {
     jok();
 
 } catch (mysqli_sql_exception $e) {
-    // ako FK blokira brisanje, poruka će doći ovdje
+    // ako FK blokira brisanje, poruka će doći ovdje␊
     jdie('DB greška: ' . $e->getMessage(), 500);
 }

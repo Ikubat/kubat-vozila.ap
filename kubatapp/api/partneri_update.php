@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,16 +19,16 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('partneri_update.php');
 
-// partneri_update.php
-// Ažurira postojeći zapis u `partneri`.
-// Podržava:
-//  - ime, prezime (ili naziv ako tablica tako radi)
-//  - kontakt/telefon
-//  - email
-//  - adresa
-//  - mjesto_id (FK) ili mjesto (tekst)
-//
-// Važno: ne briše mjesto ako ga frontend ne šalje.
+// partneri_update.php␊
+// Ažurira postojeći zapis u `partneri`.␊
+// Podržava:␊
+//  - ime, prezime (ili naziv ako tablica tako radi)␊
+//  - kontakt/telefon␊
+//  - email␊
+//  - adresa␊
+//  - mjesto_id (FK) ili mjesto (tekst)␊
+//␊
+// Važno: ne briše mjesto ako ga frontend ne šalje.␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -67,7 +67,7 @@ try {
   $id = (int)($in['id'] ?? 0);
   if ($id <= 0) jdie('ID je obavezan.');
 
-  // polja iz inputa (null = nije poslano, "" = poslano prazno)
+  // polja iz inputa (null = nije poslano, "" = poslano prazno)␊
   $ime       = array_key_exists('ime', $in)       ? trim((string)$in['ime'])       : null;
   $prezime   = array_key_exists('prezime', $in)   ? trim((string)$in['prezime'])   : null;
   $kontakt   = array_key_exists('kontakt', $in)   ? trim((string)$in['kontakt'])   : null;
@@ -80,7 +80,7 @@ try {
   $hasMjTxt  = array_key_exists('mjesto', $in);
   $mjestoTxt = $hasMjTxt ? trim((string)$in['mjesto']) : null;
 
-  // struktura tablice
+  // struktura tablice␊
   $cols = [];
   $rs = $db->query("SHOW COLUMNS FROM `$TABLE`");
   while ($c = $rs->fetch_assoc()) {
@@ -92,14 +92,14 @@ try {
   $f_prezime   = $cols['prezime']   ?? null;
   $f_naziv     = $cols['naziv']     ?? null;
   $f_adresa    = $cols['adresa']    ?? null;
-  $f_mjesto    = $cols['mjesto']    ?? null;                 // tekstualno
-  $f_mjesto_id = $cols['mjesto_id'] ?? $cols['id_mjesta'] ?? null; // FK
+  $f_mjesto    = $cols['mjesto']    ?? null;                 // tekstualno␊
+  $f_mjesto_id = $cols['mjesto_id'] ?? $cols['id_mjesta'] ?? null; // FK␊
   $f_tel       = $cols['telefon']   ?? $cols['kontakt'] ?? $cols['tel'] ?? null;
   $f_email     = $cols['email']     ?? $cols['mail'] ?? null;
 
   if (!$f_id) jdie("Tablica '$TABLE' nema ID kolonu.");
 
-  // postoji li zapis
+  // postoji li zapis␊
   $chk = $db->prepare("SELECT * FROM `$TABLE` WHERE `$f_id` = ?");
   $chk->bind_param('i', $id);
   $chk->execute();
@@ -110,7 +110,7 @@ try {
   $vals  = [];
   $types = '';
 
-  // ime/prezime
+  // ime/prezime␊
   if ($f_ime !== null && $ime !== null) {
     $sets[] = "`$f_ime` = ?";
     $vals[] = $ime;
@@ -122,7 +122,7 @@ try {
     $types .= 's';
   }
 
-  // naziv - ako nema posebnih ime/prezime kolona
+  // naziv - ako nema posebnih ime/prezime kolona␊
   if ($f_naziv && !$f_ime && !$f_prezime && ($ime !== null || $prezime !== null)) {
     $curIme     = $ime     !== null ? $ime     : ($cur[$f_ime]     ?? '');
     $curPrezime = $prezime !== null ? $prezime : ($cur[$f_prezime] ?? '');
@@ -133,7 +133,7 @@ try {
     $types .= 's';
   }
 
-  // kontakt / email / adresa
+  // kontakt / email / adresa␊
   if ($f_tel !== null && $kontakt !== null) {
     $sets[] = "`$f_tel` = ?";
     $vals[] = $kontakt;
@@ -150,28 +150,28 @@ try {
     $types .= 's';
   }
 
-  // ----- Mjesto logika -----
-  // Ako postoji mjesto_id kolona i klient je poslao mjesto_id:
+  // ----- Mjesto logika -----␊
+  // Ako postoji mjesto_id kolona i klient je poslao mjesto_id:␊
   if ($f_mjesto_id && $hasMjId) {
     if ($mjestoId && $mjestoId > 0) {
       $sets[] = "`$f_mjesto_id` = ?";
       $vals[] = $mjestoId;
       $types .= 'i';
     } else {
-      // ako želiš ovdje obrisati FK, otkomentiraj:
-      // $sets[] = "`$f_mjesto_id` = NULL";
+      // ako želiš ovdje obrisati FK, otkomentiraj:␊
+      // $sets[] = "`$f_mjesto_id` = NULL";␊
     }
   }
 
-  // Ako nema mjesto_id ili ga nije dirao, ali je poslao tekstualno mjesto:
+  // Ako nema mjesto_id ili ga nije dirao, ali je poslao tekstualno mjesto:␊
   if ($f_mjesto && $hasMjTxt && $mjestoTxt !== '' && $mjestoTxt !== null) {
     $sets[] = "`$f_mjesto` = ?";
     $vals[] = $mjestoTxt;
     $types .= 's';
   }
 
-  // VAŽNO:
-  // - ako NIJE poslao ni mjesto_id ni mjesto -> ne diramo postojeće mjesto
+  // VAŽNO:␊
+  // - ako NIJE poslao ni mjesto_id ni mjesto -> ne diramo postojeće mjesto␊
 
   if (!$sets) jdie('Nema polja za ažuriranje.');
 

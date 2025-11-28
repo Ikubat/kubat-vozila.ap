@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,8 +19,8 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('vrsta_create.php');
 
-// vrsta_create.php - doda novu vrstu u vrsta_vozila
-// prima JSON ili form-data: naziv, oznaka
+// vrsta_create.php - doda novu vrstu u vrsta_vozila␊
+// prima JSON ili form-data: naziv, oznaka␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -58,20 +58,20 @@ try {
         $naziv = trim((string)($_POST['naziv'] ?? ''));
         $oznaka = trim((string)($_POST['oznaka'] ?? ''));
     } else {
-        // GET test iz browsera: ?naziv=...&oznaka=...
+        // GET test iz browsera: ?naziv=...&oznaka=...␊
         $naziv = trim((string)($_GET['naziv'] ?? ''));
         $oznaka = trim((string)($_GET['oznaka'] ?? ''));
     }
 
     if ($naziv === '') jdie('Naziv je obavezan.');
     if ($oznaka === '') {
-        $oznaka = $naziv; // ako kolona ne dopušta NULL
+        $oznaka = $naziv; // ako kolona ne dopušta NULL␊
     }
 
     $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
     $db->set_charset('utf8mb4');
 
-    // ako već postoji ista (naziv, oznaka), vrati taj id
+    // ako već postoji ista (naziv, oznaka), vrati taj id␊
     $st = $db->prepare("SELECT id FROM vrsta_vozila WHERE naziv=? AND oznaka=? LIMIT 1");
     $st->bind_param('ss', $naziv, $oznaka);
     $st->execute();
@@ -79,7 +79,7 @@ try {
         jok(['id' => (int)$row['id'], 'note' => 'exists']);
     }
 
-    // insert
+    // insert␊
     $st = $db->prepare("INSERT INTO vrsta_vozila (naziv, oznaka) VALUES (?, ?)");
     $st->bind_param('ss', $naziv, $oznaka);
     $st->execute();

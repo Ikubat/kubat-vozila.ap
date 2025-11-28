@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,12 +19,12 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('mjesta_create.php');
 
-// Dodaje novo mjesto u tablicu `mjesta`.
-//
-// Prihvaća POST JSON ili klasični POST:
-// { "naziv": "...", "sifra": "...", "kanton": "..." }
-//
-// Radi i ako se kolona zove naziv, mjesto ili naziv_mjesta.
+// Dodaje novo mjesto u tablicu `mjesta`.␊
+//␊
+// Prihvaća POST JSON ili klasični POST:␊
+// { "naziv": "...", "sifra": "...", "kanton": "..." }␊
+//␊
+// Radi i ako se kolona zove naziv, mjesto ili naziv_mjesta.␊
 
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
@@ -49,7 +49,7 @@ if ($method !== 'POST') {
 
 $ct = $_SERVER['CONTENT_TYPE'] ?? '';
 
-// Podrška za JSON ili klasični POST
+// Podrška za JSON ili klasični POST␊
 if (stripos($ct, 'application/json') !== false) {
     $in = json_decode(file_get_contents('php://input'), true) ?: [];
     $naziv  = trim((string)($in['naziv']  ?? $in['m_naziv']  ?? $in['naziv_mjesta'] ?? ''));
@@ -66,7 +66,7 @@ if ($naziv === '') {
 }
 
 try {
-    // Čitanje stvarnih naziva kolona u tablici
+    // Čitanje stvarnih naziva kolona u tablici␊
     $colsRes = $conn->query('SHOW COLUMNS FROM mjesta');
     $cols = [];
     while ($c = $colsRes->fetch_assoc()) {
@@ -87,7 +87,7 @@ try {
     $colSifra  = $cols['sifra'] ?? ($cols['porezna_sifra'] ?? null);
     $colKanton = $cols['kanton'] ?? null;
 
-    // Provjera duplikata po nazivu
+    // Provjera duplikata po nazivu␊
     $st = $conn->prepare("SELECT `$colId` FROM mjesta WHERE `$colNaziv` = ? LIMIT 1");
     $st->bind_param('s', $naziv);
     $st->execute();
@@ -96,7 +96,7 @@ try {
         jok(['id' => (int)$du[$colId], 'msg' => 'Mjesto već postoji.']);
     }
 
-    // Sastavljanje INSERT-a s detektiranim kolonama
+// Sastavljanje INSERT-a s detektiranim kolonama␊
     $fields = [$colNaziv];
     $placeholders = ['?'];
     $types = 's';

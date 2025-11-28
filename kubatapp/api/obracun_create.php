@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,15 +19,15 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('obracun_create.php');
 
-// Prima JSON iz obracun.js i upisuje zapis u tablicu obračuna.
-//
-// Očekuje minimalno:
-//  - datum (YYYY-MM-DD)
-//  - partner_id
-// Ostala polja (vozilo_id, opis, fakt_eur, ... , ukupno) se spremaju
-// SAMO ako odgovarajuće kolone postoje u tablici.
-//
-// Radi s tablicom obracun_vozila ili obracun (uzima prvu koja postoji).
+// Prima JSON iz obracun.js i upisuje zapis u tablicu obračuna.␊
+//␊
+// Očekuje minimalno:␊
+//  - datum (YYYY-MM-DD)␊
+//  - partner_id␊
+// Ostala polja (vozilo_id, opis, fakt_eur, ... , ukupno) se spremaju␊
+// SAMO ako odgovarajuće kolone postoje u tablici.␊
+//␊
+// Radi s tablicom obracun_vozila ili obracun (uzima prvu koja postoji).␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -46,19 +46,19 @@ function jok(array $extra = []): void {
     exit;
 }
 
-// --- provjera metode ---
+// --- provjera metode ---␊
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     jdie('Koristi POST.');
 }
 
-// --- čitanje JSON body ---
+// --- čitanje JSON body ---␊
 $raw = file_get_contents('php://input');
 $in = json_decode($raw, true);
 if (!is_array($in)) {
     jdie('Neispravan JSON body.');
 }
 
-// --- osnovna polja iz JS-a ---
+// --- osnovna polja iz JS-a ---␊
 $datum      = trim((string)($in['datum'] ?? ''));
 $partner_id = (int)($in['partner_id'] ?? 0);
 
@@ -69,7 +69,7 @@ if ($partner_id <= 0) {
     jdie('Partner nije odabran.');
 }
 
-// ostala polja (mogu ali ne moraju postojati u tablici)
+// ostala polja (mogu ali ne moraju postojati u tablici)␊
 $fieldsInput = [
     'vozilo_id'          => $in['vozilo_id']          ?? null,
     'opis'               => $in['opis']               ?? '',
@@ -90,7 +90,7 @@ $fieldsInput = [
     'ukupno'             => $in['ukupno']             ?? 0,
 ];
 
-// tipovi za bind_param po polju
+// tipovi za bind_param po polju␊
 $fieldTypes = [
     'vozilo_id'          => 'i',
     'opis'               => 's',
@@ -112,11 +112,11 @@ $fieldTypes = [
 ];
 
 try {
-    // --- konekcija ---
+    // --- konekcija ---␊
     $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
     $db->set_charset('utf8mb4');
 
-    // --- pronađi tablicu ---
+    // --- pronađi tablicu ---␊
     $table = null;
     foreach ($TABLE_CANDIDATES as $t) {
         $res = $db->query("SHOW TABLES LIKE '".$db->real_escape_string($t)."'");
@@ -129,14 +129,14 @@ try {
         jdie("Nije pronađena tablica za obračune (obracun_vozila ili obracun).");
     }
 
-    // --- pročitaj strukturu tablice ---
+    // --- pročitaj strukturu tablice ---␊
     $cols = [];
     $rs = $db->query("SHOW COLUMNS FROM `$table`");
     while ($c = $rs->fetch_assoc()) {
         $cols[strtolower($c['Field'])] = $c['Field'];
     }
 
-    // moraju postojati kolone za datum i partner_id
+    // moraju postojati kolone za datum i partner_id␊
     $colDatum = $cols['datum']      ?? $cols['datum_obracuna'] ?? null;
     $colPart  = $cols['partner_id'] ?? $cols['id_partner']     ?? null;
 
@@ -144,13 +144,13 @@ try {
         jdie("Tablica `$table` mora imati kolone za datum i partner_id.");
     }
 
-    // --- priprema inserta ---
+    // --- priprema inserta ---␊
     $fields = [];
     $marks  = [];
     $types  = '';
     $vals   = [];
 
-    // obavezna polja
+    // obavezna polja␊
     $fields[] = $colDatum;
     $marks[]  = '?';
     $types   .= 's';
@@ -161,16 +161,16 @@ try {
     $types   .= 'i';
     $vals[]   = $partner_id;
 
-    // opcionalna polja: koristimo SAMO ako kolona postoji u tablici
+    // opcionalna polja: koristimo SAMO ako kolona postoji u tablici␊
     foreach ($fieldsInput as $name => $value) {
         $lname = strtolower($name);
         if (isset($cols[$lname])) {
             $col = $cols[$lname];
             $t   = $fieldTypes[$name] ?? 's';
 
-            // null handling
+         // null handling␊
             if ($value === '' || $value === null) {
-                // NULL ide bez placeholdere? Ne, zbog prepared statementa idemo s placeholderom i NULL vrijednošću.
+                // NULL ide bez placeholdere? Ne, zbog prepared statementa idemo s placeholderom i NULL vrijednošću.␊
                 $fields[] = $col;
                 $marks[]  = '?';
                 $types   .= $t;
@@ -182,7 +182,7 @@ try {
                 if ($t === 'i') {
                     $vals[] = (int)$value;
                 } elseif ($t === 'd') {
-                    $vals[] = (float)$value;
+                    $vals[] = (float)$valu;
                 } else {
                     $vals[] = (string)$value;
                 }
@@ -204,4 +204,5 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     jdie('DB greška: '.$e->getMessage(), 500);
+
 }

@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -29,15 +29,15 @@ $DB_PASS = '';
 $DB_NAME = 'kubatapp';
 
 try {
-    // Povezivanje na bazu
+    // Povezivanje na bazu␊
     $db = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
     $db->set_charset('utf8mb4');
 
-    // Jednostavan upit
+    // Jednostavan upit␊
     $sql = "SELECT id, naziv, oznaka FROM vrsta_vozila ORDER BY naziv ASC";
     $rs = $db->query($sql);
 
-    // Polje rezultata
+    // Polje rezultata␊
     $out = [];
     while ($r = $rs->fetch_assoc()) {
         $out[] = [
@@ -47,7 +47,7 @@ try {
         ];
     }
 
-    // Ispis u JSON formatu
+    // Ispis u JSON formatu␊
     echo json_encode($out, JSON_UNESCAPED_UNICODE);
 } catch (mysqli_sql_exception $e) {
     http_response_code(500);

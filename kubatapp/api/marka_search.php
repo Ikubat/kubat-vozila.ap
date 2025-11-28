@@ -1,7 +1,7 @@
 <?php
-$bootstrapPath = __DIR__ . '/_bootstrap.php';
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -19,14 +19,14 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('marka_search.php');
 
-// Lista marki iz tablice marka_vozila + vrsta_vozila, bez pretpostavke da postoji "model" kolona.
+// Lista marki iz tablice marka_vozila + vrsta_vozila, bez pretpostavke da postoji "model" kolona.␊
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
-// Fallback nazivi tablica ako nisu definirani u okruženju
+// Fallback nazivi tablica ako nisu definirani u okruženju␊
 $T_MARKA = $T_MARKA ?? 'marka_vozila';
 $T_VRSTA = $T_VRSTA ?? 'vrsta_vozila';
 
@@ -40,7 +40,7 @@ function jout($d) {
     exit;
 }
 
-// ulaz
+// ulaz␊
 $q           = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
 $page        = max(1, (int)($_GET['page'] ?? 1));
 $pp          = max(1, (int)($_GET['page_size'] ?? 50));
@@ -62,7 +62,7 @@ $fKataloska  = (isset($_GET['kataloska']) && $_GET['kataloska'] !== '') ? (float
 try {
     $db = $conn;
 
-    // --- detektuj kolone u marka_vozila ---
+    // --- detektuj kolone u marka_vozila ---␊
     $cols = [];
     $rs = $db->query("SHOW COLUMNS FROM `$T_MARKA`");
     while ($c = $rs->fetch_assoc()) {
@@ -73,11 +73,11 @@ try {
         jdie("Tablica `$T_MARKA` ne postoji ili nema kolona.");
     }
 
-    // mapiranje: šta god postoji koristimo
+    // mapiranje: šta god postoji koristimo␊
     $colId        = $cols['id']          ?? $cols['id_marka']  ?? null;
     $colNaziv     = $cols['naziv']       ?? $cols['marka']     ?? $cols['naziv_marka'] ?? null;
-    $colModel     = $cols['model']       ?? $cols['tip']       ?? $cols['naziv_modela'] ?? null; // opcionalno
-    $colVrsta     = $cols['vrsta_id']    ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;       // opcionalno
+    $colModel     = $cols['model']       ?? $cols['tip']       ?? $cols['naziv_modela'] ?? null; // opcionalno␊
+    $colVrsta     = $cols['vrsta_id']    ?? $cols['id_vrsta']  ?? $cols['vrsta'] ?? null;       // opcionalno␊
     $colSerija    = $cols['serija']      ?? null;
     $colOblik     = $cols['oblik']       ?? null;
     $colVrata     = $cols['vrata']       ?? null;
@@ -93,7 +93,7 @@ try {
         jdie("Tablica `$T_MARKA` nema očekivane kolone (id, naziv).");
     }
 
-    // bazni SELECT s aliasima koje frontend očekuje
+    // bazni SELECT s aliasima koje frontend očekuje␊
     $sel = [];
     $sel[] = "m.`$colId`    AS id";
     $sel[] = "m.`$colNaziv` AS naziv";
@@ -108,7 +108,7 @@ try {
         $joinVrsta = "LEFT JOIN `$T_VRSTA` v ON v.id = m.`$colVrsta`";
     } else {
         $sel[] = "NULL AS vrsta_id";
-        $joinVrsta = "LEFT JOIN `$T_VRSTA` v ON 1=0"; // nema veze, ali struktura ostaje ista
+        $joinVrsta = "LEFT JOIN `$T_VRSTA` v ON 1=0"; // nema veze, ali struktura ostaje ista␊
     }
 
     $sel[] = "v.naziv  AS vrsta_naz";
@@ -125,7 +125,7 @@ try {
     if ($colKataloska) $sel[] = "m.`$colKataloska` AS kataloska"; else $sel[] = "NULL AS kataloska";
     $select = implode(",\n       ", $sel);
 
-    // --- WHERE za pretragu ---
+    // --- WHERE za pretragu ---␊
     $whereParts = [];
     $params = [];
     $types  = '';
@@ -138,7 +138,7 @@ try {
         }
     }
 
-    // helper: građenje uvjeta za modelske godine tako da obuhvati i mlađa godišta
+    // helper: građenje uvjeta za modelske godine tako da obuhvati i mlađa godišta␊
     $addYearCondition = function (int $year) use (&$params, &$types, $colGodModela, $colGodKraj) {
         $yearParts = [];
         if ($colGodModela) {
@@ -155,25 +155,25 @@ try {
     if ($q !== '') {
         $likeParts = [];
 
-        // tražimo po nazivu marke
+        // tražimo po nazivu marke␊
         $likeParts[] = "m.`$colNaziv` LIKE CONCAT('%',?,'%')";
         $params[] = $q; $types .= 's';
 
-        // po modelu, ako postoji
+        // po modelu, ako postoji␊
         if ($colModel) {
             $likeParts[] = "m.`$colModel` LIKE CONCAT('%',?,'%')";
             $params[] = $q; $types .= 's';
         }
 
-        // po nazivu vrste
+        // po nazivu vrste␊
         $likeParts[] = "v.naziv LIKE CONCAT('%',?,'%')";
         $params[] = $q; $types .= 's';
 
-        // po oznaci vrste
+        // po oznaci vrste␊
         $likeParts[] = "IFNULL(v.oznaka,'') LIKE CONCAT('%',?,'%')";
         $params[] = $q; $types .= 's';
 
-        // po modelskoj godini (godište >= tražene vrijednosti) uzimajući u obzir i kraj proizvodnje
+        // po modelskoj godini (godište >= tražene vrijednosti) uzimajući u obzir i kraj proizvodnje␊
         if ($yearFilter !== null) {
             $yearCond = $addYearCondition($yearFilter);
             if ($yearCond) {
@@ -240,7 +240,7 @@ try {
         $params[] = $fKataloska; $types .= 'd';
     }
 
-    // Ako je traženje samo godine, bez teksta, a kolona postoji, primijeni filter i bez LIKE izraza
+    // Ako je traženje samo godine, bez teksta, a kolona postoji, primijeni filter i bez LIKE izraza␊
     if ($yearFilter !== null && $q === (string)$yearFilter) {
         $yearCond = $addYearCondition($yearFilter);
         if ($yearCond) {
@@ -250,11 +250,11 @@ try {
 
     $where = $whereParts ? implode(' AND ', $whereParts) : '1=1';
 
-    // --- total ---
+    // --- total ---␊
     if ($params) {
-        $sqlCount = "SELECT COUNT(*) c
-                     FROM `$T_MARKA` m
-                     $joinVrsta
+        $sqlCount = "SELECT COUNT(*) c␊
+                     FROM `$T_MARKA` m␊
+                     $joinVrsta␊
                      WHERE $where";
         $st = $db->prepare($sqlCount);
         $st->bind_param($types, ...$params);
@@ -267,12 +267,12 @@ try {
 
     $pages = max(1, (int)ceil($total / $pp));
 
-    // --- data ---
+    // --- data ---␊
     $sqlData = "SELECT
-       $select
+       $select␊
        FROM `$T_MARKA` m
-       $joinVrsta
-       WHERE $where
+       $joinVrsta␊
+       WHERE $where␊
        ORDER BY m.`$colNaziv` ASC " . ($colModel ? ", m.`$colModel` ASC " : "") . "
        LIMIT $pp OFFSET $off";
 
@@ -290,7 +290,7 @@ try {
         $rows[] = [
             'id'           => (int)$r['id'],
             'naziv'        => $r['naziv'],
-            'model'        => $r['model'],              // može biti '' ako kolona ne postoji
+            'model'        => $r['model'],              // može biti '' ako kolona ne postoji␊
             'vrsta_id'     => $r['vrsta_id'] !== null ? (int)$r['vrsta_id'] : null,
             'vrsta_naz'    => $r['vrsta_naz'] ?? '',
             'vrsta_oznaka' => $r['vrsta_oznaka'] ?? '',
@@ -313,7 +313,7 @@ try {
         'total'     => $total,
         'pages'     => $pages,
         'page'      => $page,
-        'page_size' => $pp
+        'page_size' => $pp␊
     ]);
 
 } catch (mysqli_sql_exception $e) {
