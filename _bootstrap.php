@@ -30,7 +30,10 @@ set_error_handler(function ($severity, $message, $file, $line) {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
-// Standard JSON error payload
+// Standard JSON response helper
+// - Cleans any buffered warnings so output stays valid JSON
+// - Uses INVALID_UTF8_SUBSTITUTE so loši znakovi iz baze ne razbiju JSON
+// - Ako serializacija ipak zakaže, frontend će dobiti jasan JSON error
 function kubatapp_json_response(array $payload, int $status = 200): void
 {
     if (ob_get_length()) {
@@ -38,7 +41,21 @@ function kubatapp_json_response(array $payload, int $status = 200): void
     }
 
     http_response_code($status);
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    if ($json === false) {
+        // Posljednja zaštita: vrati validan JSON i pojasni grešku
+        $fallback = [
+            'ok'    => false,
+            'error' => 'JSON encode neuspješan: ' . json_last_error_msg(),
+        ];
+
+        echo json_encode($fallback, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        return;
+    }
+
+    echo $json;
 }
 
 // Standard JSON error payload
@@ -60,9 +77,12 @@ function kubatapp_json_error($message, $status = 500)
  */
 function kubatapp_require_api(string $relativeScript): void
 {
-    // Kod tebe su svi API fajlovi u istom folderu kao _bootstrap.php (api/)
+    // Kod tebe su API fajlovi u /api dok je _bootstrap.php u glavnom folderu
+    // (npr. kubatapp/_bootstrap.php + kubatapp/api/*.php). Podrži i slučaj
+    // kada su skripte ipak pored _bootstrap.php radi kompatibilnosti.
     $baseDirs = [
-        __DIR__,
+        __DIR__,            // legacy: pored _bootstrap.php
+        __DIR__ . '/api',   // tipična struktura: api/partneri_list.php
     ];
 
     foreach ($baseDirs as $base) {
