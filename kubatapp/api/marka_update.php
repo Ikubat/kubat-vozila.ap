@@ -1,61 +1,99 @@
-<?php␊
-$bootstrapPath = __DIR__ . '/_bootstrap.php';␊
-if (!is_file($bootstrapPath)) {␊
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';␊
-}␊
-if (!is_file($bootstrapPath)) {␊
-    if (!headers_sent()) {␊
-        header('Content-Type: application/json; charset=utf-8');␊
-    }␊
-    http_response_code(500);␊
-    echo json_encode([␊
-        'ok'    => false,␊
-        'error' => 'API bootstrap nije pronađen.',␊
-    ], JSON_UNESCAPED_UNICODE);␊
-    exit;␊
-}␊
-␊
-require_once $bootstrapPath;␊
-␊
-kubatapp_require_api('marka_update.php');␊
-␊
-// Ažuriranje postojeće marke u marka_vozila.␊
+<?php
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+if (!is_file($bootstrapPath)) {
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
+}
+if (!is_file($bootstrapPath)) {
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    http_response_code(500);
+    echo json_encode([
+        'ok'    => false,
+        'error' => 'API bootstrap nije pronađen.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+require_once $bootstrapPath;
+
+kubatapp_require_api('marka_update.php');
+
+
+
+// Ažuriranje postojeće marke u marka_vozila.
+
 // Očekuje (JSON ili POST):
-// { "id": 5, "naziv": "...", "model": "...", "vrsta_id": 2 }␊
-//␊
-// Radi i ako tablica nema "model" ili "vrsta_id" - ažurira samo ono što postoji.␊
-␊
-header('Content-Type: application/json; charset=utf-8');␊
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);␊
-ini_set('html_errors', 0);␊
-␊
-// Prisilno sve PHP greške pretvaramo u JSON odgovor umjesto HTML-a␊
-set_error_handler(function ($severity, $message, $file, $line) {␊
-    throw new ErrorException($message, 0, $severity, $file, $line);␊
-});␊
-set_exception_handler(function (Throwable $e) {␊
-    http_response_code(500);␊
-    echo json_encode([␊
-        'ok'    => false,␊
-        'error' => 'Server error: ' . $e->getMessage(),␊
-    ], JSON_UNESCAPED_UNICODE);␊
-    exit;␊
-});␊
-register_shutdown_function(function () {␊
-    $err = error_get_last();␊
-    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {␊
-        http_response_code(500);␊
-        if (!headers_sent()) {␊
-            header('Content-Type: application/json; charset=utf-8');␊
-        }␊
-        echo json_encode([␊
-            'ok'    => false,␊
-            'error' => 'Fatal error: ' . $err['message'],␊
-        ], JSON_UNESCAPED_UNICODE);␊
-    }␊
-});␊
-␊
-require_once __DIR__ . '/config.php';␊
+// { "id": 5, "naziv": "...", "model": "...", "vrsta_id": 2 }
+
+//
+
+// Radi i ako tablica nema "model" ili "vrsta_id" - ažurira samo ono što postoji.
+
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+ini_set('html_errors', 0);
+
+
+
+// Prisilno sve PHP greške pretvaramo u JSON odgovor umjesto HTML-a
+
+set_error_handler(function ($severity, $message, $file, $line) {
+
+    throw new ErrorException($message, 0, $severity, $file, $line);
+
+});
+
+set_exception_handler(function (Throwable $e) {
+
+    http_response_code(500);
+
+    echo json_encode([
+
+        'ok'    => false,
+
+        'error' => 'Server error: ' . $e->getMessage(),
+
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+});
+
+register_shutdown_function(function () {
+
+    $err = error_get_last();
+
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+
+        http_response_code(500);
+
+        if (!headers_sent()) {
+
+            header('Content-Type: application/json; charset=utf-8');
+
+        }
+
+        echo json_encode([
+
+            'ok'    => false,
+
+            'error' => 'Fatal error: ' . $err['message'],
+
+        ], JSON_UNESCAPED_UNICODE);
+
+    }
+
+});
+
+
+
+require_once __DIR__ . '/config.php';
+
 // Fallback nazivi tablica ako nisu definirani u okruženju
 $T_MARKA = $T_MARKA ?? 'marka_vozila';
 
@@ -196,7 +234,8 @@ try {
         jdie('Model ne može biti prazan.');
     }
 
-␊
+
+
     // postoji li zapis?
     $st = $db->prepare("SELECT * FROM `$T_MARKA` WHERE `$colId`=?");
     $st->bind_param('i', $id);

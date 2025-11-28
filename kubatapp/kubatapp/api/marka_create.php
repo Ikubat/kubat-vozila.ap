@@ -1,8 +1,7 @@
 <?php
-require_once __DIR__ . '/../_bootstrap.php';
-kubatapp_require_api('ime_ovog_fajla.php');
+$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
+    $bootstrapPath = __DIR__ . '/_bootstrap.php';
 }
 if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
@@ -20,18 +19,25 @@ require_once $bootstrapPath;
 
 kubatapp_require_api('marka_create.php');
 
-// Dodavanje nove marke u tablicu marka_vozila.␊
-// Očekuje (idealno JSON POST):␊
-// { "naziv": "...", "model": "...", "vrsta_id": 2 }␊
-//␊
-// Radi i ako tvoja tablica NEMA kolonu "model" ili "vrsta_id" - automatski se prilagodi.␊
+// Dodavanje nove marke u tablicu marka_vozila.
+
+// Očekuje (idealno JSON POST):
+
+// { "naziv": "...", "model": "...", "vrsta_id": 2 }
+
+//
+
+// Radi i ako tvoja tablica NEMA kolonu "model" ili "vrsta_id" - automatski se prilagodi.
+
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 require_once __DIR__ . '/config.php';
 
-// Fallback nazivi tablica ako nisu definirani u okruženju␊␊
+// Fallback nazivi tablica ako nisu definirani u okruženju
+
+
 $T_MARKA = $T_MARKA ?? 'marka_vozila';
 
 function jdie($m, $c = 400) {
@@ -44,7 +50,9 @@ function jok($x = []) {
     exit;
 }
 
-// ---- UČITAVANJE PODATAKA ----␊␊
+// ---- UČITAVANJE PODATAKA ----
+
+
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $ct = $_SERVER['CONTENT_TYPE'] ?? '';
 
@@ -98,7 +106,8 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
     $godKraj   = isset($_POST['god_kraj']) && $_POST['god_kraj'] !== '' ? (int)$_POST['god_kraj'] : null;
     $kataloska = isset($_POST['kataloska']) && $_POST['kataloska'] !== '' ? (float)$_POST['kataloska'] : null;
 } else {
-    // GET test: ?naziv=VW&model=Golf&vrsta_id=2␊
+    // GET test: ?naziv=VW&model=Golf&vrsta_id=2
+
     $naziv  = trim((string)($_GET['naziv'] ?? ''));
     $model  = trim((string)($_GET['model'] ?? ''));
     if (isset($_GET['vrsta_id']) && $_GET['vrsta_id'] !== '') {
@@ -118,7 +127,9 @@ if ($method === 'POST' && stripos($ct, 'application/json') !== false) {
 
 if ($naziv === '') jdie('Naziv je obavezan.');
 
-// ---- DB & STRUKTURA ----␊␊
+// ---- DB & STRUKTURA ----
+
+
 try {
     $db = $conn;
 
@@ -146,19 +157,24 @@ try {
     
     if (!$colNaziv) jdie("Tablica `$T_MARKA` nema kolonu za naziv.");
 
-    // ---- PRIPREMA INSERTA ----␊
+    // ---- PRIPREMA INSERTA ----
+
     $fields = [];
     $ph     = [];
     $vals   = [];
     $types  = '';
 
-    // naziv je uvijek tu␊␊
+    // naziv je uvijek tu
+
+
     $fields[] = "`$colNaziv`";
     $ph[]     = '?';
     $vals[]   = $naziv;
     $types   .= 's';
 
-    // model ako postoji kolona␊␊
+    // model ako postoji kolona
+
+
     if ($colModel && $model !== '') {
         $fields[] = "`$colModel`";
         $ph[]     = '?';
@@ -187,7 +203,8 @@ try {
         }
     }
 
-    // vrsta_id ako postoji kolona i vrijednost␊
+    // vrsta_id ako postoji kolona i vrijednost
+
     if ($colVrsta && $vrstaId !== null && $vrstaId > 0) {
         $fields[] = "`$colVrsta`";
         $ph[]     = '?';
@@ -197,7 +214,8 @@ try {
 
     if (!$fields) jdie('Nema polja za spremiti.');
 
-    $sql = "INSERT INTO `$T_MARKA` (" . implode(',', $fields) . ")␊
+    $sql = "INSERT INTO `$T_MARKA` (" . implode(',', $fields) . ")
+
             VALUES (" . implode(',', $ph) . ")";
     $st = $db->prepare($sql);
     $st->bind_param($types, ...$vals);
