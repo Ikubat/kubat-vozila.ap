@@ -26,13 +26,17 @@ $isLocal =
    ============================ */
 
 if ($isLocal) {
-    // ------------------------------␊
-    // LOKALNO (XAMPP)␊
-    // ------------------------------␊
+    // ------------------------------
+
+    // LOKALNO (XAMPP)
+
+    // ------------------------------
+
     define('DB_HOST', 'localhost');
     define('DB_USER', 'root');
     define('DB_PASS', '');
-    define('DB_NAME', 'kubatapp'); // ime tvoje lokalne baze␊
+    define('DB_NAME', 'kubatapp'); // ime tvoje lokalne baze
+
 
     // Full error reporting lokalno; ne prikazuj PHP warninge u JSON API-ima
     error_reporting(E_ALL);
