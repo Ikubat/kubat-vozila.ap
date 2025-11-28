@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <title>Uplatnice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Ako imaš zajednički CSS (onaj veliki koji si mi slao), linkaj ga ovdje -->
+  <!-- <link rel="stylesheet" href="common.css?v=106"> -->
+
+  <style>
+    :root {
+      --gap: 12px;
+      --radius: 10px;
+      --shadow: 0 4px 16px rgba(0,0,0,.08);
+      --border: #e5e7eb;
+      --primary: #2563eb;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:24px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+      background:#f5f6fa;
+      color:#111827;
+    }
+    .wrap{max-width:960px;margin:0 auto}
+    .card{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:18px 18px 16px;
+    }
+    h1{margin:0 0 4px;font-size:22px}
+    .sub{margin:0 0 14px;color:#6b7280;font-size:13px}
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:var(--gap);
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .toolbar .grow{flex:1}
+    input[type="search"], input[type="text"], input[type="number"], input[type="date"], select{
+      width:100%;
+      padding:9px 11px;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:#fff;
+      font-size:14px;
+      outline:none;
+    }
+    input:focus, select:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 2px rgba(37,99,235,.14);
+    }
+    button{
+      border:0;
+      border-radius:var(--radius);
+      padding:9px 13px;
+      font-size:14px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .btn.primary{background:var(--primary);color:#fff}
+    .btn.primary:hover{background:#1d4ed8}
+    .btn.sec{background:#e5e7eb;color:#111827}
+    .btn.sec:hover{background:#d1d5db}
+    .btn.warn{background:#fee2e2;color:#991b1b}
+    .btn.warn:hover{background:#fecaca}
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      margin-top:4px;
+    }
+    .head-row,.row{
+      display:grid;
+      grid-template-columns: 110px 1.4fr 1.4fr 1.6fr 110px;
+      gap:8px;
+      align-items:center;
+      padding:7px 9px;
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      font-size:13px;
+    }
+    .head-row{
+      background:#eef2ff;
+      font-weight:600;
+    }
+    .row{
+      background:#fff;
+    }
+    .row:hover{background:#f3f4ff}
+    .acts{
+      display:flex;
+      justify-content:flex-end;
+      gap:4px;
+    }
+    .act{
+      padding:5px 7px;
+      border-radius:7px;
+      background:#eef2ff;
+      color:#111827;
+      cursor:pointer;
+      border:0;
+    }
+    .picker-row{display:flex;gap:8px;align-items:center}␊
+    .picker-row .display-input{flex:1;min-width:0}
+    .act.del{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+    .hint{
+      padding:10px 4px;
+      text-align:center;
+      font-size:13px;
+      color:#6b7280;
+    }
+    .info-bar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:4px;
+      font-size:12px;
+      color:#6b7280;
+    }
+
+    /* MODAL */
+    .modal-wrap{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(15,23,42,.55);
+      z-index:50;
+      padding:16px;
+    }
+    .modal-wrap.show{display:flex}
+    .modal{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      max-width:900px;
+      width:100%;
+      padding:16px 16px 14px;
+      font-size:14px;
+    }
+    .modal header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .modal h2{
+      margin:0;
+      font-size:18px;
+    }
+    .close-x{
+      border:0;
+      background:#eef2ff;
+      border-radius:999px;
+      width:26px;
+      height:26px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .grid-two{
+      display:grid;
+      grid-template-columns: 2fr 1.4fr;
+      gap:12px;
+    }
+    .block{
+      border-radius:10px;
+      border:1px solid #e5e7eb;
+      padding:10px;
+    }
+    .block h3{
+      margin:0 0 6px;
+      font-size:14px;
+      font-weight:600;
+      color:#374151;
+    }
+    .field{
+      margin-bottom:6px;
+    }
+    .field label{
+      display:block;
+      font-size:12px;
+      color:#4b5563;
+      margin-bottom:2px;
+    }
+    .field input,
+    .field select{
+      width:100%;
+    }
+    .row-inline{
+      display:flex;
+      gap:8px;
+    }
+    .row-inline .field{flex:1}
+    .modal-footer{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    @media (max-width: 800px){
+      .grid-two{grid-template-columns:1fr}
+      .head-row,.row{
+        grid-template-columns: 90px 1.4fr 1.4fr 1.6fr 90px;
+      }
+    }
+  </style>
+</head>
+<body class="uplatnice">
+  <div class="wrap">
+    <div class="card">
+      <h1>Uplatnice</h1>
+      <p class="sub">Pregled i unos uplatnica (uplatni nalozi).</p>
+
+      <div class="toolbar">
+        <div class="grow">
+          <input id="u_q" type="search" placeholder="Filtriraj po uplatitelju, primatelju ili svrsi…">
+        </div>
+        <button id="u_btnAdd" class="btn primary">
+          <i class="fa-solid fa-plus"></i> Nova uplatnica
+        </button>
+      </div>
+
+      <div class="list">
+        <div class="head-row">
+          <div>Datum</div>
+          <div>Uplatilac</div>
+          <div>Primatelj</div>
+          <div>Svrha</div>
+          <div style="text-align:right">Akcije</div>
+        </div>
+        <div id="u_list"></div>
+      </div>
+
+      <div id="u_empty" class="hint" style="display:none;">Nema uplatnica.</div>
+
+      <div class="info-bar">
+        <div id="u_infoCount">Prikazano: 0</div>
+        <div id="u_infoFilter"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Nova / Uredi uplatnica -->
+  <div id="u_wrap" class="modal-wrap" role="dialog" aria-modal="true" aria-labelledby="u_title">
+    <div class="modal">
+      <header>
+        <h2 id="u_title">Nova uplatnica</h2>
+        <button id="u_close" class="close-x" type="button" aria-label="Zatvori">✕</button>
+      </header>
+
+      <input type="hidden" id="u_id">
+
+      <div class="grid-two">
+        <!-- Lijeva strana – kao papirna uplatnica -->
+        <div class="block">
+          <h3>Osnovni podaci</h3>
+
+          <div class="field">
+            <label for="u_uplatilac_id">Uplatilac (partner)</label>
+            <div class="picker-row">
+              <input id="u_uplatilac_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
+              <input id="u_uplatilac_id" type="hidden">
+              <button id="u_pick_uplatilac" class="btn sec" type="button">
+                <i class="fa-solid fa-user"></i> Partneri
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="u_primatelj_id">Primatelj (partner)</label>
+            <div class="picker-row">
+              <input id="u_primatelj_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
+              <input id="u_primatelj_id" type="hidden">
+              <button id="u_pick_primatelj" class="btn sec" type="button">
+                <i class="fa-solid fa-user"></i> Partneri
+              </button>
+            </div>
+          </div>
+
+
+          <div class="field">
+            <label for="u_svrha_id">Šifra svrhe</label>
+            <select id="u_svrha_id"></select>
+          </div>
+
+          <div class="field">
+            <label for="u_svrha">Svrha uplate (prvi red)</label>
+            <input id="u_svrha" type="text">
+          </div>
+
+          <div class="field">
+            <label for="u_svrha1">Svrha uplate (drugi red)</label>
+            <input id="u_svrha1" type="text">
+          </div>
+
+          <div class="row-inline">
+            <div class="field">
+              <label for="u_mjesto">Mjesto uplate</label>
+              <input id="u_mjesto" type="text">
+            </div>
+            <div class="field">
+              <label for="u_datum">Datum</label>
+              <input id="u_datum" type="date">
+            </div>
+          </div>
+
+          <div class="row-inline">
+            <div class="field">
+              <label for="u_iznos">Iznos</label>
+              <input id="u_iznos" type="number" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label for="u_valuta">Valuta</label>
+              <input id="u_valuta" type="text" value="KM">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="u_racun_pos">Račun pošiljaoca</label>
+            <input id="u_racun_pos" type="text">
+          </div>
+          <div class="field">
+            <label for="u_racun_prim">Račun primatelja</label>
+            <input id="u_racun_prim" type="text">
+          </div>
+        </div>
+
+        <!-- Desna strana – porezni dio -->
+        <div class="block">
+          <h3>Porezni / budžetski dio</h3>
+
+          <div class="field">
+            <label for="u_broj_poreskog">Broj poreskog obveznika</label>
+            <input id="u_broj_poreskog" type="text">
+          </div>
+
+          <div class="field">
+            <label for="u_vrsta_prihoda">Vrsta prihoda</label>
+            <input id="u_vrsta_prihoda" type="text">
+          </div>
+
+          <div class="field">
+            <label for="u_opcina">Općina</label>
+            <input id="u_opcina" type="text">
+          </div>
+
+          <div class="field">
+            <label for="u_budzetska">Budžetska organizacija</label>
+            <input id="u_budzetska" type="text">
+          </div>
+
+          <div class="field">
+            <label for="u_poziv">Poziv na broj</label>
+            <input id="u_poziv" type="text">
+          </div>
+
+          <div class="field">
+            <label for="u_napomena">Napomena (opcionalno)</label>
+            <input id="u_napomena" type="text">
+          </div>
+        </div>
+      </div>
+
+      <div id="u_msg" class="hint" style="display:none;text-align:left;color:#b91c1c;"></div>
+
+      <div class="modal-footer">
+        <button id="u_save" class="btn primary" type="button">Spremi</button>
+        <button id="u_cancel" class="btn sec" type="button">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="uplatnice.js?v=1"></script>
+</body>
+</html>
