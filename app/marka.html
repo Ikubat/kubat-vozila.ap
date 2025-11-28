@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vozila / Marke</title>␊
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=9002">␊
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="marke">
+  <div class="wrap">
+    <div class="card">
+      <h1>Vozila / Marke</h1>
+      <p class="sub">Upravljanje markama i modelima vozila s modernim pregledom.</p>
+
+      <div class="toolbar">
+        <div class="grow">
+            <input id="q" type="search" placeholder="Filtriraj po marki, modelu, seriji…" aria-label="Pretraži marke" />
+        </div>
+        <button id="btnAddTop" class="btn" title="Dodaj marku" aria-label="Dodaj marku">
+          <i class="fa-solid fa-plus"></i> Nova marka
+        </button>
+      </div>
+
+      <div class="list" aria-live="polite">
+        <div class="head-row">
+          <div>Vrsta</div>
+          <div>Marka vozila</div>
+          <div>Model</div>
+          <div>Serija</div>
+          <div>Modelska godina</div>
+          <div>Godina prestanka proizvodnje</div>
+          <div>Oblik</div>
+          <div>Broj vrata</div>
+          <div>Snaga</div>
+          <div>Zapremina</div>
+          <div>Pogon</div>
+            <div>Mjenjač</div>
+          <div>Kataloška vrijednost (KM)</div>
+          <div style="text-align:right">Akcije</div>
+        </div>
+        <div class="filter-row">
+          <div><input data-filter="vrsta" type="search" placeholder="Vrsta" aria-label="Filtriraj po vrsti" /></div>
+          <div><input data-filter="naziv" type="search" placeholder="Marka" aria-label="Filtriraj po marki" /></div>
+          <div><input data-filter="model" type="search" placeholder="Model" aria-label="Filtriraj po modelu" /></div>
+          <div><input data-filter="serija" type="search" placeholder="Serija" aria-label="Filtriraj po seriji" /></div>
+          <div><input data-filter="god_modela" type="number" inputmode="numeric" min="0" placeholder="Modelska god." aria-label="Filtriraj po modelskoj godini" /></div>
+          <div><input data-filter="god_kraj" type="number" inputmode="numeric" min="0" placeholder="Kraj proizvodnje" aria-label="Filtriraj po godini kraja" /></div>
+          <div><input data-filter="oblik" type="search" placeholder="Oblik" aria-label="Filtriraj po obliku" /></div>
+          <div><input data-filter="vrata" type="number" inputmode="numeric" min="0" placeholder="Vrata" aria-label="Filtriraj po broju vrata" /></div>
+          <div><input data-filter="snaga" type="number" inputmode="numeric" min="0" placeholder="Snaga" aria-label="Filtriraj po snazi" /></div>
+          <div><input data-filter="zapremina" type="number" inputmode="numeric" min="0" placeholder="Zapremina" aria-label="Filtriraj po zapremini" /></div>
+          <div><input data-filter="pogon" type="search" placeholder="Pogon" aria-label="Filtriraj po pogonu" /></div>
+          <div><input data-filter="mjenjac" type="search" placeholder="Mjenjač" aria-label="Filtriraj po mjenjaču" /></div>
+          <div><input data-filter="kataloska" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Kataloška" aria-label="Filtriraj po kataloškoj vrijednosti" /></div>
+          <div></div>
+        </div>
+        <div id="list"></div>
+      </div>
+
+      <div id="empty" class="hint" style="display:none">Nema rezultata.</div>
+
+      <div class="info-bar">
+        <div id="pageInfo">Prikazano: 0</div>
+        <div id="infoFilter"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Nova / Uredi marka -->
+  <div id="mWrap" class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="box">
+      <header>
+        <h2 id="mTitle">Uredi marku / vozilo</h2>
+        <button id="mClose" class="close-x" aria-label="Zatvori" type="button"></button>
+      </header>
+
+      <input type="hidden" id="m_id" />
+
+      <div class="grid two-col">
+        <div>
+          <label for="m_vrsta">Vrsta vozila</label>
+          <div class="inline-field">
+            <select id="m_vrsta"></select>
+            <button id="btnPickVrsta" class="btn sec" type="button" title="Dodaj vrstu" aria-label="Dodaj vrstu">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_naziv_select">Marka</label>
+          <div class="inline-field">
+            <select id="m_naziv_select"></select>
+            <button id="btnAddMarka" class="btn sec" type="button" title="Dodaj marku" aria-label="Dodaj marku">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_model">Model</label>
+          <div class="inline-field">
+            <select id="m_model"></select>
+            <button id="btnAddModel" class="btn sec" type="button" title="Dodaj model" aria-label="Dodaj model">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_serija">Serija</label>
+          <input id="m_serija" type="text" placeholder="npr. W204" />
+        </div>
+        <div>
+          <label for="m_god_modela">Modelska godina</label>
+          <input id="m_god_modela" type="number" min="1900" max="2100" step="1" inputmode="numeric" placeholder="npr. 2018" />
+        </div>
+        <div>
+          <label for="m_god_kraj">God. prestanka proizvodnje</label>
+          <input id="m_god_kraj" type="number" min="1900" max="2100" step="1" inputmode="numeric" placeholder="npr. 2020" />
+        </div>
+        <div>
+          <label for="m_oblik">Oblik</label>
+          <div class="inline-field">
+            <select id="m_oblik"></select>
+            <button id="btnAddOblik" class="btn sec" type="button" title="Dodaj oblik" aria-label="Dodaj oblik">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_vrata">Broj vrata</label>
+          <div class="inline-field">
+            <select id="m_vrata"></select>
+            <button id="btnAddVrata" class="btn sec" type="button" title="Dodaj broj vrata" aria-label="Dodaj broj vrata">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_snaga">Snaga (kW)</label>
+          <input id="m_snaga" type="number" min="1" max="2000" step="1" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="m_zapremina">Zapremina (ccm)</label>
+          <input id="m_zapremina" type="number" min="1" max="99999" step="1" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="m_pogon">Pogon</label>
+          <div class="inline-field">
+            <select id="m_pogon"></select>
+            <button id="btnAddPogon" class="btn sec" type="button" title="Dodaj pogon" aria-label="Dodaj pogon">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_mjenjac">Mjenjač</label>
+          <div class="inline-field">
+            <select id="m_mjenjac"></select>
+            <button id="btnAddMjenjac" class="btn sec" type="button" title="Dodaj mjenjač" aria-label="Dodaj mjenjač">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="m_kataloska">Kataloška vrijednost (KM)</label>
+          <input id="m_kataloska" type="number" min="0" step="0.01" inputmode="decimal" />
+        </div>
+      </div>
+
+      <div id="mMsg" class="msg"></div>
+
+      <div class="actions">
+        <button id="mSave" class="btn" type="button">Spremi</button>
+        <button id="mCancel" class="btn sec" type="button">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="common.js?v=777"></script>
+  <script src="marka.js?v=9003"></script>
+</body>
+</html>

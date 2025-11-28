@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mjesta — pregled i unos</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --gap: 12px;
+      --radius: 10px;
+      --shadow: 0 4px 16px rgba(0,0,0,.08);
+      --border: #e5e7eb;
+      --primary: #0f68ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:24px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+      background:#f6f7fb;
+      color:#0f172a;
+    }
+    .wrap{max-width:960px;margin:0 auto}
+    .card{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:18px 18px 16px;
+    }
+    h1{margin:0 0 4px;font-size:22px}
+    .sub{margin:0 0 14px;color:#6b7280;font-size:13px}
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:var(--gap);
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .toolbar .grow{flex:1}
+    input[type="text"], input[type="search"], select{
+      width:100%;
+      padding:9px 11px;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:#fff;
+      font-size:14px;
+      outline:none;
+    }
+    input[type="text"]:focus, input[type="search"]:focus, select:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 2px rgba(15,104,255,.14);
+    }
+    button{
+      border:0;
+      border-radius:var(--radius);
+      padding:9px 13px;
+      font-size:14px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .btn{background:var(--primary);color:#fff}
+    .btn.sec{background:#eef2ff;color:#111827}
+    .btn.warn{background:#fee2e2;color:#991b1b}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    .list{
+      display:grid;
+      gap:6px;
+      margin-top:8px;
+    }
+    .head-row,
+    .card-row{
+      display:grid;
+      grid-template-columns:2.4fr 1fr 1fr 90px;
+      gap:8px;
+      align-items:center;
+      padding:7px 9px;
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      font-size:13px;
+    }
+    .head-row{
+      background:#f3f4ff;
+      font-weight:600;
+    }
+    .card-row{
+      background:#fff;
+    }
+    .acts{
+      display:flex;
+      justify-content:flex-end;
+      gap:4px;
+    }
+    .act{
+      padding:5px 7px;
+      border-radius:7px;
+      background:#eef2ff;
+      color:#111827;
+      cursor:pointer;
+      border:0;
+    }
+    .act.del{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+    .hint{
+      padding:10px 4px;
+      text-align:center;
+      font-size:13px;
+      color:#6b7280;
+    }
+
+    .info-bar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:4px;
+      font-size:12px;
+      color:#6b7280;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(15,23,42,.55);
+      z-index:50;
+      padding:16px;
+    }
+    .modal.show{display:flex}
+    .modal .box{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      max-width:520px;
+      width:100%;
+      padding:16px 16px 14px;
+      font-size:14px;
+    }
+    .modal header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .modal h2{
+      margin:0;
+      font-size:18px;
+    }
+    .close-x{
+      border:0;
+      background:#eef2ff;
+      border-radius:999px;
+      width:26px;
+      height:26px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+    .grid{display:grid;gap:10px}
+    .grid label{display:block;font-size:14px;color:#111827}
+    .grid input,.grid select{margin-top:4px}
+    .msg{
+      display:none;
+      margin-top:6px;
+      padding:7px 9px;
+      border-radius:8px;
+      background:#fee2e2;
+      border:1px solid #fecaca;
+      color:#991b1b;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body class="mjesta">
+  <div class="wrap">
+    <div class="card">
+      <h1>Mjesta</h1>
+      <p class="sub">Upravljanje mjestima s poreznim šiframa i kantonima.</p>
+
+      <div class="toolbar">
+        <div class="grow">
+          <input id="search" type="search" placeholder="Filtriraj po nazivu, šifri ili kantonu…" aria-label="Pretraži mjesta">
+        </div>
+        <button id="btnAdd" class="btn" title="Dodaj novo mjesto" aria-label="Dodaj novo mjesto">
+          <i class="fa-solid fa-plus"></i> Novo mjesto
+        </button>
+      </div>
+
+      <div class="list" aria-live="polite">
+        <div class="head-row">
+          <div>Naziv mjesta</div>
+          <div>Porezna šifra</div>
+          <div>Kanton</div>
+          <div style="text-align:right">Akcije</div>
+        </div>
+        <div id="list"></div>
+      </div>
+
+      <!-- Info bar kao kod VRSTE -->
+      <div class="info-bar">
+        <div id="infoCount">Prikazano: 0</div>
+        <div id="infoFilter"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mWrap" class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="box">
+      <header>
+        <h2 id="mTitle">Novo mjesto</h2>
+        <button id="mClose" class="close-x" aria-label="Zatvori" type="button">✕</button>
+      </header>
+
+      <input type="hidden" id="m_id" />
+
+      <div class="grid">
+        <div>
+          <label for="m_naziv">Naziv mjesta *</label>
+          <input type="text" id="m_naziv" autocomplete="off" />
+        </div>
+        <div>
+          <label for="m_sifra">Porezna šifra *</label>
+          <input type="text" id="m_sifra" autocomplete="off" />
+        </div>
+        <div>
+          <label for="m_kanton">Kanton *</label>
+          <select id="m_kanton">
+            <option value="">— odaberi —</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="mMsg" class="msg"></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+        <button id="mSave" class="btn" type="button">Spremi</button>
+        <button id="mCancel" class="btn.sec" type="button">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="common.js?v=106"></script>
+  <script src="mjesta.js?v=106"></script>
+</body>
+</html>
