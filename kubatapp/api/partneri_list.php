@@ -198,4 +198,6 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     out(['ok' => false, 'error' => 'DB greška: ' . $e->getMessage()], 500);
+} catch (Throwable $e) {
+    out(['ok' => false, 'error' => 'Greška: ' . $e->getMessage()], 500);
 }
