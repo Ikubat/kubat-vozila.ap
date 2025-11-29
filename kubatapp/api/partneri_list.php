@@ -128,7 +128,7 @@ try {
     }
 
     // ako je nekim slučajem ostalo samo id -> barem vrati id
-        if (count($select) === 1) {
+    if (count($select) === 1) {
         // koristimo alias `p` i kada vraćamo samo ID da ORDER BY ne bi pao na nepostojeći alias
         $sql = "SELECT " . implode(', ', $select) . " FROM `$T_PARTNERI` p ORDER BY p.`$p_id`";
     } else {
