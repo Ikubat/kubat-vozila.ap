@@ -1,9 +1,6 @@
 <?php
 $bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
 if (!is_file($bootstrapPath)) {
-    $bootstrapPath = __DIR__ . '/_bootstrap.php';
-}
-if (!is_file($bootstrapPath)) {
     if (!headers_sent()) {
         header('Content-Type: application/json; charset=utf-8');
     }
