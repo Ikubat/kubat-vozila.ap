@@ -430,7 +430,7 @@
         $datum.value = iso;
       }
       $wrap.classList.add('show');
-      $uplatilacSel.focus();
+      $uplatilacLabel.focus();
     }
 
     function openEdit(row) {
