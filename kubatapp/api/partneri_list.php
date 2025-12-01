@@ -73,6 +73,8 @@ try {
     $p_mjestoFK  = $pickP('mjesto_id', 'id_mjesta', 'mjesto_fk'); // FK na mjesta
     $p_tel       = $pickP('kontakt', 'kontakt_osoba', 'telefon', 'tel', 'mobitel', 'phone');
     $p_email     = $pickP('email', 'mail', 'e_mail');
+    $p_vrsta     = $pickP('vrsta_partnera', 'vrsta', 'tip', 'kategorija');
+    $p_idbroj    = $pickP('id_broj', 'idbroj', 'id_broj_partnera');
 
     if (!$p_id) {
         out(['ok' => false, 'error' => "Tablica '$T_PARTNERI' nema ID kolonu (npr. id, id_partner)."], 500);
@@ -113,6 +115,8 @@ try {
     if ($p_prezime)   $select[] = "p.`$p_prezime` AS prezime_raw";
     if ($p_naziv)     $select[] = "p.`$p_naziv` AS naziv_raw";
     if ($p_adresa)    $select[] = "p.`$p_adresa` AS adresa_raw";
+    if ($p_vrsta)     $select[] = "p.`$p_vrsta` AS vrsta_raw";
+    if ($p_idbroj)    $select[] = "p.`$p_idbroj` AS idbroj_raw";
     if ($p_mjestoTxt) $select[] = "p.`$p_mjestoTxt` AS mjesto_txt_raw";
     if ($p_tel)       $select[] = "p.`$p_tel` AS tel_raw";
     if ($p_email)     $select[] = "p.`$p_email` AS email_raw";
@@ -171,6 +175,8 @@ try {
         }
 
         $adresa = isset($row['adresa_raw']) ? trim((string)$row['adresa_raw']) : '';
+        $vrsta  = isset($row['vrsta_raw']) ? trim((string)$row['vrsta_raw']) : '';
+        $idBroj = isset($row['idbroj_raw']) ? trim((string)$row['idbroj_raw']) : '';
 
         // mjesto: prioritet je JOIN (mjesto_fk_naziv), pa tekstualno, pa prazno
         $mjesto = '';
@@ -187,6 +193,8 @@ try {
             'id'      => $id,
             'ime'     => $ime,
             'prezime' => $prezime,
+            'vrsta_partnera' => $vrsta,
+            'id_broj' => $idBroj,
             'kontakt' => $tel,
             'email'   => $email,
             'adresa'  => $adresa,

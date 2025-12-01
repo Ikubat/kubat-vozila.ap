@@ -36,6 +36,8 @@ try {
 
     $ime       = trim($in['ime'] ?? '');
     $prezime   = trim($in['prezime'] ?? '');
+    $vrsta     = trim($in['vrsta_partnera'] ?? ($in['vrsta'] ?? ''));
+    $idBroj    = trim($in['id_broj'] ?? '');
     $kontakt   = trim($in['kontakt'] ?? '');
     $email     = trim($in['email'] ?? '');
     $adresa    = trim($in['adresa'] ?? '');
@@ -49,10 +51,10 @@ try {
         $respond(false, ['error' => implode(' ', $err)]);
     }
 
-    $sql = "INSERT INTO partneri (ime, prezime, kontakt, email, adresa, mjesto_id)
-            VALUES (?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO partneri (ime, prezime, vrsta_partnera, id_broj, kontakt, email, adresa, mjesto_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $st = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($st, 'sssssi', $ime, $prezime, $kontakt, $email, $adresa, $mjesto_id);
+    mysqli_stmt_bind_param($st, 'sssssssi', $ime, $prezime, $vrsta, $idBroj, $kontakt, $email, $adresa, $mjesto_id);
     mysqli_stmt_execute($st);
 
     $respond(true, ['id' => mysqli_insert_id($conn)]);
