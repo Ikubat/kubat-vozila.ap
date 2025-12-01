@@ -16,7 +16,8 @@
       update:  'uplatnica_update.php',
       delete:  'uplatnica_delete.php',
       partneri:'partneri_list.php',
-      svrhe:   'svrha_list.php'
+      svrhe:   'svrha_list.php',
+      svrhaCreate: 'svrha_create.php'
     };
 
     // ---- DOM ----
@@ -43,6 +44,9 @@
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
     const $svrhaSel       = document.getElementById('u_svrha_id');
+    const $svrhaNew       = document.getElementById('u_svrha_new');
+    const $svrhaNewBtn    = document.getElementById('u_svrha_new_btn');
+    const $svrhaNewMsg    = document.getElementById('u_svrha_new_msg');
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
@@ -187,6 +191,56 @@
       if (!$poziv.value)        $poziv.value = s.poziv || '';
     }
 
+    function setSvrhaNewMsg(msg = '', isError = false) {
+      if (!$svrhaNewMsg) return;
+      $svrhaNewMsg.textContent = msg;
+      if (msg) {
+        $svrhaNewMsg.style.display = '';
+        $svrhaNewMsg.style.color = isError ? '#b91c1c' : '#4b5563';
+      } else {
+        $svrhaNewMsg.style.display = 'none';
+      }
+    }
+
+    async function addSvrha() {
+      if (!$svrhaNew || !$svrhaNewBtn) return;
+      const naziv = $svrhaNew.value.trim();
+      setSvrhaNewMsg('');
+      if (!naziv) {
+        setSvrhaNewMsg('Unesi naziv nove svrhe.', true);
+        $svrhaNew.focus();
+        return;
+      }
+
+      $svrhaNewBtn.disabled = true;
+      try {
+        const body = {
+          naziv,
+          vrsta_prihoda_sifra: $vrstaPrihoda.value.trim() || undefined,
+          budzetska_org_sifra: $budzetska.value.trim() || undefined,
+          poziv_na_broj_default: $poziv.value.trim() || undefined
+        };
+        const out = await fetchJson(API.svrhaCreate, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const newId = out && (out.id || (out.data && out.data.id));
+        await loadSvrhe();
+        if (newId) {
+          $svrhaSel.value = newId;
+          onSvrhaChange();
+        }
+        $svrhaNew.value = '';
+        setSvrhaNewMsg('Svrha je dodana.');
+      } catch (err) {
+        console.error('addSvrha error', err);
+        setSvrhaNewMsg('Greška pri dodavanju svrhe.', true);
+      } finally {
+        $svrhaNewBtn.disabled = false;
+      }
+    }
+
     function setPartner(target, id, label, partnerData) {
       const isPrimatelj = target === 'primatelj';
       const $idField    = isPrimatelj ? $primateljId : $uplatilacId;
@@ -246,6 +300,7 @@
     }
 
     $svrhaSel.addEventListener('change', onSvrhaChange);
+    $svrhaNewBtn?.addEventListener('click', addSvrha);
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
 
@@ -375,7 +430,7 @@
         $datum.value = iso;
       }
       $wrap.classList.add('show');
-      $uplatilacSel.focus();
+      $uplatilacLabel.focus();
     }
 
     function openEdit(row) {
