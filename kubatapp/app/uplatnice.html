@@ -102,6 +102,7 @@
     .acts{
       display:flex;
       justify-content:flex-end;
+      justify-self:end;
       gap:4px;
     }
     .act{
@@ -297,10 +298,21 @@
             </div>
           </div>
 
-
+          
           <div class="field">
             <label for="u_svrha_id">Šifra svrhe</label>
             <select id="u_svrha_id"></select>
+          </div>
+
+          <div class="field">
+            <label for="u_svrha_new">Dodaj novu šifru svrhe</label>
+            <div class="picker-row">
+              <input id="u_svrha_new" type="text" placeholder="Naziv / opis nove svrhe">
+              <button id="u_svrha_new_btn" class="btn sec" type="button">
+                <i class="fa-solid fa-plus"></i> Dodaj svrhu
+              </button>
+            </div>
+            <div id="u_svrha_new_msg" class="hint" style="display:none;"></div>
           </div>
 
           <div class="field">

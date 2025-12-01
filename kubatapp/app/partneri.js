@@ -4,9 +4,9 @@
 // - Pick mode (?pick=1): klik na red vrati partnera u obracun (setSelectedPartner)
 //   + u pick modu i dalje radi dodavanje/uređivanje
 
-// API baza: ista logika kao u mjesta.js i vrsta.js
-// API skripte se trenutno nalaze u rootu; nema /api/ poddirektorija.
-const ROOT_PATH = location.pathname.includes('/app/') ? '../' : './';
+// API baza: ista logika kao u mjesta.js i vrsta.js␊
+// API skripte su u /api/ poddirektoriju (app → ../api/, inače ./api/).
+const ROOT_PATH = location.pathname.includes('/app/') ? '../api/' : './api/';
 const mjSelect = document.getElementById('p_mjesto');
 const MJ_API = ROOT_PATH + 'mjesta_list.php';
 loadMjesta();
@@ -105,6 +105,8 @@ const baseApi = ROOT_PATH;
   const $pId     = document.getElementById('p_id');
   const $pIme    = document.getElementById('p_ime');
   const $pPrez   = document.getElementById('p_prezime');
+  const $pVrsta  = document.getElementById('p_vrsta');
+  const $pIdBroj = document.getElementById('p_id_broj');
   const $pKont   = document.getElementById('p_kontakt');
   const $pEmail  = document.getElementById('p_email');
   const $pAdr    = document.getElementById('p_adresa');
@@ -194,6 +196,8 @@ const baseApi = ROOT_PATH;
       const kontakt = p.kontakt || p.telefon || '';
       const email   = p.email || '';
       const adresa  = p.adresa || '';
+      const vrsta   = p.vrsta_partnera || p.vrsta || '';
+      const idBroj  = p.id_broj || p.idbroj || '';
       const mjesto  = p.mjesto || '';
       const label   = (ime || prezime) ? (ime + ' ' + prezime).trim() : (p.naziv || '');
 
@@ -202,6 +206,8 @@ const baseApi = ROOT_PATH;
              data-id="${esc(p.id)}"
              data-ime="${esc(ime)}"
              data-prezime="${esc(prezime)}"
+             data-vrsta="${esc(vrsta)}"
+             data-idbroj="${esc(idBroj)}"
              data-kontakt="${esc(kontakt)}"
              data-email="${esc(email)}"
              data-adresa="${esc(adresa)}"
@@ -209,6 +215,8 @@ const baseApi = ROOT_PATH;
              data-label="${esc(label)}">
           <div class="c-ime">${esc(ime)}</div>
           <div class="c-prezime">${esc(prezime)}</div>
+          <div class="c-vrsta">${esc(vrsta)}</div>
+          <div class="c-idbroj">${esc(idBroj)}</div>
           <div class="c-kontakt">${esc(kontakt)}</div>
           <div class="c-email">${esc(email)}</div>
           <div class="c-adresa">${esc(adresa)}</div>
@@ -286,6 +294,8 @@ const baseApi = ROOT_PATH;
             String(p.id).includes(term) ||
             (p.ime      && p.ime.toLowerCase().includes(term)) ||
             (p.prezime  && p.prezime.toLowerCase().includes(term)) ||
+            (p.vrsta_partnera && p.vrsta_partnera.toLowerCase().includes(term)) ||
+            (p.id_broj && String(p.id_broj).toLowerCase().includes(term)) ||
             (p.kontakt  && p.kontakt.toLowerCase().includes(term)) ||
             (p.email    && p.email.toLowerCase().includes(term)) ||
             (p.adresa   && p.adresa.toLowerCase().includes(term)) ||
@@ -304,6 +314,8 @@ const baseApi = ROOT_PATH;
     $pId && ($pId.value = '');
     $pIme && ($pIme.value = '');
     $pPrez && ($pPrez.value = '');
+    $pVrsta && ($pVrsta.value = '');
+    $pIdBroj && ($pIdBroj.value = '');
     $pKont && ($pKont.value = '');
     $pEmail && ($pEmail.value = '');
     $pAdr && ($pAdr.value = '');
@@ -322,6 +334,8 @@ const baseApi = ROOT_PATH;
     $pId && ($pId.value = d.id || '');
     $pIme && ($pIme.value = d.ime || row.querySelector('.c-ime')?.textContent.trim() || '');
     $pPrez && ($pPrez.value = d.prezime || row.querySelector('.c-prezime')?.textContent.trim() || '');
+    $pVrsta && ($pVrsta.value = d.vrsta || row.querySelector('.c-vrsta')?.textContent.trim() || '');
+    $pIdBroj && ($pIdBroj.value = d.idbroj || row.querySelector('.c-idbroj')?.textContent.trim() || '');
     $pKont && ($pKont.value = d.kontakt || row.querySelector('.c-kontakt')?.textContent.trim() || '');
     $pEmail && ($pEmail.value = d.email || row.querySelector('.c-email')?.textContent.trim() || '');
     $pAdr && ($pAdr.value = d.adresa || row.querySelector('.c-adresa')?.textContent.trim() || '');
@@ -364,6 +378,8 @@ const baseApi = ROOT_PATH;
       id:       $pId && $pId.value ? parseInt($pId.value, 10) : undefined,
       ime:      ime,
       prezime:  prezime,
+      vrsta_partnera: $pVrsta ? $pVrsta.value.trim() : '',
+      id_broj:  $pIdBroj ? $pIdBroj.value.trim() : '',
       kontakt:  $pKont ? $pKont.value.trim() : '',
       email:    $pEmail ? $pEmail.value.trim() : '',
       adresa:   $pAdr ? $pAdr.value.trim() : '',
@@ -478,6 +494,8 @@ const baseApi = ROOT_PATH;
       label,
       ime,
       prezime,
+      vrsta: row.dataset.vrsta || row.querySelector('.c-vrsta')?.textContent.trim() || '',
+      id_broj: row.dataset.idbroj || row.querySelector('.c-idbroj')?.textContent.trim() || '',
       kontakt: row.dataset.kontakt || row.querySelector('.c-kontakt')?.textContent.trim() || '',
       email:   row.dataset.email   || row.querySelector('.c-email')?.textContent.trim()   || '',
       adresa:  row.dataset.adresa  || row.querySelector('.c-adresa')?.textContent.trim()  || '',
