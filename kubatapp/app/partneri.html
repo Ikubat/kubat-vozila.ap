@@ -73,7 +73,7 @@
     .head-row,
     .card-row{
       display:grid;
-      grid-template-columns:1.1fr 1.1fr 1fr 1.3fr 1.3fr 1fr 100px;
+      grid-template-columns:1fr 1fr 1fr 0.9fr 1fr 1.2fr 1.2fr 1fr 100px;
       gap:8px;
       align-items:center;
       padding:7px 9px;
@@ -187,6 +187,8 @@
         <div class="head-row">
           <div>Ime</div>
           <div>Prezime</div>
+          <div>Vrsta partnera</div>
+          <div>ID broj</div>
           <div>Kontakt</div>
           <div>Email</div>
           <div>Adresa</div>
@@ -223,6 +225,14 @@
         <div>
           <label for="p_prezime">Prezime</label>
           <input id="p_prezime" type="text" placeholder="npr. Marić" />
+        </div>
+        <div>
+          <label for="p_vrsta">Vrsta partnera</label>
+          <input id="p_vrsta" type="text" placeholder="npr. Pravno lice / Fizičko lice" />
+        </div>
+        <div>
+          <label for="p_id_broj">ID broj</label>
+          <input id="p_id_broj" type="text" placeholder="npr. 123456789" />
         </div>
         <div>
           <label for="p_kontakt">Kontakt</label>
