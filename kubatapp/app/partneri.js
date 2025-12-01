@@ -98,6 +98,7 @@ const baseApi = ROOT_PATH;
   const $empty   = document.getElementById('empty');
   const $pageInfo= document.getElementById('pageInfo');
   const $addTop  = document.getElementById('btnAddTop');
+  const $headRow = document.getElementById('headRow');
 
   // modal partner
   const $wrap    = document.getElementById('pWrap');
@@ -133,6 +134,30 @@ const baseApi = ROOT_PATH;
 
   let allRows = [];
   let mjesta = [];
+
+  const columns = [
+    { key: 'ime',     label: 'Ime',            className: 'c-ime',     get: p => p.ime || '' },
+    { key: 'prezime', label: 'Prezime',        className: 'c-prezime', get: p => p.prezime || '' },
+    { key: 'vrsta',   label: 'Vrsta partnera', className: 'c-vrsta',   get: p => p.vrsta_partnera || p.vrsta || '' },
+    { key: 'idBroj',  label: 'ID broj',        className: 'c-idbroj',  get: p => p.id_broj || p.idbroj || '' },
+    { key: 'kontakt', label: 'Kontakt',        className: 'c-kontakt', get: p => p.kontakt || p.telefon || '' },
+    { key: 'email',   label: 'Email',          className: 'c-email',   get: p => p.email || '' },
+    { key: 'adresa',  label: 'Adresa',         className: 'c-adresa',  get: p => p.adresa || '' },
+    { key: 'mjesto',  label: 'Mjesto',         className: 'c-mjesto',  get: p => p.mjesto || '' },
+  ];
+  const columnGetters = columns.reduce((acc, col) => {
+    acc[col.key] = col.get;
+    return acc;
+  }, {});
+
+  function renderHeader() {
+    if (!$headRow) return;
+    const headerCells = columns.map(col => `<div>${esc(col.label)}</div>`);
+    headerCells.push('<div class="acts-head" aria-hidden="true">Akcije</div>');
+    $headRow.innerHTML = headerCells.join('');
+  }
+
+  renderHeader();
 
   // stub za slučaj da nije iz obračuna
   if (typeof window.setSelectedPartner !== 'function') {
@@ -181,6 +206,7 @@ const baseApi = ROOT_PATH;
     if (!$list) return;
 
     if (!rows || !rows.length) {
+      $list.innerHTML = '';
       $list.innerHTML = '';
       if ($empty) $empty.style.display = 'block';
       if ($pageInfo) $pageInfo.textContent = 'Prikazano: 0';
