@@ -477,7 +477,7 @@
         $datum.value = iso;
       }
       $wrap.classList.add('show');
-      $uplatilacSel.focus();
+      ($btnPickUplat || $uplatilacLabel).focus();
     }
 
     function openEdit(row) {
