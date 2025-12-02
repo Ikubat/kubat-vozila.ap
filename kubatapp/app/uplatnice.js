@@ -8,7 +8,8 @@
       ? ['../api/', '../']
       : ['./api/', './'];
     // korištenje html baze (bez api/) za otvaranje novih prozora
-    const basePageRoot = baseRoots[0].replace(/api\/?$/, '');
+    // ako smo u /app/, trebamo ostati u tom direktoriju (npr. ../app/partneri.html)
+    const basePageRoot = location.pathname.includes('/app/') ? '../app/' : './';
 
     const API = {
       list:    'uplatnica_list.php',
