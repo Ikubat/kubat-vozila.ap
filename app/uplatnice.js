@@ -43,10 +43,14 @@
     const $primateljLabel = document.getElementById('u_primatelj_label');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
-    const $svrhaSel       = document.getElementById('u_svrha_id');
-    const $svrhaNew       = document.getElementById('u_svrha_new');
-    const $svrhaNewBtn    = document.getElementById('u_svrha_new_btn');
-    const $svrhaNewMsg    = document.getElementById('u_svrha_new_msg');
+    const $svrhaSel          = document.getElementById('u_svrha_id');
+    const $svrhaNew          = document.getElementById('u_svrha_new');
+    const $svrhaNewBtn       = document.getElementById('u_svrha_new_btn');
+    const $svrhaNewMsg       = document.getElementById('u_svrha_new_msg');
+    const $svrhaModal        = document.getElementById('u_svrha_modal');
+    const $svrhaModalSave    = document.getElementById('u_svrha_modal_save');
+    const $svrhaModalCancel  = document.getElementById('u_svrha_modal_cancel');
+    const $svrhaModalClose   = document.getElementById('u_svrha_modal_close');
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
@@ -202,8 +206,22 @@
       }
     }
 
+    function openSvrhaModal() {
+      if (!$svrhaModal) return;
+      setSvrhaNewMsg('');
+      if ($svrhaNew) {
+        $svrhaNew.value = '';
+        $svrhaNew.focus();
+      }
+      $svrhaModal.classList.add('show');
+    }
+
+    function closeSvrhaModal() {
+      if ($svrhaModal) $svrhaModal.classList.remove('show');
+    }
+
     async function addSvrha() {
-      if (!$svrhaNew || !$svrhaNewBtn) return;
+      if (!$svrhaNew || !$svrhaModalSave) return;
       const naziv = $svrhaNew.value.trim();
       setSvrhaNewMsg('');
       if (!naziv) {
@@ -212,7 +230,7 @@
         return;
       }
 
-      $svrhaNewBtn.disabled = true;
+      $svrhaModalSave.disabled = true;
       try {
         const body = {
           naziv,
@@ -232,12 +250,12 @@
           onSvrhaChange();
         }
         $svrhaNew.value = '';
-        setSvrhaNewMsg('Svrha je dodana.');
+        closeSvrhaModal();
       } catch (err) {
         console.error('addSvrha error', err);
         setSvrhaNewMsg('Greška pri dodavanju svrhe.', true);
       } finally {
-        $svrhaNewBtn.disabled = false;
+        $svrhaModalSave.disabled = false;
       }
     }
 
@@ -300,7 +318,11 @@
     }
 
     $svrhaSel.addEventListener('change', onSvrhaChange);
-    $svrhaNewBtn?.addEventListener('click', addSvrha);
+    $svrhaNewBtn?.addEventListener('click', (e) => { e.preventDefault(); openSvrhaModal(); });
+    $svrhaModalSave?.addEventListener('click', addSvrha);
+    $svrhaModalCancel?.addEventListener('click', closeSvrhaModal);
+    $svrhaModalClose?.addEventListener('click', closeSvrhaModal);
+    $svrhaModal?.addEventListener('click', (e) => { if (e.target === $svrhaModal) closeSvrhaModal(); });
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
   
