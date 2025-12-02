@@ -25,18 +25,30 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once __DIR__ . '/config.php';
 
 try {
+    $cols = [];
+    $rs = $conn->query('SHOW COLUMNS FROM partneri');
+    while ($c = $rs->fetch_assoc()) {
+        $cols[strtolower($c['Field'])] = $c['Field'];
+    }
+
+    $fVrsta  = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
+    $fIdBroj = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+
+    $select = [
+        'p.id',
+        'p.ime',
+        'p.prezime',
+        'p.kontakt',
+        'p.email',
+        'p.adresa',
+        'p.mjesto_id',
+        $fVrsta ? "p.`$fVrsta` AS vrsta_partnera" : "'' AS vrsta_partnera",
+        $fIdBroj ? "p.`$fIdBroj` AS id_broj" : "'' AS id_broj",
+        'm.naziv_mjesta AS mjesto'
+    ];
+
     $sql = "
-        SELECT
-            p.id,
-            p.ime,
-            p.prezime,
-            p.kontakt,
-            p.email,
-            p.adresa,
-            p.mjesto_id,
-            COALESCE(p.vrsta_partnera, p.vrsta) AS vrsta_partnera,
-            COALESCE(p.id_broj, p.idbroj) AS id_broj,
-            m.naziv_mjesta AS mjesto
+        SELECT " . implode(",\n            ", $select) . "
         FROM partneri p
         LEFT JOIN mjesta m ON m.id = p.mjesto_id
         ORDER BY p.prezime ASC, p.ime ASC, p.id ASC
