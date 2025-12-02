@@ -225,7 +225,12 @@
         </div>
         <div>
           <label for="p_vrsta">Vrsta partnera</label>
-          <input id="p_vrsta" type="text" placeholder="npr. Pravno lice / Fizičko lice" />
+          <div class="mjesto-wrap">
+            <select id="p_vrsta"></select>
+            <button id="btnAddVrsta" class="btn sec" type="button" title="Dodaj vrstu partnera" aria-label="Dodaj vrstu partnera">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div>
           <label for="p_id_broj">ID broj</label>
@@ -302,6 +307,30 @@
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
         <button id="mSave" class="btn" type="button">Spremi</button>
         <button id="mCancel" class="btn sec" type="button">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Dodaj vrstu partnera -->
+  <div id="dlgVrsta" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="box" style="max-width:420px">
+      <header>
+        <h2>Dodaj vrstu partnera</h2>
+        <button id="vClose" class="close-x" aria-label="Zatvori" type="button">✕</button>
+      </header>
+
+      <div class="grid">
+        <div>
+          <label for="v_naziv">Naziv vrste</label>
+          <input id="v_naziv" type="text" autocomplete="off" placeholder="npr. Pravna osoba" />
+        </div>
+      </div>
+
+      <div id="vMsg" class="msg"></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+        <button id="vSave" class="btn" type="button">Spremi</button>
+        <button id="vCancel" class="btn sec" type="button">Odustani</button>
       </div>
     </div>
   </div>

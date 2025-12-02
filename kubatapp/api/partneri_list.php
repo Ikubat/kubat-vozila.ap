@@ -34,8 +34,8 @@ try {
             p.email,
             p.adresa,
             p.mjesto_id,
-            p.vrsta,
-            p.idbroj,
+            COALESCE(p.vrsta_partnera, p.vrsta) AS vrsta_partnera,
+            COALESCE(p.id_broj, p.idbroj) AS id_broj,
             m.naziv_mjesta AS mjesto
         FROM partneri p
         LEFT JOIN mjesta m ON m.id = p.mjesto_id
