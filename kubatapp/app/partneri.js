@@ -560,9 +560,16 @@ const baseApi = ROOT_PATH;
 
   // -------- mini modal vrsta partnera --------
   function openVrstaModal() {
-    if (!$dlgVrsta) return;
+    if (!$dlgVrsta) {
+      console.warn('Nema dijaloga za vrstu partnera.');
+      return;
+    }
     $vNaziv && ($vNaziv.value = '');
     if ($vMsg) { $vMsg.textContent = ''; $vMsg.style.display = 'none'; }
+    // osiguraj da dropdown ima zadnji popis prije dodavanja nove vrste
+    if (vrstePartnera.length === 0) {
+      loadVrstePartnera();
+    }
     $dlgVrsta.classList.add('show');
     $vNaziv && $vNaziv.focus();
   }
@@ -598,7 +605,16 @@ const baseApi = ROOT_PATH;
       }
 
       await loadVrstePartnera();
-      selectVrstaByText(naziv);
+      if (out.id && $pVrsta) {
+        const byId = Array.from($pVrsta.options).find(o => (o.dataset.id || '') === String(out.id));
+        if (byId) {
+          $pVrsta.value = byId.value;
+        } else {
+          selectVrstaByText(naziv);
+        }
+      } else {
+        selectVrstaByText(naziv);
+      }
       closeVrstaModal();
     } catch (err) {
       console.error('Greška pri spremanju vrste partnera:', err);
@@ -612,7 +628,12 @@ const baseApi = ROOT_PATH;
   $dlgMj?.addEventListener('click', e => { if (e.target === $dlgMj) closeMjestoModal(); });
   $mSave?.addEventListener('click', saveMjesto);
 
-  if ($btnAddVrsta) $btnAddVrsta.addEventListener('click', openVrstaModal);
+  if ($btnAddVrsta) {
+    $btnAddVrsta.addEventListener('click', (e) => {
+      e.preventDefault();
+      openVrstaModal();
+    });
+  }
   $vCancel?.addEventListener('click', closeVrstaModal);
   $vClose?.addEventListener('click', closeVrstaModal);
   $dlgVrsta?.addEventListener('click', e => { if (e.target === $dlgVrsta) closeVrstaModal(); });
