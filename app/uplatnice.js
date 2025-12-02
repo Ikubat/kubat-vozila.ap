@@ -99,7 +99,20 @@
           : base + path;
         try {
           const res = await fetch(url, options);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
+
+          if (!res.ok) {
+            let errMsg = 'HTTP ' + res.status;
+            try {
+              const body = await res.json();
+              if (body && typeof body.error === 'string' && body.error.trim()) {
+                errMsg = body.error.trim();
+              }
+            } catch (_) {
+              // fallback to default errMsg
+            }
+            throw new Error(errMsg);
+          }
+
           return await res.json();
         } catch (err) {
           lastErr = err;
@@ -253,7 +266,8 @@
         closeSvrhaModal();
       } catch (err) {
         console.error('addSvrha error', err);
-        setSvrhaNewMsg('Greška pri dodavanju svrhe.', true);
+        const msg = err && err.message ? err.message : 'Greška pri dodavanju svrhe.';
+        setSvrhaNewMsg(msg, true);
       } finally {
         $svrhaModalSave.disabled = false;
       }
