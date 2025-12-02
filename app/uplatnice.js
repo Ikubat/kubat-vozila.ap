@@ -93,7 +93,9 @@
     async function fetchJson(path, options = {}) {
       let lastErr = null;
 
-      for (const base of baseRoots) {
+      for (let i = 0; i < baseRoots.length; i++) {
+        const base = baseRoots[i];
+        const isLast = i === baseRoots.length - 1;
         const url = path.startsWith('http') || path.startsWith('/')
           ? path
           : base + path;
@@ -110,14 +112,23 @@
             } catch (_) {
               // fallback to default errMsg
             }
-            throw new Error(errMsg);
+
+            const err = new Error(errMsg);
+            err.status = res.status;
+
+            if (res.status === 404 && !isLast) {
+              lastErr = err;
+              continue;
+            }
+
+            throw err;
           }
 
           return await res.json();
         } catch (err) {
           lastErr = err;
-          // pokušaj idući base samo na mrežne greške / 404;
-          // ako smo već probali zadnji, baci grešku.
+          const retryable = (err && err.status === 404) || err?.name === 'TypeError';
+          if (!retryable || isLast) break;
         }
       }
 
