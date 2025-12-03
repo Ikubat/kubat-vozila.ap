@@ -43,10 +43,14 @@
     const $primateljLabel = document.getElementById('u_primatelj_label');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
-    const $svrhaSel       = document.getElementById('u_svrha_id');
-    const $svrhaNew       = document.getElementById('u_svrha_new');
-    const $svrhaNewBtn    = document.getElementById('u_svrha_new_btn');
-    const $svrhaNewMsg    = document.getElementById('u_svrha_new_msg');
+    const $svrhaSel          = document.getElementById('u_svrha_id');
+    const $svrhaNew          = document.getElementById('u_svrha_new');
+    const $svrhaNewBtn       = document.getElementById('u_svrha_new_btn');
+    const $svrhaNewMsg       = document.getElementById('u_svrha_new_msg');
+    const $svrhaModal        = document.getElementById('u_svrha_modal');
+    const $svrhaModalSave    = document.getElementById('u_svrha_modal_save');
+    const $svrhaModalCancel  = document.getElementById('u_svrha_modal_cancel');
+    const $svrhaModalClose   = document.getElementById('u_svrha_modal_close');
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
@@ -89,18 +93,42 @@
     async function fetchJson(path, options = {}) {
       let lastErr = null;
 
-      for (const base of baseRoots) {
+      for (let i = 0; i < baseRoots.length; i++) {
+        const base = baseRoots[i];
+        const isLast = i === baseRoots.length - 1;
         const url = path.startsWith('http') || path.startsWith('/')
           ? path
           : base + path;
         try {
           const res = await fetch(url, options);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
+
+          if (!res.ok) {
+            let errMsg = 'HTTP ' + res.status;
+            try {
+              const body = await res.json();
+              if (body && typeof body.error === 'string' && body.error.trim()) {
+                errMsg = body.error.trim();
+              }
+            } catch (_) {
+              // fallback to default errMsg
+            }
+
+            const err = new Error(errMsg);
+            err.status = res.status;
+
+            if (res.status === 404 && !isLast) {
+              lastErr = err;
+              continue;
+            }
+
+            throw err;
+          }
+
           return await res.json();
         } catch (err) {
           lastErr = err;
-          // pokušaj idući base samo na mrežne greške / 404;
-          // ako smo već probali zadnji, baci grešku.
+          const retryable = (err && err.status === 404) || err?.name === 'TypeError';
+          if (!retryable || isLast) break;
         }
       }
 
@@ -202,8 +230,22 @@
       }
     }
 
+    function openSvrhaModal() {
+      if (!$svrhaModal) return;
+      setSvrhaNewMsg('');
+      if ($svrhaNew) {
+        $svrhaNew.value = '';
+        $svrhaNew.focus();
+      }
+      $svrhaModal.classList.add('show');
+    }
+
+    function closeSvrhaModal() {
+      if ($svrhaModal) $svrhaModal.classList.remove('show');
+    }
+
     async function addSvrha() {
-      if (!$svrhaNew || !$svrhaNewBtn) return;
+      if (!$svrhaNew || !$svrhaModalSave) return;
       const naziv = $svrhaNew.value.trim();
       setSvrhaNewMsg('');
       if (!naziv) {
@@ -212,7 +254,7 @@
         return;
       }
 
-      $svrhaNewBtn.disabled = true;
+      $svrhaModalSave.disabled = true;
       try {
         const body = {
           naziv,
@@ -232,12 +274,13 @@
           onSvrhaChange();
         }
         $svrhaNew.value = '';
-        setSvrhaNewMsg('Svrha je dodana.');
+        closeSvrhaModal();
       } catch (err) {
         console.error('addSvrha error', err);
-        setSvrhaNewMsg('Greška pri dodavanju svrhe.', true);
+        const msg = err && err.message ? err.message : 'Greška pri dodavanju svrhe.';
+        setSvrhaNewMsg(msg, true);
       } finally {
-        $svrhaNewBtn.disabled = false;
+        $svrhaModalSave.disabled = false;
       }
     }
 
@@ -300,7 +343,11 @@
     }
 
     $svrhaSel.addEventListener('change', onSvrhaChange);
-    $svrhaNewBtn?.addEventListener('click', addSvrha);
+    $svrhaNewBtn?.addEventListener('click', (e) => { e.preventDefault(); openSvrhaModal(); });
+    $svrhaModalSave?.addEventListener('click', addSvrha);
+    $svrhaModalCancel?.addEventListener('click', closeSvrhaModal);
+    $svrhaModalClose?.addEventListener('click', closeSvrhaModal);
+    $svrhaModal?.addEventListener('click', (e) => { if (e.target === $svrhaModal) closeSvrhaModal(); });
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
   
@@ -430,7 +477,7 @@
         $datum.value = iso;
       }
       $wrap.classList.add('show');
-      $uplatilacSel.focus();
+      ($btnPickUplat || $uplatilacLabel).focus();
     }
 
     function openEdit(row) {
