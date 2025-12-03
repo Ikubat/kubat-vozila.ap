@@ -130,8 +130,10 @@ try {
 
   // naziv - ako nema posebnih ime/prezime kolona␊
   if ($f_naziv && !$f_ime && !$f_prezime && ($ime !== null || $prezime !== null)) {
-    $curIme     = $ime     !== null ? $ime     : ($cur[$f_ime]     ?? '');
-    $curPrezime = $prezime !== null ? $prezime : ($cur[$f_prezime] ?? '');
+    // Tablica ima samo kolonu `naziv` pa kombinuj ime+prezime bez čitanja
+    // nepostojećih kolona (što bi bacilo PHP warning u JSON API-u).
+    $curIme     = $ime     !== null ? $ime     : '';
+    $curPrezime = $prezime !== null ? $prezime : '';
     $naziv = trim($curIme . ' ' . $curPrezime);
     if ($naziv === '') $naziv = $cur[$f_naziv] ?? '';
     $sets[] = "`$f_naziv` = ?";
