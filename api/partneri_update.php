@@ -130,8 +130,12 @@ try {
 
   // naziv - ako nema posebnih ime/prezime kolona␊
   if ($f_naziv && !$f_ime && !$f_prezime && ($ime !== null || $prezime !== null)) {
-    $curIme     = $ime     !== null ? $ime     : ($cur[$f_ime]     ?? '');
-    $curPrezime = $prezime !== null ? $prezime : ($cur[$f_prezime] ?? '');
+    // Nemamo zasebne kolone za ime/prezime, pa koristimo direktno input
+    // vrijednosti i eventualni postojeći `naziv` zapis kao fallback. Čitanje
+    // $cur[$f_ime] ili $cur[$f_prezime] bi uzrokovalo E_WARNING kada su
+    // ti ključevi NULL, što (zbog bootstrapa) baca izuzetak i ruši endpoint.
+    $curIme     = $ime     !== null ? $ime     : '';
+    $curPrezime = $prezime !== null ? $prezime : '';
     $naziv = trim($curIme . ' ' . $curPrezime);
     if ($naziv === '') $naziv = $cur[$f_naziv] ?? '';
     $sets[] = "`$f_naziv` = ?";
