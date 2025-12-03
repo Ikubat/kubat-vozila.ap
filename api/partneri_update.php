@@ -203,7 +203,11 @@ try {
   $types .= 'i';
 
   $st = $db->prepare($sql);
-  $st->bind_param($types, ...$vals);
+  $bind = [$types];
+  foreach ($vals as $i => $v) {
+    $bind[] = &$vals[$i]; // bind_param traži reference
+  }
+  call_user_func_array([$st, 'bind_param'], $bind);
   $st->execute();
 
   jok();
