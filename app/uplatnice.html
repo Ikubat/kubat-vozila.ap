@@ -301,18 +301,12 @@
           
           <div class="field">
             <label for="u_svrha_id">Šifra svrhe</label>
-            <select id="u_svrha_id"></select>
-          </div>
-
-          <div class="field">
-            <label for="u_svrha_new">Dodaj novu šifru svrhe</label>
             <div class="picker-row">
-              <input id="u_svrha_new" type="text" placeholder="Naziv / opis nove svrhe">
+              <select id="u_svrha_id"></select>
               <button id="u_svrha_new_btn" class="btn sec" type="button">
                 <i class="fa-solid fa-plus"></i> Dodaj svrhu
               </button>
             </div>
-            <div id="u_svrha_new_msg" class="hint" style="display:none;"></div>
           </div>
 
           <div class="field">
@@ -398,6 +392,28 @@
       <div class="modal-footer">
         <button id="u_save" class="btn primary" type="button">Spremi</button>
         <button id="u_cancel" class="btn sec" type="button">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Dodaj svrhu -->
+  <div id="u_svrha_modal" class="modal-wrap" role="dialog" aria-modal="true" aria-labelledby="u_svrha_modal_title">
+    <div class="modal" style="max-width:480px">
+      <header>
+        <h2 id="u_svrha_modal_title">Dodaj svrhu</h2>
+        <button id="u_svrha_modal_close" class="close-x" type="button" aria-label="Zatvori">✕</button>
+      </header>
+
+      <div class="field">
+        <label for="u_svrha_new">Naziv / opis svrhe</label>
+        <input id="u_svrha_new" type="text" placeholder="npr. Naknada za uslugu">
+      </div>
+
+      <div id="u_svrha_new_msg" class="hint" style="display:none;"></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+        <button id="u_svrha_modal_save" class="btn primary" type="button">Spremi</button>
+        <button id="u_svrha_modal_cancel" class="btn sec" type="button">Odustani</button>
       </div>
     </div>
   </div>

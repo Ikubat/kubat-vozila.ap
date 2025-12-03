@@ -34,14 +34,15 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 try {
     $in = json_decode(file_get_contents('php://input'), true) ?: [];
 
-    $ime       = trim($in['ime'] ?? '');
-    $prezime   = trim($in['prezime'] ?? '');
-    $vrsta     = trim($in['vrsta_partnera'] ?? ($in['vrsta'] ?? ''));
-    $idBroj    = trim($in['id_broj'] ?? '');
-    $kontakt   = trim($in['kontakt'] ?? '');
-    $email     = trim($in['email'] ?? '');
-    $adresa    = trim($in['adresa'] ?? '');
-    $mjesto_id = isset($in['mjesto_id']) && $in['mjesto_id'] !== '' ? (int)$in['mjesto_id'] : null;
+    $ime        = trim($in['ime'] ?? '');
+    $prezime    = trim($in['prezime'] ?? '');
+    $vrsta      = trim($in['vrsta_partnera'] ?? ($in['vrsta'] ?? ''));
+    $idBroj     = trim($in['id_broj'] ?? '');
+    $brojRacuna = trim($in['broj_racuna'] ?? '');
+    $kontakt    = trim($in['kontakt'] ?? '');
+    $email      = trim($in['email'] ?? '');
+    $adresa     = trim($in['adresa'] ?? '');
+    $mjestoId   = array_key_exists('mjesto_id', $in) && $in['mjesto_id'] !== '' ? (int)$in['mjesto_id'] : null;
 
     $err = [];
     if ($ime === '' && $prezime === '') $err[] = 'Ime ili prezime je obavezno.';
@@ -66,6 +67,7 @@ try {
     $fMjestoId  = $cols['mjesto_id'] ?? $cols['id_mjesta'] ?? null;
     $fVrsta     = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
     $fIdBroj    = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+    $fBrojRac   = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
 
     $fields = [];
     $placeholders = [];
@@ -84,10 +86,11 @@ try {
     if ($fNaziv && !$fIme && !$fPrezime) $addField($fNaziv, trim($ime . ' ' . $prezime));
     if ($fVrsta) $addField($fVrsta, $vrsta);
     if ($fIdBroj) $addField($fIdBroj, $idBroj);
+    if ($fBrojRac) $addField($fBrojRac, $brojRacuna);
     if ($fKontakt) $addField($fKontakt, $kontakt);
     if ($fEmail) $addField($fEmail, $email);
     if ($fAdresa) $addField($fAdresa, $adresa);
-    if ($fMjestoId) $addField($fMjestoId, $mjesto_id !== null ? $mjesto_id : null, 'i');
+    if ($fMjestoId) $addField($fMjestoId, $mjestoId, 'i');
 
     if (!$fields) {
         throw new RuntimeException('Tablica partneri nema očekivane kolone.');
