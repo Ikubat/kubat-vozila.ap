@@ -40,6 +40,7 @@ if ($q !== '') {
         'p.prezime LIKE ?',
         'p.vrsta_partnera LIKE ?',
         'p.id_broj LIKE ?',
+        'p.broj_racuna LIKE ?',
         'p.kontakt LIKE ?',
         'p.email LIKE ?',
         'p.adresa LIKE ?',
@@ -69,7 +70,7 @@ $stTot->close();
 // 2) Podaci za trenutnu stranicu␊
 $sqlData = "␊␊
     SELECT␊␊
-      p.id, p.ime, p.prezime, p.vrsta_partnera, p.id_broj, p.kontakt, p.email, p.adresa, p.mjesto_id,␊
+      p.id, p.ime, p.prezime, p.vrsta_partnera, p.id_broj, p.broj_racuna, p.kontakt, p.email, p.adresa, p.mjesto_id,␊
       m.naziv_mjesta AS mjesto_naz␊␊
     FROM partneri p␊␊
     LEFT JOIN mjesta m ON m.id = p.mjesto_id␊

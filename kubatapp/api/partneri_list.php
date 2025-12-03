@@ -36,6 +36,7 @@ try {
             p.mjesto_id,
             p.vrsta,
             p.idbroj,
+            p.broj_racuna,
             m.naziv_mjesta AS mjesto
         FROM partneri p
         LEFT JOIN mjesta m ON m.id = p.mjesto_id
