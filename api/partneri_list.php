@@ -33,6 +33,7 @@ try {
 
     $fVrsta  = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
     $fIdBroj = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+    $fBrojR  = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
 
     $select = [
         'p.id',
@@ -44,6 +45,7 @@ try {
         'p.mjesto_id',
         $fVrsta ? "p.`$fVrsta` AS vrsta_partnera" : "'' AS vrsta_partnera",
         $fIdBroj ? "p.`$fIdBroj` AS id_broj" : "'' AS id_broj",
+        $fBrojR ? "p.`$fBrojR` AS broj_racuna" : "'' AS broj_racuna",
         'm.naziv_mjesta AS mjesto'
     ];
 

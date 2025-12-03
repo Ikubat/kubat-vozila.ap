@@ -72,6 +72,7 @@ try {
   $prezime   = array_key_exists('prezime', $in)   ? trim((string)$in['prezime'])   : null;
   $vrsta     = array_key_exists('vrsta_partnera', $in) ? trim((string)$in['vrsta_partnera']) : (array_key_exists('vrsta', $in) ? trim((string)$in['vrsta']) : null);
   $idBroj    = array_key_exists('id_broj', $in) ? trim((string)$in['id_broj']) : (array_key_exists('idbroj', $in) ? trim((string)$in['idbroj']) : null);
+  $brojRacun = array_key_exists('broj_racuna', $in) ? trim((string)$in['broj_racuna']) : (array_key_exists('brojracuna', $in) ? trim((string)$in['brojracuna']) : null);
   $kontakt   = array_key_exists('kontakt', $in)   ? trim((string)$in['kontakt'])   : null;
   $email     = array_key_exists('email', $in)     ? trim((string)$in['email'])     : null;
   $adresa    = array_key_exists('adresa', $in)    ? trim((string)$in['adresa'])    : null;
@@ -100,6 +101,7 @@ try {
   $f_email     = $cols['email']     ?? $cols['mail'] ?? null;
   $f_vrsta     = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
   $f_idbroj    = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+  $f_brojRac   = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
 
   if (!$f_id) jdie("Tablica '$TABLE' nema ID kolonu.");
 
@@ -156,6 +158,11 @@ try {
   if ($f_idbroj !== null && $idBroj !== null) {
     $sets[] = "`$f_idbroj` = ?";
     $vals[] = $idBroj;
+    $types .= 's';
+  }
+  if ($f_brojRac !== null && $brojRacun !== null) {
+    $sets[] = "`$f_brojRac` = ?";
+    $vals[] = $brojRacun;
     $types .= 's';
   }
   if ($f_adresa !== null && $adresa !== null) {

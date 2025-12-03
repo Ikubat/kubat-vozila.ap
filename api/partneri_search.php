@@ -42,6 +42,7 @@ while ($c = $rs->fetch_assoc()) {
 
 $fVrsta  = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
 $fIdBroj = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+$fBrojR  = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
 
 if ($q !== '') {
     $like = '%' . $q . '%';
@@ -52,6 +53,7 @@ if ($q !== '') {
 
     if ($fVrsta)  $whereParts[] = "p.`$fVrsta` LIKE ?";
     if ($fIdBroj) $whereParts[] = "p.`$fIdBroj` LIKE ?";
+    if ($fBrojR)  $whereParts[] = "p.`$fBrojR` LIKE ?";
 
     $whereParts = array_merge($whereParts, [
         'p.kontakt LIKE ?',
@@ -89,6 +91,7 @@ $select = [
 
 if ($fVrsta)  $select[] = "p.`$fVrsta` AS vrsta_partnera"; else $select[] = "'' AS vrsta_partnera";
 if ($fIdBroj) $select[] = "p.`$fIdBroj` AS id_broj"; else $select[] = "'' AS id_broj";
+if ($fBrojR)  $select[] = "p.`$fBrojR` AS broj_racuna"; else $select[] = "'' AS broj_racuna";
 
 $select = array_merge($select, [
     'p.kontakt',

@@ -38,6 +38,7 @@ try {
     $prezime   = trim($in['prezime'] ?? '');
     $vrsta     = trim($in['vrsta_partnera'] ?? ($in['vrsta'] ?? ''));
     $idBroj    = trim($in['id_broj'] ?? '');
+    $brojRacuna = trim($in['broj_racuna'] ?? '');
     $kontakt   = trim($in['kontakt'] ?? '');
     $email     = trim($in['email'] ?? '');
     $adresa    = trim($in['adresa'] ?? '');
@@ -66,6 +67,7 @@ try {
     $fMjestoId  = $cols['mjesto_id'] ?? $cols['id_mjesta'] ?? null;
     $fVrsta     = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
     $fIdBroj    = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+    $fBrojRac   = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
 
     $fields = [];
     $placeholders = [];
@@ -84,6 +86,7 @@ try {
     if ($fNaziv && !$fIme && !$fPrezime) $addField($fNaziv, trim($ime . ' ' . $prezime));
     if ($fVrsta) $addField($fVrsta, $vrsta);
     if ($fIdBroj) $addField($fIdBroj, $idBroj);
+    if ($fBrojRac) $addField($fBrojRac, $brojRacuna);
     if ($fKontakt) $addField($fKontakt, $kontakt);
     if ($fEmail) $addField($fEmail, $email);
     if ($fAdresa) $addField($fAdresa, $adresa);
