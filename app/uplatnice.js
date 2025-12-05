@@ -39,8 +39,10 @@
     const $id             = document.getElementById('u_id');
     const $uplatilacId    = document.getElementById('u_uplatilac_id');
     const $uplatilacLabel = document.getElementById('u_uplatilac_label');
+    const $uplatilacTekst = document.getElementById('u_uplatilac_tekst');
     const $primateljId    = document.getElementById('u_primatelj_id');
     const $primateljLabel = document.getElementById('u_primatelj_label');
+    const $primateljTekst = document.getElementById('u_primatelj_tekst');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
     const $svrhaSel          = document.getElementById('u_svrha_id');
@@ -405,8 +407,10 @@
           datum: r.datum || r.datum_uplate || '',
           uplatilac_id: r.uplatilac_id ? parseInt(r.uplatilac_id, 10) : null,
           uplatilac_naziv: r.uplatilac_naziv || r.uplatilac || '',
+          uplatilac_tekst: r.uplatilac_tekst || '',
           primatelj_id: r.primatelj_id ? parseInt(r.primatelj_id, 10) : null,
           primatelj_naziv: r.primatelj_naziv || r.primatelj || '',
+          primatelj_tekst: r.primatelj_tekst || '',
           svrha_id: r.svrha_id ? parseInt(r.svrha_id, 10) : null,
           svrha_tekst: r.svrha_tekst || r.svrha || '',
           svrha1: r.svrha1 || '',
@@ -447,8 +451,10 @@
       $id.value = '';
       $uplatilacId.value = '';
       $uplatilacLabel.value = '';
+      if ($uplatilacTekst) $uplatilacTekst.value = '';
       $primateljId.value = '';
       $primateljLabel.value = '';
+      if ($primateljTekst) $primateljTekst.value = '';
       $svrhaSel.value = '';
       $svrha.value = '';
       $svrha1.value = '';
@@ -490,6 +496,8 @@
 
       setPartner('uplatilac', item.uplatilac_id || null, item.uplatilac_naziv || '');
       setPartner('primatelj', item.primatelj_id || null, item.primatelj_naziv || '');
+      if ($uplatilacTekst) $uplatilacTekst.value = item.uplatilac_tekst || '';
+      if ($primateljTekst) $primateljTekst.value = item.primatelj_tekst || '';
       $svrhaSel.value = item.svrha_id || '';
 
       $svrha.value = item.svrha_tekst || '';
@@ -534,6 +542,8 @@
         uplatilac_id:  $uplatilacId.value ? parseInt($uplatilacId.value, 10) : null,
         primatelj_id:  $primateljId.value ? parseInt($primateljId.value, 10) : null,
         svrha_id:      $svrhaSel.value ? parseInt($svrhaSel.value, 10) : null,
+        uplatilac_tekst: $uplatilacTekst ? $uplatilacTekst.value.trim() : '',
+        primatelj_tekst: $primateljTekst ? $primateljTekst.value.trim() : '',
         svrha:         $svrha.value.trim(),
         svrha1:        $svrha1.value.trim(),
         mjesto_uplate: $mjesto.value.trim(),
