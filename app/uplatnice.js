@@ -45,14 +45,10 @@
     const $primateljTekst = document.getElementById('u_primatelj_tekst');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
-    const $svrhaSel          = document.getElementById('u_svrha_id');
-    const $svrhaNew          = document.getElementById('u_svrha_new');
-    const $svrhaNewBtn       = document.getElementById('u_svrha_new_btn');
-    const $svrhaNewMsg       = document.getElementById('u_svrha_new_msg');
-    const $svrhaModal        = document.getElementById('u_svrha_modal');
-    const $svrhaModalSave    = document.getElementById('u_svrha_modal_save');
-    const $svrhaModalCancel  = document.getElementById('u_svrha_modal_cancel');
-    const $svrhaModalClose   = document.getElementById('u_svrha_modal_close');
+    const $svrhaSel       = document.getElementById('u_svrha_id');
+    const $svrhaNew       = document.getElementById('u_svrha_new');
+    const $svrhaNewBtn    = document.getElementById('u_svrha_new_btn');
+    const $svrhaNewMsg    = document.getElementById('u_svrha_new_msg');
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
