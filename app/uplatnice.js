@@ -72,19 +72,20 @@
     const state = {
       q: '',
       all: [],
-      partners: new Map(), // id -> partner␊
-      svrhe: new Map()     // id -> svrha␊
+      partners: new Map(), // id -> partner
+      svrhe: new Map()     // id -> svrha
     };
 
     let pickTarget = 'uplatilac';
 
-    const esc = s =>
-      String(s ?? '').replace(/[&<>"']/g, m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;'
-      }[m]));
+const esc = s =>
+  String(s ?? '').replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[m]));
 
     function show(el, on) {
       if (!el) return;
@@ -154,7 +155,7 @@
           state.partners.set(id, {
             id,
             label,
-            racun: p.racun || '',
+            broj_racuna: p.broj_racuna || p.racun || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             opcina_sifra: p.opcina_sifra || '',
             mjesto_naziv: p.mjesto_naziv || ''
@@ -199,14 +200,14 @@
     function applyUplatilacDefaults(p) {
       if (!p) return;
       if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
-      if (!$racunPos.value)      $racunPos.value = p.racun || '';
+      if (!$racunPos.value)      $racunPos.value = p.broj_racuna || '';
       if (!$brojPorezni.value)   $brojPorezni.value = p.porezni_broj || '';
       if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
     }
 
     function applyPrimateljDefaults(p) {
       if (!p) return;
-      if (!$racunPrim.value) $racunPrim.value = p.racun || '';
+      if (!$racunPrim.value) $racunPrim.value = p.broj_racuna || '';
     }
 
     function onSvrhaChange() {
@@ -298,7 +299,7 @@
         partner = {
           id: Number(partnerData.id),
           label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
-          racun: partnerData.racun || partnerData.racun_pos || '',
+          broj_racuna: partnerData.broj_racuna || partnerData.racun || partnerData.racun_pos || '',
           porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
           opcina_sifra: partnerData.opcina_sifra || '',
           mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
@@ -379,10 +380,10 @@
 
       const html = state.all.map(u => `
         <div class="row" data-id="${u.id}">
-          <div>${esc(u.datum || '')}</div>␊
-          <div>${esc(u.uplatilac_naziv || '')}</div>␊
-          <div>${esc(u.primatelj_naziv || '')}</div>␊
-          <div>${esc(u.svrha_tekst || '')}</div>␊
+          <div>${esc(u.datum || '')}</div>
+          <div>${esc(u.uplatilac_naziv || '')}</div>
+          <div>${esc(u.primatelj_naziv || '')}</div>
+          <div>${esc(u.svrha_tekst || '')}</div>
           <div class="acts">
             <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
             <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
@@ -568,6 +569,11 @@
       }
       if (!body.primatelj_id) {
         $msg.textContent = 'Primatelj je obavezan.';
+        show($msg, true);
+        return;
+      }
+      if (!body.racun_primatelja) {
+        $msg.textContent = 'Račun primatelja je obavezan.';
         show($msg, true);
         return;
       }

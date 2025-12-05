@@ -1,27 +1,14 @@
 <?php
-$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
-if (!is_file($bootstrapPath)) {
-    $bootstrapPath = __DIR__ . '/_bootstrap.php';
-}
-if (!is_file($bootstrapPath)) {
-    if (!headers_sent()) {
-        header('Content-Type: application/json; charset=utf-8');
-    }
-    http_response_code(500);
-    echo json_encode([
-        'ok'    => false,
-        'error' => 'API bootstrap nije pronađen.',
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+// 1) Uvijek prvo bootstrap
+require_once __DIR__ . '/../_bootstrap.php';
 
-require_once $bootstrapPath;
-
-kubatapp_require_api('uplatnica_create.php');
+// 2) Ovdje se učitava config s $conn konekcijom
+require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+// Ako u config.php nije definiran $T_UPLATNICE, koristi 'uplatnice'
 $T_UPLATNICE = $T_UPLATNICE ?? 'uplatnice';
 
 function jdie($m, $c = 400) {
@@ -73,20 +60,26 @@ $poziv_na_broj       = trim((string)($data['poziv_na_broj'] ?? ''));
 $napomena            = trim((string)($data['napomena'] ?? ''));
 
 // minimalne provjere
-if ($uplatilac_id <= 0) jdie('Uplatilac je obavezan.');
-if ($primatelj_id <= 0) jdie('Primatelj je obavezan.');
-if ($svrha === '')      jdie('Svrha uplate je obavezna.');
-if ($datum_uplate === '') jdie('Datum je obavezan.');
-if ($iznos <= 0)        jdie('Iznos mora biti veći od 0.');
+if ($uplatilac_id <= 0)     jdie('Uplatilac je obavezan.');
+if ($primatelj_id <= 0)     jdie('Primatelj je obavezan.');
+if ($svrha === '')          jdie('Svrha uplate je obavezna.');
+if ($datum_uplate === '')   jdie('Datum je obavezan.');
+if ($iznos <= 0)            jdie('Iznos mora biti veći od 0.');
 if ($racun_primatelja === '') jdie('Račun primatelja je obavezan.');
 
 try {
+    // ovdje sada SIGURNO postoji $conn iz config.php
     $db = $conn;
 
+    // učitaj strukturu tablice
     $cols = [];
     $rs = $db->query("SHOW COLUMNS FROM `$T_UPLATNICE`");
     while ($c = $rs->fetch_assoc()) {
         $cols[strtolower($c['Field'])] = $c['Field'];
+    }
+
+    if (!$cols) {
+        jdie("Tablica `$T_UPLATNICE` ne postoji.", 500);
     }
 
     $colOrDefault = function (string $key, string $fallback) use ($cols) {
@@ -97,23 +90,23 @@ try {
     $colPrimateljTxt = $cols['primatelj_tekst'] ?? null;
 
     $fields = [
-        ['name' => $colOrDefault('uplatilac_id', 'uplatilac_id'), 'type' => 'i', 'value' => $uplatilac_id],
-        ['name' => $colOrDefault('primatelj_id', 'primatelj_id'), 'type' => 'i', 'value' => $primatelj_id],
-        ['name' => $colOrDefault('svrha_id', 'svrha_id'), 'type' => 'i', 'value' => $svrha_id],
-        ['name' => $colOrDefault('svrha', 'svrha'), 'type' => 's', 'value' => $svrha],
-        ['name' => $colOrDefault('svrha1', 'svrha1'), 'type' => 's', 'value' => $svrha1],
-        ['name' => $colOrDefault('mjesto_uplate', 'mjesto_uplate'), 'type' => 's', 'value' => $mjesto_uplate],
-        ['name' => $colOrDefault('datum_uplate', 'datum_uplate'), 'type' => 's', 'value' => $datum_uplate],
-        ['name' => $colOrDefault('iznos', 'iznos'), 'type' => 'd', 'value' => $iznos],
-        ['name' => $colOrDefault('valuta', 'valuta'), 'type' => 's', 'value' => $valuta],
-        ['name' => $colOrDefault('racun_posiljaoca', 'racun_posiljaoca'), 'type' => 's', 'value' => $racun_posiljaoca],
-        ['name' => $colOrDefault('racun_primatelja', 'racun_primatelja'), 'type' => 's', 'value' => $racun_primatelja],
-        ['name' => $colOrDefault('broj_poreskog_obv', 'broj_poreskog_obv'), 'type' => 's', 'value' => $broj_poreskog_obv],
-        ['name' => $colOrDefault('vrsta_prihoda_sifra', 'vrsta_prihoda_sifra'), 'type' => 's', 'value' => $vrsta_prihoda_sifra],
-        ['name' => $colOrDefault('opcina_sifra', 'opcina_sifra'), 'type' => 's', 'value' => $opcina_sifra],
-        ['name' => $colOrDefault('budzetska_org_sifra', 'budzetska_org_sifra'), 'type' => 's', 'value' => $budzetska_org_sifra],
-        ['name' => $colOrDefault('poziv_na_broj', 'poziv_na_broj'), 'type' => 's', 'value' => $poziv_na_broj],
-        ['name' => $colOrDefault('napomena', 'napomena'), 'type' => 's', 'value' => $napomena],
+        ['name' => $colOrDefault('uplatilac_id', 'uplatilac_id'),        'type' => 'i', 'value' => $uplatilac_id],
+        ['name' => $colOrDefault('primatelj_id', 'primatelj_id'),        'type' => 'i', 'value' => $primatelj_id],
+        ['name' => $colOrDefault('svrha_id', 'svrha_id'),                'type' => 'i', 'value' => $svrha_id],
+        ['name' => $colOrDefault('svrha', 'svrha'),                      'type' => 's', 'value' => $svrha],
+        ['name' => $colOrDefault('svrha1', 'svrha1'),                    'type' => 's', 'value' => $svrha1],
+        ['name' => $colOrDefault('mjesto_uplate', 'mjesto_uplate'),      'type' => 's', 'value' => $mjesto_uplate],
+        ['name' => $colOrDefault('datum_uplate', 'datum_uplate'),        'type' => 's', 'value' => $datum_uplate],
+        ['name' => $colOrDefault('iznos', 'iznos'),                      'type' => 'd', 'value' => $iznos],
+        ['name' => $colOrDefault('valuta', 'valuta'),                    'type' => 's', 'value' => $valuta],
+        ['name' => $colOrDefault('racun_posiljaoca', 'racun_posiljaoca'),'type' => 's', 'value' => $racun_posiljaoca],
+        ['name' => $colOrDefault('racun_primatelja', 'racun_primatelja'),'type' => 's', 'value' => $racun_primatelja],
+        ['name' => $colOrDefault('broj_poreskog_obv', 'broj_poreskog_obv'),'type' => 's','value' => $broj_poreskog_obv],
+        ['name' => $colOrDefault('vrsta_prihoda_sifra', 'vrsta_prihoda_sifra'),'type' => 's','value' => $vrsta_prihoda_sifra],
+        ['name' => $colOrDefault('opcina_sifra', 'opcina_sifra'),        'type' => 's', 'value' => $opcina_sifra],
+        ['name' => $colOrDefault('budzetska_org_sifra', 'budzetska_org_sifra'),'type' => 's','value' => $budzetska_org_sifra],
+        ['name' => $colOrDefault('poziv_na_broj', 'poziv_na_broj'),      'type' => 's', 'value' => $poziv_na_broj],
+        ['name' => $colOrDefault('napomena', 'napomena'),                'type' => 's', 'value' => $napomena],
     ];
 
     if ($colUplatilacTxt) {
@@ -123,16 +116,14 @@ try {
         $fields[] = ['name' => $colPrimateljTxt, 'type' => 's', 'value' => $primatelj_tekst];
     }
 
-    $colNames = array_map(function ($f) {
-        return '`' . $f['name'] . '`';
-    }, $fields);
+    $colNames     = array_map(fn($f) => '`' . $f['name'] . '`', $fields);
     $placeholders = array_fill(0, count($fields), '?');
-    $types = implode('', array_column($fields, 'type'));
-    $values = array_column($fields, 'value');
+    $types        = implode('', array_column($fields, 'type'));
+    $values       = array_column($fields, 'value');
 
     $sql = "INSERT INTO `$T_UPLATNICE`
-      (" . implode(',', $colNames) . ")
-      VALUES (" . implode(',', $placeholders) . ")";
+            (" . implode(',', $colNames) . ")
+            VALUES (" . implode(',', $placeholders) . ")";
 
     $st = $db->prepare($sql);
     $st->bind_param($types, ...$values);
@@ -142,5 +133,5 @@ try {
     jok(['id' => $newId]);
 
 } catch (mysqli_sql_exception $e) {
-    jdie('DB greška: '.$e->getMessage(), 500);
+    jdie('DB greška: ' . $e->getMessage(), 500);
 }
