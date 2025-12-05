@@ -1,83 +1,92 @@
 <?php
-$bootstrapPath = dirname(__DIR__) . '/_bootstrap.php';
-if (!is_file($bootstrapPath)) {
-    $bootstrapPath = __DIR__ . '/_bootstrap.php';
-}
-if (!is_file($bootstrapPath)) {
-    if (!headers_sent()) {
-        header('Content-Type: application/json; charset=utf-8');
-    }
-    http_response_code(500);
-    echo json_encode([
-        'ok'    => false,
-        'error' => 'API bootstrap nije pronađen.',
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-require_once $bootstrapPath;
-
-kubatapp_require_api('svrha_list.php');
+require_once __DIR__ . '/../_bootstrap.php';
+require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// AKO si u config.php definirao npr. $T_SVRHA = 'svrhe_uplate', koristi se to,
-// inače pada na 'svrhe_uplate' kao default.
+// Ako nije definisano u config.php → koristi default ime tablice
 $T_SVRHA = $T_SVRHA ?? 'svrhe_uplate';
 
-function jdie($m, $code = 500) {
-    http_response_code($code);
-    echo json_encode(['ok' => false, 'error' => $m], JSON_UNESCAPED_UNICODE);
+function jdie($m, $c = 400) {
+    kubatapp_json_error($m, $c);
     exit;
 }
-
-$q   = isset($_GET['q'])   ? trim((string)$_GET['q'])   : '';
-$all = isset($_GET['all']) ? (int)$_GET['all']          : 0;
+function jout($d) {
+    kubatapp_json_response($d);
+    exit;
+}
 
 try {
     $db = $conn;
 
-    // Provjeri da tablica postoji
+    // učitaj kolone
     $cols = [];
     $rs = $db->query("SHOW COLUMNS FROM `$T_SVRHA`");
     while ($c = $rs->fetch_assoc()) {
         $cols[strtolower($c['Field'])] = $c['Field'];
     }
-    if (!$cols) {
-        jdie("Tablica `$T_SVRHA` ne postoji.");
-    }
+    if (!$cols) jdie("Tablica `$T_SVRHA` ne postoji.", 500);
 
-    // Pokušaj pogoditi nazive kolona
-    $colId     = $cols['id']           ?? $cols['id_svrha']     ?? null;
-    $colNaziv  = $cols['naziv']        ?? $cols['svrha']        ?? null;
-    $colVrPrih = $cols['vrsta_prihoda']?? $cols['vrsta_prihoda_sifra'] ?? null;
-    $colBudzet = $cols['budzetska']    ?? $cols['budzetska_org_sifra'] ?? null;
-    $colPoziv  = $cols['poziv_na_broj']?? $cols['opci_poziv']  ?? null;
+    // mapiranje kolona
+    $colId     = $cols['id']       ?? $cols['id_svrha'] ?? null;
+    $colNaziv  = $cols['naziv']    ?? $cols['svrha']    ?? null;
+    $colVrPrih = $cols['vrsta_prihoda'] ?? $cols['vrsta_prihoda_sifra'] ?? null;
+    $colBudzet = $cols['budzetska'] ?? $cols['budzetska_org_sifra'] ?? null;
+    $colPoziv  = $cols['poziv_na_broj'] ?? $cols['opci_poziv'] ?? null;
 
     if (!$colId || !$colNaziv) {
-        jdie("Tablica `$T_SVRHA` nema očekivane kolone (id, naziv).");
+        jdie("Tablica `$T_SVRHA` mora imati barem ID i naziv.");
     }
 
-    $where = '1=1';
+    // ulaz
+    $q    = trim((string)($_GET['q'] ?? ''));
+    $all  = isset($_GET['all']) ? (int)$_GET['all'] : 0;
+
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $pp   = max(1, (int)($_GET['page_size'] ?? 50));
+    $off  = ($page - 1) * $pp;
+
+    // WHERE
+    $where = "1=1";
     $params = [];
-    $types  = '';
+    $types  = "";
 
     if ($q !== '') {
-        $where .= " AND `$colNaziv` LIKE CONCAT('%',?,'%')";
+        $where = "($colNaziv LIKE CONCAT('%',?,'%'))";
         $params[] = $q;
-        $types   .= 's';
+        $types .= 's';
     }
 
-    $sql = "SELECT
-                `$colId`    AS id,
-                `$colNaziv` AS naziv"
-            . ($colVrPrih ? ", `$colVrPrih` AS vrsta_prihoda_sifra" : ", NULL AS vrsta_prihoda_sifra")
-            . ($colBudzet ? ", `$colBudzet` AS budzetska_org_sifra" : ", NULL AS budzetska_org_sifra")
-            . ($colPoziv ? ", `$colPoziv` AS poziv_na_broj_default" : ", NULL AS poziv_na_broj_default")
-            . " FROM `$T_SVRHA`
-               WHERE $where
-               ORDER BY `$colNaziv` ASC";
+    // total count
+    if ($params) {
+        $st = $db->prepare("SELECT COUNT(*) c FROM `$T_SVRHA` WHERE $where");
+        $st->bind_param($types, ...$params);
+        $st->execute();
+        $total = (int)$st->get_result()->fetch_assoc()['c'];
+    } else {
+        $total = (int)$db->query("SELECT COUNT(*) c FROM `$T_SVRHA`")->fetch_assoc()['c'];
+    }
+
+    if ($all) {
+        // bez paginacije
+        $limitSql = "";
+    } else {
+        $limitSql = " LIMIT $pp OFFSET $off ";
+    }
+
+    // SELECT
+    $sql =
+        "SELECT 
+            `$colId`     AS id,
+            `$colNaziv`  AS naziv" .
+        ($colVrPrih ? ", `$colVrPrih` AS vrsta_prihoda" : "") .
+        ($colBudzet ? ", `$colBudzet` AS budzetska" : "") .
+        ($colPoziv  ? ", `$colPoziv`  AS poziv_na_broj" : "") .
+        " FROM `$T_SVRHA`
+          WHERE $where
+          ORDER BY `$colNaziv` ASC
+          $limitSql";
 
     if ($params) {
         $st = $db->prepare($sql);
@@ -91,18 +100,22 @@ try {
     $rows = [];
     while ($r = $rs->fetch_assoc()) {
         $rows[] = [
-            'id'                  => (int)$r['id'],
-            'naziv'               => $r['naziv'],
-            'vrsta_prihoda_sifra' => $r['vrsta_prihoda_sifra'],
-            'budzetska_org_sifra' => $r['budzetska_org_sifra'],
-            'poziv_na_broj_default' => $r['poziv_na_broj_default'],
+            'id'             => (int)$r['id'],
+            'naziv'          => $r['naziv'],
+            'vrsta_prihoda'  => $r['vrsta_prihoda'] ?? '',
+            'budzetska'      => $r['budzetska'] ?? '',
+            'poziv_na_broj'  => $r['poziv_na_broj'] ?? '',
         ];
     }
 
-    echo json_encode([
-        'ok'   => true,
-        'data' => $rows
-    ], JSON_UNESCAPED_UNICODE);
+    jout([
+        'ok'        => true,
+        'data'      => $rows,
+        'total'     => $total,
+        'page'      => $page,
+        'page_size' => $pp
+    ]);
+
 } catch (mysqli_sql_exception $e) {
-    jdie('DB greška: ' . $e->getMessage(), 500);
+    jdie("DB greška: " . $e->getMessage(), 500);
 }
