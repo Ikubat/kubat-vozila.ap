@@ -69,11 +69,13 @@ try {
     // mapiranje kolona (uzimaš šta god postoji)
     $colId           = $cols['id']             ?? null;
     $colUplatilac    = $cols['uplatilac']      ?? null;
+    $colUplatilacTxt = $cols['uplatilac_tekst']?? null;
     $colAdresa       = $cols['adresa']        ?? null;
     $colTelefon      = $cols['telefon']       ?? null;
     $colSvrha        = $cols['svrha']         ?? null;
     $colSvrha1       = $cols['svrha1']        ?? null; // ako si je dodao
     $colPrimatelj    = $cols['primatelj']     ?? null;
+    $colPrimateljTxt = $cols['primatelj_tekst']?? null;
     $colMjesto       = $cols['mjesto']        ?? null;
     $colRacunPos     = $cols['racun_platioca']   ?? null;
     $colRacunPrim    = $cols['racun_primaoca']   ?? null;
@@ -98,6 +100,10 @@ try {
         ? "u.`$colUplatilac` AS uplatilac"
         : "'' AS uplatilac";
 
+    $sel[] = $colUplatilacTxt
+        ? "u.`$colUplatilacTxt` AS uplatilac_tekst"
+        : "'' AS uplatilac_tekst";
+
     $sel[] = $colAdresa
         ? "u.`$colAdresa` AS adresa"
         : "'' AS adresa";
@@ -117,6 +123,10 @@ try {
     $sel[] = $colPrimatelj
         ? "u.`$colPrimatelj` AS primatelj"
         : "'' AS primatelj";
+
+    $sel[] = $colPrimateljTxt
+        ? "u.`$colPrimateljTxt` AS primatelj_tekst"
+        : "'' AS primatelj_tekst";
 
     $sel[] = $colMjesto
         ? "u.`$colMjesto` AS mjesto"
@@ -181,9 +191,11 @@ try {
         };
 
         $addLike($colUplatilac);
+        $addLike($colUplatilacTxt);
         $addLike($colSvrha);
         $addLike($colSvrha1);
         $addLike($colPrimatelj);
+        $addLike($colPrimateljTxt);
         $addLike($colMjesto);
         $addLike($colPoziv);
 
@@ -234,11 +246,13 @@ try {
         $rows[] = [
             'id'            => (int)$r['id'],
             'uplatilac'     => $r['uplatilac'],
+            'uplatilac_tekst'=> $r['uplatilac_tekst'],
             'adresa'        => $r['adresa'],
             'telefon'       => $r['telefon'],
             'svrha'         => $r['svrha'],
             'svrha1'        => $r['svrha1'],
             'primatelj'     => $r['primatelj'],
+            'primatelj_tekst'=> $r['primatelj_tekst'],
             'mjesto'        => $r['mjesto'],
             'racun_platioca'=> $r['racun_platioca'],
             'racun_primaoca'=> $r['racun_primaoca'],
