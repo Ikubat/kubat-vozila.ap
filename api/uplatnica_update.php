@@ -59,6 +59,8 @@ $primatelj_id        = isset($data['primatelj_id']) ? (int)$data['primatelj_id']
 $svrha_id            = isset($data['svrha_id']) && $data['svrha_id'] !== '' ? (int)$data['svrha_id'] : null;
 $svrha               = trim((string)($data['svrha']  ?? ''));
 $svrha1              = trim((string)($data['svrha1'] ?? ''));
+$uplatilac_tekst     = trim((string)($data['uplatilac_tekst'] ?? ''));
+$primatelj_tekst     = trim((string)($data['primatelj_tekst'] ?? ''));
 $mjesto_uplate       = trim((string)($data['mjesto_uplate'] ?? ''));
 $datum_uplate        = trim((string)($data['datum_uplate']  ?? ''));
 $iznos               = isset($data['iznos']) ? (float)$data['iznos'] : 0;
@@ -91,48 +93,57 @@ try {
         jdie('Uplatnica ne postoji.', 404);
     }
 
-    $sql = "UPDATE `$T_UPLATNICE`
-            SET uplatilac_id        = ?,
-                primatelj_id        = ?,
-                svrha_id            = ?,
-                svrha               = ?,
-                svrha1              = ?,
-                mjesto_uplate       = ?,
-                datum_uplate        = ?,
-                iznos               = ?,
-                valuta              = ?,
-                racun_posiljaoca    = ?,
-                racun_primatelja    = ?,
-                broj_poreskog_obv   = ?,
-                vrsta_prihoda_sifra = ?,
-                opcina_sifra        = ?,
-                budzetska_org_sifra = ?,
-                poziv_na_broj       = ?,
-                napomena            = ?
-            WHERE id = ?";
+    $cols = [];
+    $rs = $db->query("SHOW COLUMNS FROM `$T_UPLATNICE`");
+    while ($c = $rs->fetch_assoc()) {
+        $cols[strtolower($c['Field'])] = $c['Field'];
+    }
+
+    $colOrDefault = function (string $key, string $fallback) use ($cols) {
+        return $cols[strtolower($key)] ?? $fallback;
+    };
+
+    $colUplatilacTxt = $cols['uplatilac_tekst'] ?? null;
+    $colPrimateljTxt = $cols['primatelj_tekst'] ?? null;
+
+    $fields = [
+        ['name' => $colOrDefault('uplatilac_id', 'uplatilac_id'), 'type' => 'i', 'value' => $uplatilac_id],
+        ['name' => $colOrDefault('primatelj_id', 'primatelj_id'), 'type' => 'i', 'value' => $primatelj_id],
+        ['name' => $colOrDefault('svrha_id', 'svrha_id'), 'type' => 'i', 'value' => $svrha_id],
+        ['name' => $colOrDefault('svrha', 'svrha'), 'type' => 's', 'value' => $svrha],
+        ['name' => $colOrDefault('svrha1', 'svrha1'), 'type' => 's', 'value' => $svrha1],
+        ['name' => $colOrDefault('mjesto_uplate', 'mjesto_uplate'), 'type' => 's', 'value' => $mjesto_uplate],
+        ['name' => $colOrDefault('datum_uplate', 'datum_uplate'), 'type' => 's', 'value' => $datum_uplate],
+        ['name' => $colOrDefault('iznos', 'iznos'), 'type' => 'd', 'value' => $iznos],
+        ['name' => $colOrDefault('valuta', 'valuta'), 'type' => 's', 'value' => $valuta],
+        ['name' => $colOrDefault('racun_posiljaoca', 'racun_posiljaoca'), 'type' => 's', 'value' => $racun_posiljaoca],
+        ['name' => $colOrDefault('racun_primatelja', 'racun_primatelja'), 'type' => 's', 'value' => $racun_primatelja],
+        ['name' => $colOrDefault('broj_poreskog_obv', 'broj_poreskog_obv'), 'type' => 's', 'value' => $broj_poreskog_obv],
+        ['name' => $colOrDefault('vrsta_prihoda_sifra', 'vrsta_prihoda_sifra'), 'type' => 's', 'value' => $vrsta_prihoda_sifra],
+        ['name' => $colOrDefault('opcina_sifra', 'opcina_sifra'), 'type' => 's', 'value' => $opcina_sifra],
+        ['name' => $colOrDefault('budzetska_org_sifra', 'budzetska_org_sifra'), 'type' => 's', 'value' => $budzetska_org_sifra],
+        ['name' => $colOrDefault('poziv_na_broj', 'poziv_na_broj'), 'type' => 's', 'value' => $poziv_na_broj],
+        ['name' => $colOrDefault('napomena', 'napomena'), 'type' => 's', 'value' => $napomena],
+    ];
+
+    if ($colUplatilacTxt) {
+        $fields[] = ['name' => $colUplatilacTxt, 'type' => 's', 'value' => $uplatilac_tekst];
+    }
+    if ($colPrimateljTxt) {
+        $fields[] = ['name' => $colPrimateljTxt, 'type' => 's', 'value' => $primatelj_tekst];
+    }
+
+    $assignments = array_map(function ($f) {
+        return '`' . $f['name'] . '` = ?';
+    }, $fields);
+    $types = implode('', array_column($fields, 'type')) . 'i';
+    $values = array_column($fields, 'value');
+    $values[] = $id;
+
+    $sql = "UPDATE `$T_UPLATNICE` SET " . implode(', ', $assignments) . " WHERE id = ?";
 
     $st = $db->prepare($sql);
-    $st->bind_param(
-      'iiissssdsdsssssssi',
-      $uplatilac_id,
-      $primatelj_id,
-      $svrha_id,
-      $svrha,
-      $svrha1,
-      $mjesto_uplate,
-      $datum_uplate,
-      $iznos,
-      $valuta,
-      $racun_posiljaoca,
-      $racun_primatelja,
-      $broj_poreskog_obv,
-      $vrsta_prihoda_sifra,
-      $opcina_sifra,
-      $budzetska_org_sifra,
-      $poziv_na_broj,
-      $napomena,
-      $id
-    );
+    $st->bind_param($types, ...$values);
     $st->execute();
 
     jok();
