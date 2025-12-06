@@ -233,9 +233,11 @@ const esc = s =>
       const isPravna = isVrstaPravna || (!isVrstaFizicka && !isStr && !hasImePrezime);
 
       const poreznaSifra = getMjestoPoreznaSifra(p);
+      const opcinaUplatilac = (p && p.opcina_sifra) || '';
 
       if (hasUvoz) {
-        if (poreznaSifra) $opcina.value = poreznaSifra;
+        const opcinaSifra = opcinaUplatilac || poreznaSifra || '';
+        $opcina.value = opcinaSifra;
         if (isFizicka) {
           $brojPorezni.value = '0010000000019';
         } else if (isPravna) {
@@ -368,7 +370,9 @@ const esc = s =>
             || partnerData.porezna_sifra_mjesto
             || partnerData.porezna_sifra
             || '',
-          opcina_sifra: partnerData.opcina_sifra || '',
+          opcina_sifra: partnerData.opcina_sifra
+            || getMjestoPoreznaSifra(partnerData)
+            || '',
           mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
         };
         state.partners.set(partner.id, partner);
