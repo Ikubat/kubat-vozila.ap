@@ -221,7 +221,9 @@ const esc = s =>
         if (isFizicka) {
           $brojPorezni.value = '0010000000019';
         } else if (isPravna) {
-          $brojPorezni.value = p.id_broj || p.porezni_broj || '';
+          const idBroj = (p.id_broj || '').trim();
+          const idBrojZamijenjen = idBroj ? idBroj.replace(/^\d/, '0') : '';
+          $brojPorezni.value = idBrojZamijenjen || p.porezni_broj || '';
         } else {
           $brojPorezni.value = '';
         }
