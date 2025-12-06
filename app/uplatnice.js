@@ -152,14 +152,20 @@ const esc = s =>
           const label = (p.naziv && p.naziv.trim())
             || [p.ime, p.prezime].filter(Boolean).join(' ')
             || ('Partner #' + id);
+          const mjestoPoreznaSifra = p.mjesto_porezna_sifra
+            || p.porezna_sifra_mjesta
+            || p.porezna_sifra_mjesto
+            || p.porezna_sifra
+            || '';
           state.partners.set(id, {
             id,
             label,
             broj_racuna: p.broj_racuna || p.racun || '',
             id_broj: p.id_broj || p.idbroj || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
-            opcina_sifra: p.opcina_sifra || '',
-            mjesto_naziv: p.mjesto_naziv || ''
+            opcina_sifra: p.opcina_sifra || mjestoPoreznaSifra || '',
+            mjesto_naziv: p.mjesto_naziv || '',
+            mjesto_porezna_sifra: mjestoPoreznaSifra
           });
         });
 
@@ -217,7 +223,14 @@ const esc = s =>
       const isFizicka = isVrstaFizicka || (!isVrstaPravna && !isStr && hasImePrezime);
       const isPravna = isVrstaPravna || (!isVrstaFizicka && !isStr && !hasImePrezime);
 
+      const poreznaSifra = p.mjesto_porezna_sifra
+        || p.porezna_sifra_mjesta
+        || p.porezna_sifra_mjesto
+        || p.opcina_sifra
+        || '';
+
       if (hasUvoz) {
+        if (poreznaSifra) $opcina.value = poreznaSifra;
         if (isFizicka) {
           $brojPorezni.value = '0010000000019';
         } else if (isPravna) {
