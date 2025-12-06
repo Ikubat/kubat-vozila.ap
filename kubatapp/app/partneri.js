@@ -85,7 +85,9 @@ const baseApi = ROOT_PATH;
     update:      baseApi + 'partneri_update.php',
     delete:      baseApi + 'partneri_delete.php',
     mjesta_list: baseApi + 'mjesta_list.php',
-    mjesta_create: baseApi + 'mjesta_create.php'
+    mjesta_create: baseApi + 'mjesta_create.php',
+    vrste_list: baseApi + 'vrsta_partnera_list.php',
+    vrste_create: baseApi + 'vrsta_partnera_create.php'
   };
 
   // -------- pick mode --------
@@ -127,6 +129,15 @@ const baseApi = ROOT_PATH;
   const $mCancel = document.getElementById('mCancel');
   const $mClose  = document.getElementById('mClose');
   const $btnAddMjesto = document.getElementById('btnAddMjesto');
+  const $btnAddVrsta = document.getElementById('btnAddVrsta');
+
+  // mini modal vrsta partnera
+  const $dlgVrsta = document.getElementById('dlgVrsta');
+  const $vNaziv   = document.getElementById('v_naziv');
+  const $vMsg     = document.getElementById('vMsg');
+  const $vSave    = document.getElementById('vSave');
+  const $vCancel  = document.getElementById('vCancel');
+  const $vClose   = document.getElementById('vClose');
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
@@ -134,6 +145,7 @@ const baseApi = ROOT_PATH;
 
   let allRows = [];
   let mjesta = [];
+  let vrstePartnera = [];
 
   const columns = [
     { key: 'ime',     label: 'Ime',            className: 'c-ime',     get: p => p.ime || '' },
@@ -162,6 +174,49 @@ const baseApi = ROOT_PATH;
   // stub za slučaj da nije iz obračuna
   if (typeof window.setSelectedPartner !== 'function') {
     window.setSelectedPartner = function () {};
+  }
+
+  // -------- Vrste partnera: load za dropdown --------
+  async function loadVrstePartnera() {
+    if (!$pVrsta) return;
+    try {
+      const r = await fetch(API.vrste_list, { cache: 'no-store' });
+      const t = await r.text();
+      let out;
+      try { out = JSON.parse(t); } catch (e) {
+        console.error('vrsta_partnera_list nije JSON:', t);
+        return;
+      }
+      if (!out.ok) {
+        console.error('vrsta_partnera_list greška:', out.error);
+        return;
+      }
+      vrstePartnera = out.data || out.rows || [];
+      vrstePartnera.sort((a, b) => String(a.naziv || '').localeCompare(String(b.naziv || ''), 'hr'));
+      const opts = ['<option value="">— odaberi vrstu —</option>'];
+      for (const v of vrstePartnera) {
+        if (!v || !v.naziv) continue;
+        opts.push(`<option value="${esc(v.naziv)}" data-id="${esc(v.id ?? '')}">${esc(v.naziv)}</option>`);
+      }
+      $pVrsta.innerHTML = opts.join('');
+    } catch (err) {
+      console.error('Greška pri dohvaćanju vrsta partnera:', err);
+    }
+  }
+
+  function selectVrstaByText(naziv) {
+    if (!$pVrsta || !naziv) return;
+    $pVrsta.value = naziv;
+    if ($pVrsta.value === naziv) return;
+    const opt = Array.from($pVrsta.options).find(o => o.textContent.trim() === naziv.trim());
+    if (opt) $pVrsta.value = opt.value;
+    else {
+      const extra = document.createElement('option');
+      extra.value = naziv;
+      extra.textContent = naziv;
+      $pVrsta.appendChild(extra);
+      $pVrsta.value = naziv;
+    }
   }
 
   // -------- Mjesta: load za dropdown --------
@@ -360,7 +415,7 @@ const baseApi = ROOT_PATH;
     $pId && ($pId.value = d.id || '');
     $pIme && ($pIme.value = d.ime || row.querySelector('.c-ime')?.textContent.trim() || '');
     $pPrez && ($pPrez.value = d.prezime || row.querySelector('.c-prezime')?.textContent.trim() || '');
-    $pVrsta && ($pVrsta.value = d.vrsta || row.querySelector('.c-vrsta')?.textContent.trim() || '');
+    $pVrsta && selectVrstaByText(d.vrsta || row.querySelector('.c-vrsta')?.textContent.trim() || '');
     $pIdBroj && ($pIdBroj.value = d.idbroj || row.querySelector('.c-idbroj')?.textContent.trim() || '');
     $pKont && ($pKont.value = d.kontakt || row.querySelector('.c-kontakt')?.textContent.trim() || '');
     $pEmail && ($pEmail.value = d.email || row.querySelector('.c-email')?.textContent.trim() || '');
@@ -503,11 +558,86 @@ const baseApi = ROOT_PATH;
     }
   }
 
+  // -------- mini modal vrsta partnera --------
+  function openVrstaModal() {
+    if (!$dlgVrsta) {
+      console.warn('Nema dijaloga za vrstu partnera.');
+      return;
+    }
+    $vNaziv && ($vNaziv.value = '');
+    if ($vMsg) { $vMsg.textContent = ''; $vMsg.style.display = 'none'; }
+    // osiguraj da dropdown ima zadnji popis prije dodavanja nove vrste
+    if (vrstePartnera.length === 0) {
+      loadVrstePartnera();
+    }
+    $dlgVrsta.classList.add('show');
+    $vNaziv && $vNaziv.focus();
+  }
+
+  function closeVrstaModal() {
+    if ($dlgVrsta) $dlgVrsta.classList.remove('show');
+  }
+
+  async function saveVrsta() {
+    const naziv = ($vNaziv?.value || '').trim();
+    if (!naziv) {
+      if ($vMsg) { $vMsg.textContent = 'Naziv vrste je obavezan.'; $vMsg.style.display = 'block'; }
+      return;
+    }
+
+    try {
+      const res = await fetch(API.vrste_create, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ naziv })
+      });
+      const text = await res.text();
+      let out;
+      try { out = JSON.parse(text); }
+      catch (e) {
+        console.error('vrsta_partnera_create nije JSON:', text);
+        if ($vMsg) { $vMsg.textContent = 'Server nije vratio ispravan JSON.'; $vMsg.style.display = 'block'; }
+        return;
+      }
+      if (!out.ok) {
+        if ($vMsg) { $vMsg.textContent = out.error || 'Greška pri spremanju vrste.'; $vMsg.style.display = 'block'; }
+        return;
+      }
+
+      await loadVrstePartnera();
+      if (out.id && $pVrsta) {
+        const byId = Array.from($pVrsta.options).find(o => (o.dataset.id || '') === String(out.id));
+        if (byId) {
+          $pVrsta.value = byId.value;
+        } else {
+          selectVrstaByText(naziv);
+        }
+      } else {
+        selectVrstaByText(naziv);
+      }
+      closeVrstaModal();
+    } catch (err) {
+      console.error('Greška pri spremanju vrste partnera:', err);
+      if ($vMsg) { $vMsg.textContent = 'Greška pri komunikaciji sa serverom.'; $vMsg.style.display = 'block'; }
+    }
+  }
+
   if ($btnAddMjesto) $btnAddMjesto.addEventListener('click', openMjestoModal);
   $mCancel?.addEventListener('click', closeMjestoModal);
   $mClose?.addEventListener('click', closeMjestoModal);
   $dlgMj?.addEventListener('click', e => { if (e.target === $dlgMj) closeMjestoModal(); });
   $mSave?.addEventListener('click', saveMjesto);
+
+  if ($btnAddVrsta) {
+    $btnAddVrsta.addEventListener('click', (e) => {
+      e.preventDefault();
+      openVrstaModal();
+    });
+  }
+  $vCancel?.addEventListener('click', closeVrstaModal);
+  $vClose?.addEventListener('click', closeVrstaModal);
+  $dlgVrsta?.addEventListener('click', e => { if (e.target === $dlgVrsta) closeVrstaModal(); });
+  $vSave?.addEventListener('click', saveVrsta);
 
   // -------- pick helper --------
   function pickPartner(row) {
@@ -618,6 +748,7 @@ const baseApi = ROOT_PATH;
 
   // -------- init --------
   loadMjesta();
+  loadVrstePartnera();
   loadList();
 
 })();
