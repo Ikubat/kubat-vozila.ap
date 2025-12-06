@@ -124,6 +124,11 @@
           state.partners.set(id, {
             id,
             label,
+            ime: p.ime || '',
+            prezime: p.prezime || '',
+            naziv: p.naziv || '',
+            vrsta_partnera: p.vrsta_partnera || p.vrsta || '',
+            id_broj: p.id_broj || p.idbroj || '',
             racun: p.racun || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             opcina_sifra: p.opcina_sifra || '',
@@ -166,12 +171,41 @@
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
+    function updateBrojPoreskogObveznika(partner) {
+      const p = partner || state.partners.get(Number($uplatilacId.value)) || null;
+      if (!p) return;
+
+      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+      const hasUvoz = svrhaText.includes('uvoz');
+
+      const labelUpper = (p.label || '').toUpperCase();
+      const vrstaUpper = (p.vrsta_partnera || p.vrsta || '').toUpperCase();
+      const isStr = ['STR', 'SZR', 'OBRT', 'OBR'].some(k => labelUpper.includes(k) || vrstaUpper.includes(k));
+
+      const hasImePrezime = !!(p.ime || p.prezime);
+      const isFizicka = !isStr && hasImePrezime;
+      const isPravna = !isStr && !isFizicka;
+
+      if (hasUvoz) {
+        if (isFizicka) {
+          $brojPorezni.value = '0010000000019';
+        } else if (isPravna) {
+          $brojPorezni.value = p.porezni_broj || p.id_broj || '';
+        } else {
+          $brojPorezni.value = '';
+        }
+      } else if (!$brojPorezni.value) {
+        $brojPorezni.value = p.porezni_broj || p.id_broj || '';
+      }
+    }
+
     function applyUplatilacDefaults(p) {
       if (!p) return;
       if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
       if (!$racunPos.value)      $racunPos.value = p.racun || '';
-      if (!$brojPorezni.value)   $brojPorezni.value = p.porezni_broj || '';
       if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
+
+      updateBrojPoreskogObveznika(p);
     }
 
     function applyPrimateljDefaults(p) {
@@ -189,6 +223,8 @@
       if (!$vrstaPrihoda.value) $vrstaPrihoda.value = s.vrsta_prihoda || '';
       if (!$budzetska.value)    $budzetska.value = s.budzetska || '';
       if (!$poziv.value)        $poziv.value = s.poziv || '';
+
+      updateBrojPoreskogObveznika();
     }
 
     function setSvrhaNewMsg(msg = '', isError = false) {
@@ -253,6 +289,11 @@
         partner = {
           id: Number(partnerData.id),
           label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
+          ime: partnerData.ime || '',
+          prezime: partnerData.prezime || '',
+          naziv: partnerData.naziv || '',
+          vrsta_partnera: partnerData.vrsta_partnera || partnerData.vrsta || '',
+          id_broj: partnerData.id_broj || partnerData.idbroj || '',
           racun: partnerData.racun || partnerData.racun_pos || '',
           porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
           opcina_sifra: partnerData.opcina_sifra || '',
