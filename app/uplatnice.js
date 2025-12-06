@@ -72,8 +72,8 @@
     const state = {
       q: '',
       all: [],
-      partners: new Map(), // id -> partner
-      svrhe: new Map()     // id -> svrha
+      partners: new Map(), // id -> partner␊
+      svrhe: new Map()     // id -> svrha␊
     };
 
     let pickTarget = 'uplatilac';
@@ -204,6 +204,15 @@ const esc = s =>
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
+    function getMjestoPoreznaSifra(p) {
+      if (!p) return '';
+      return p.mjesto_porezna_sifra
+        || p.porezna_sifra_mjesta
+        || p.porezna_sifra_mjesto
+        || p.opcina_sifra
+        || '';
+    }
+
     function updateBrojPoreskogObveznika(partner) {
       const p = partner || state.partners.get(Number($uplatilacId.value)) || null;
       if (!p) return;
@@ -223,11 +232,7 @@ const esc = s =>
       const isFizicka = isVrstaFizicka || (!isVrstaPravna && !isStr && hasImePrezime);
       const isPravna = isVrstaPravna || (!isVrstaFizicka && !isStr && !hasImePrezime);
 
-      const poreznaSifra = p.mjesto_porezna_sifra
-        || p.porezna_sifra_mjesta
-        || p.porezna_sifra_mjesto
-        || p.opcina_sifra
-        || '';
+      const poreznaSifra = getMjestoPoreznaSifra(p);
 
       if (hasUvoz) {
         if (poreznaSifra) $opcina.value = poreznaSifra;
@@ -358,6 +363,11 @@ const esc = s =>
           id_broj: partnerData.id_broj || partnerData.idbroj || '',
           broj_racuna: partnerData.broj_racuna || partnerData.racun || partnerData.racun_pos || '',
           porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
+          mjesto_porezna_sifra: partnerData.mjesto_porezna_sifra
+            || partnerData.porezna_sifra_mjesta
+            || partnerData.porezna_sifra_mjesto
+            || partnerData.porezna_sifra
+            || '',
           opcina_sifra: partnerData.opcina_sifra || '',
           mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
         };
@@ -408,6 +418,7 @@ const esc = s =>
     $svrhaModalCancel?.addEventListener('click', closeSvrhaModal);
     $svrhaModalClose?.addEventListener('click', closeSvrhaModal);
     $svrhaModal?.addEventListener('click', (e) => { if (e.target === $svrhaModal) closeSvrhaModal(); });
+    [$svrha, $svrha1].forEach($input => $input?.addEventListener('input', updateBrojPoreskogObveznika));
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
   
