@@ -221,12 +221,12 @@ const esc = s =>
         if (isFizicka) {
           $brojPorezni.value = '0010000000019';
         } else if (isPravna) {
-          $brojPorezni.value = p.porezni_broj || p.id_broj || '';
+          $brojPorezni.value = p.id_broj || p.porezni_broj || '';
         } else {
           $brojPorezni.value = '';
         }
       } else if (!$brojPorezni.value) {
-        $brojPorezni.value = p.porezni_broj || p.id_broj || '';
+        $brojPorezni.value = p.id_broj || p.porezni_broj || '';
       }
     }
 
