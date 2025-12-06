@@ -36,7 +36,8 @@ try {
             p.mjesto_id,
             p.vrsta,
             p.idbroj,
-            m.naziv_mjesta AS mjesto
+            m.naziv_mjesta AS mjesto,
+            m.porezna_sifra AS mjesto_porezna_sifra
         FROM partneri p
         LEFT JOIN mjesta m ON m.id = p.mjesto_id
         ORDER BY p.prezime ASC, p.ime ASC, p.id ASC

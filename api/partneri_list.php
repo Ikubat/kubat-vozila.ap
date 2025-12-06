@@ -31,9 +31,11 @@ try {
         $cols[strtolower($c['Field'])] = $c['Field'];
     }
 
-    $fVrsta  = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
-    $fIdBroj = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
-    $fBrojR  = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
+    $fVrsta   = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
+    $fIdBroj  = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+    $fBrojR   = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
+    $fPorezni = $cols['porezni_broj'] ?? $cols['porezni'] ?? null;
+    $fOpcina  = $cols['opcina_sifra'] ?? $cols['opcina'] ?? null;
 
     $select = [
         'p.id',
@@ -43,10 +45,13 @@ try {
         'p.email',
         'p.adresa',
         'p.mjesto_id',
-        $fVrsta ? "p.`$fVrsta` AS vrsta_partnera" : "'' AS vrsta_partnera",
-        $fIdBroj ? "p.`$fIdBroj` AS id_broj" : "'' AS id_broj",
-        $fBrojR ? "p.`$fBrojR` AS broj_racuna" : "'' AS broj_racuna",
-        'm.naziv_mjesta AS mjesto'
+        $fVrsta   ? "p.`$fVrsta` AS vrsta_partnera" : "'' AS vrsta_partnera",
+        $fIdBroj  ? "p.`$fIdBroj` AS id_broj" : "'' AS id_broj",
+        $fBrojR   ? "p.`$fBrojR` AS broj_racuna" : "'' AS broj_racuna",
+        $fPorezni ? "p.`$fPorezni` AS porezni_broj" : "'' AS porezni_broj",
+        $fOpcina  ? "p.`$fOpcina` AS opcina_sifra" : "'' AS opcina_sifra",
+        'm.naziv_mjesta AS mjesto',
+        'm.porezna_sifra AS mjesto_porezna_sifra'
     ];
 
 
