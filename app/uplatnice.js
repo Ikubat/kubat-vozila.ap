@@ -370,7 +370,9 @@ const esc = s =>
             || partnerData.porezna_sifra_mjesto
             || partnerData.porezna_sifra
             || '',
-          opcina_sifra: partnerData.opcina_sifra || '',
+          opcina_sifra: partnerData.opcina_sifra
+            || getMjestoPoreznaSifra(partnerData)
+            || '',
           mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
         };
         state.partners.set(partner.id, partner);
