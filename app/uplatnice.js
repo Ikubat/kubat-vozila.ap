@@ -358,6 +358,11 @@ const esc = s =>
           id_broj: partnerData.id_broj || partnerData.idbroj || '',
           broj_racuna: partnerData.broj_racuna || partnerData.racun || partnerData.racun_pos || '',
           porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
+          mjesto_porezna_sifra: partnerData.mjesto_porezna_sifra
+            || partnerData.porezna_sifra_mjesta
+            || partnerData.porezna_sifra_mjesto
+            || partnerData.porezna_sifra
+            || '',
           opcina_sifra: partnerData.opcina_sifra || '',
           mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
         };
