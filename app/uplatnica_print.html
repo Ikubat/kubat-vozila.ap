@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Ispis uplatnice</title>
+
+<style>
+@page {
+  margin: 8mm 10mm 8mm 10mm;
+}
+
+body {
+  font-family: "Courier New", monospace;
+  font-size: 12pt;
+  position: relative;
+}
+
+.field {
+  position: absolute;
+  white-space: nowrap;
+}
+
+/* PRIMJER POZICIJA NA OBRASCU */
+#uplatioc      { top: 20mm; left: 10mm; }
+#uplatioc_txt  { top: 25mm; left: 10mm; }
+#primatelj     { top: 40mm; left: 10mm; }
+#svrha1        { top: 55mm; left: 10mm; }
+#svrha2        { top: 60mm; left: 10mm; }
+#iznos         { top: 70mm; left: 140mm; }
+#racunPrim     { top: 85mm; left: 10mm; }
+/* ... i tako dalje za svako polje ... */
+
+</style>
+</head>
+<body>
+
+<div id="uplatioc"     class="field"></div>
+<div id="uplatioc_txt" class="field"></div>
+<div id="primatelj"    class="field"></div>
+<div id="svrha1"       class="field"></div>
+<div id="svrha2"       class="field"></div>
+<div id="iznos"        class="field"></div>
+<div id="racunPrim"    class="field"></div>
+
+<script>
+(async function(){
+
+  // Dobavi ID iz URL-a
+  const id = new URLSearchParams(location.search).get("id");
+  if (!id) return alert("Nedostaje ID uplatnice.");
+
+  // Povuci podatke sa API-a
+  const res = await fetch("../api/uplatnica_get.php?id=" + id);
+  const u = await res.json();
+
+  // Popuni polja
+  document.getElementById("uplatioc").innerText     = u.uplatilac_naziv;
+  document.getElementById("uplatioc_txt").innerText = u.uplatilac_tekst;
+  document.getElementById("primatelj").innerText    = u.primatelj_naziv;
+  document.getElementById("svrha1").innerText       = u.svrha;
+  document.getElementById("svrha2").innerText       = u.svrha1;
+  document.getElementById("iznos").innerText        = u.iznos + " " + u.valuta;
+  document.getElementById("racunPrim").innerText    = u.racun_primatelja;
+
+})();
+</script>
+
+</body>
+</html>
