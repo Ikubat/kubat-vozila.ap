@@ -81,9 +81,18 @@
       gap:4px;
       margin-top:4px;
     }
-    .head-row,.row{
-      display:grid;
-      grid-template-columns: 110px 1.4fr 1.4fr 1.6fr 110px;
+    .head-row, .row {
+      display: grid;
+      grid-template-columns:
+      110px      /* datum */
+      1.3fr      /* uplatilac */
+      1.3fr      /* primatelj */
+      1.6fr      /* svrha */
+      1.2fr      /* svrha1 */
+      100px      /* iznos */
+      
+      90px;      /* akcije */
+
       gap:8px;
       align-items:center;
       padding:7px 9px;
@@ -247,8 +256,12 @@
           <div>Uplatilac</div>
           <div>Primatelj</div>
           <div>Svrha</div>
+          <div>Svrha 2</div>
+          <div>Iznos</div>
+          
           <div style="text-align:right">Akcije</div>
         </div>
+
         <div id="u_list"></div>
       </div>
 
