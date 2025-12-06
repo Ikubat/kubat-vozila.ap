@@ -207,11 +207,15 @@ const esc = s =>
 
       const labelUpper = (p.label || '').toUpperCase();
       const vrstaUpper = (p.vrsta_partnera || p.vrsta || '').toUpperCase();
+      const vrstaLower = (p.vrsta_partnera || p.vrsta || '').toLowerCase();
       const isStr = ['STR', 'SZR', 'OBRT', 'OBR'].some(k => labelUpper.includes(k) || vrstaUpper.includes(k));
 
       const hasImePrezime = !!(p.ime || p.prezime);
-      const isFizicka = !isStr && hasImePrezime;
-      const isPravna = !isStr && !isFizicka;
+      const isVrstaFizicka = vrstaLower.includes('fizi');
+      const isVrstaPravna = vrstaLower.includes('prav');
+
+      const isFizicka = isVrstaFizicka || (!isVrstaPravna && !isStr && hasImePrezime);
+      const isPravna = isVrstaPravna || (!isVrstaFizicka && !isStr && !hasImePrezime);
 
       if (hasUvoz) {
         if (isFizicka) {
@@ -224,7 +228,8 @@ const esc = s =>
           $brojPorezni.value = '';
         }
       } else if (!$brojPorezni.value) {
-        $brojPorezni.value = p.idBroj || p.porezni_broj || '';
+        const idBroj = p.id_broj || p.idBroj || '';
+        $brojPorezni.value = idBroj || p.porezni_broj || '';
       }
     }
 
