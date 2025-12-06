@@ -233,9 +233,11 @@ const esc = s =>
       const isPravna = isVrstaPravna || (!isVrstaFizicka && !isStr && !hasImePrezime);
 
       const poreznaSifra = getMjestoPoreznaSifra(p);
+      const opcinaUplatilac = (p && p.opcina_sifra) || '';
 
       if (hasUvoz) {
-        if (poreznaSifra) $opcina.value = poreznaSifra;
+        const opcinaSifra = opcinaUplatilac || poreznaSifra;
+        if (opcinaSifra) $opcina.value = opcinaSifra;
         if (isFizicka) {
           $brojPorezni.value = '0010000000019';
         } else if (isPravna) {
