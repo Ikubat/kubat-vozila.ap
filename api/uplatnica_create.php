@@ -59,6 +59,69 @@ $budzetska_org_sifra = trim((string)($data['budzetska_org_sifra'] ?? ''));
 $poziv_na_broj       = trim((string)($data['poziv_na_broj'] ?? ''));
 $napomena            = trim((string)($data['napomena'] ?? ''));
 
+// ako nije poslano, pokušaj dohvatiti općinu prema uplatilacu
+function kubatapp_fetch_partner_opcina(mysqli $db, int $partnerId): string {
+    if ($partnerId <= 0) return '';
+
+    try {
+        $cols = [];
+        $rs = $db->query('SHOW COLUMNS FROM partneri');
+        while ($c = $rs->fetch_assoc()) {
+            $cols[strtolower($c['Field'])] = $c['Field'];
+        }
+
+        $fId       = $cols['id'] ?? ($cols['id_partner'] ?? null);
+        $fOpcina   = $cols['opcina_sifra'] ?? ($cols['opcina'] ?? null);
+        $fMjestoId = $cols['mjesto_id'] ?? ($cols['id_mjesta'] ?? null);
+        $fPorezna  = $cols['porezna_sifra'] ?? null;
+
+        if (!$fId) return '';
+
+        $select = ["`$fId` AS id"];
+        if ($fOpcina)  $select[] = "`$fOpcina` AS opcina_sifra";
+        if ($fPorezna) $select[] = "`$fPorezna` AS porezna_sifra";
+        if ($fMjestoId) $select[] = "`$fMjestoId` AS mjesto_id";
+
+        $sql = 'SELECT ' . implode(', ', $select) . " FROM partneri WHERE `$fId` = ? LIMIT 1";
+        $st  = $db->prepare($sql);
+        $st->bind_param('i', $partnerId);
+        $st->execute();
+        $row = $st->get_result()->fetch_assoc();
+        if (!$row) return '';
+
+        $candidate = ($row['porezna_sifra'] ?? '') ?: ($row['opcina_sifra'] ?? '');
+        if ($candidate !== '' || !$fMjestoId || empty($row['mjesto_id'])) {
+            return trim((string)$candidate);
+        }
+
+        // povuci poreznu šifru iz tablice mjesta
+        $mCols = [];
+        $rsM = $db->query('SHOW COLUMNS FROM mjesta');
+        while ($c = $rsM->fetch_assoc()) {
+            $mCols[strtolower($c['Field'])] = $c['Field'];
+        }
+
+        $fMjId     = $mCols['id'] ?? null;
+        $fMjPorez  = $mCols['porezna_sifra'] ?? ($mCols['sifra'] ?? null);
+
+        if (!$fMjId || !$fMjPorez) return '';
+
+        $sqlMj = "SELECT `$fMjPorez` AS porezna_sifra FROM mjesta WHERE `$fMjId` = ? LIMIT 1";
+        $stMj  = $db->prepare($sqlMj);
+        $mjId  = (int)$row['mjesto_id'];
+        $stMj->bind_param('i', $mjId);
+        $stMj->execute();
+        $mj = $stMj->get_result()->fetch_assoc();
+        return $mj ? trim((string)($mj['porezna_sifra'] ?? '')) : '';
+    } catch (Throwable $e) {
+        return '';
+    }
+}
+
+if ($opcina_sifra === '') {
+    $opcina_sifra = kubatapp_fetch_partner_opcina($conn, $uplatilac_id);
+}
+
 // minimalne provjere
 if ($uplatilac_id <= 0)     jdie('Uplatilac je obavezan.');
 if ($primatelj_id <= 0)     jdie('Primatelj je obavezan.');

@@ -25,17 +25,25 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once __DIR__ . '/config.php';
 
 try {
+    // --- pročitaj strukturu tablice partneri ---
     $cols = [];
     $rs = $conn->query('SHOW COLUMNS FROM partneri');
     while ($c = $rs->fetch_assoc()) {
         $cols[strtolower($c['Field'])] = $c['Field'];
     }
 
+    // fleksibilne mape kolona
     $fVrsta   = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
     $fIdBroj  = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
     $fBrojR   = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
     $fPorezni = $cols['porezni_broj'] ?? $cols['porezni'] ?? null;
     $fOpcina  = $cols['opcina_sifra'] ?? $cols['opcina'] ?? null;
+
+    // ako postoji kolona za općinu u partnerima -> koristi nju
+    // ako ne postoji -> koristi poreznu šifru iz tablice mjesta
+    $colOpcinaAlias = $fOpcina
+        ? "p.`$fOpcina` AS opcina_sifra"
+        : "m.porezna_sifra AS opcina_sifra";
 
     $select = [
         'p.id',
@@ -45,11 +53,16 @@ try {
         'p.email',
         'p.adresa',
         'p.mjesto_id',
+
         $fVrsta   ? "p.`$fVrsta` AS vrsta_partnera" : "'' AS vrsta_partnera",
-        $fIdBroj  ? "p.`$fIdBroj` AS id_broj" : "'' AS id_broj",
-        $fBrojR   ? "p.`$fBrojR` AS broj_racuna" : "'' AS broj_racuna",
+        $fIdBroj  ? "p.`$fIdBroj` AS id_broj"       : "'' AS id_broj",
+        $fBrojR   ? "p.`$fBrojR` AS broj_racuna"    : "'' AS broj_racuna",
         $fPorezni ? "p.`$fPorezni` AS porezni_broj" : "'' AS porezni_broj",
-        $fOpcina  ? "p.`$fOpcina` AS opcina_sifra" : "'' AS opcina_sifra",
+
+        // ovdje je sad uvijek opcina_sifra (ili iz partnera ili iz mjesta)
+        $colOpcinaAlias,
+
+        // dodatno, možeš i dalje imati raw poreznu iz mjesta ako ti treba negdje
         'm.naziv_mjesta AS mjesto',
         'm.porezna_sifra AS mjesto_porezna_sifra'
     ];

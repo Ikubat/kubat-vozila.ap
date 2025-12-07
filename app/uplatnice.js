@@ -53,6 +53,7 @@
     const $svrhaModalSave    = document.getElementById('u_svrha_modal_save');
     const $svrhaModalCancel  = document.getElementById('u_svrha_modal_cancel');
     const $svrhaModalClose   = document.getElementById('u_svrha_modal_close');
+   
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
@@ -69,23 +70,39 @@
     const $poziv         = document.getElementById('u_poziv');
     const $napomena      = document.getElementById('u_napomena');
 
+        // --- PRINT elementi ---
+    const $btnPrint      = document.getElementById('u_print');
+    const $pUplatilac    = document.getElementById('p_uplatilac');
+    const $pSvrha1       = document.getElementById('p_svrha1');
+    const $pSvrha2       = document.getElementById('p_svrha2');
+    const $pPrimatelj    = document.getElementById('p_primatelj');
+    const $pMjestoDatum  = document.getElementById('p_mjesto_datum');
+    const $pIznos        = document.getElementById('p_iznos');
+    const $pRacunPos     = document.getElementById('p_racun_pos');
+    const $pRacunPrim    = document.getElementById('p_racun_prim');
+    const $pPorezni      = document.getElementById('p_porezni');
+    const $pVrstaPrihoda = document.getElementById('p_vrsta_prihoda');
+    const $pOpcina       = document.getElementById('p_opcina');
+    const $pBudzetska    = document.getElementById('p_budzetska');
+    const $pPoziv        = document.getElementById('p_poziv');
+
     const state = {
       q: '',
       all: [],
-      partners: new Map(), // id -> partner␊
-      svrhe: new Map()     // id -> svrha␊
+      partners: new Map(), // id -> partner
+      svrhe: new Map()     // id -> svrha
     };
 
     let pickTarget = 'uplatilac';
 
-const esc = s =>
-  String(s ?? '').replace(/[&<>"']/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[m]));
+    const esc = s =>
+      String(s ?? '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m]));
 
     function show(el, on) {
       if (!el) return;
@@ -138,6 +155,56 @@ const esc = s =>
       throw lastErr || new Error('Nepoznata greška pri fetchu.');
     }
 
+      function fillPrintSlip() {
+  document.getElementById('p_uplatilac').textContent =
+    ($uplatilacTekst?.value?.trim() || $uplatilacLabel.value.trim());
+
+  document.getElementById('p_svrha1').textContent = $svrha.value.trim();
+  document.getElementById('p_svrha2').textContent = $svrha1.value.trim();
+
+  document.getElementById('p_primatelj').textContent =
+    ($primateljTekst?.value?.trim() || $primateljLabel.value.trim());
+
+  document.getElementById('p_mjesto_datum').textContent =
+    ($mjesto.value.trim() + ' ' + $datum.value).trim();
+
+  document.getElementById('p_iznos').textContent =
+    $iznos.value ? (parseFloat($iznos.value).toFixed(2) + ' ' + $valuta.value) : '';
+
+  document.getElementById('p_racun_pos').textContent = $racunPos.value.trim();
+  document.getElementById('p_racun_prim').textContent = $racunPrim.value.trim();
+
+  document.getElementById('p_porezni').textContent = $brojPorezni.value.trim();
+  document.getElementById('p_vrsta_prihoda').textContent = $vrstaPrihoda.value.trim();
+  document.getElementById('p_opcina').textContent = $opcina.value.trim();
+  document.getElementById('p_budzetska').textContent = $budzetska.value.trim();
+  document.getElementById('p_poziv').textContent = $poziv.value.trim();
+}
+
+
+      const uplatilacTekst =
+        ($uplatilacTekst && $uplatilacTekst.value.trim()) ||
+        $uplatilacLabel.value.trim();
+
+      const primateljTekst =
+        ($primateljTekst && $primateljTekst.value.trim()) ||
+        $primateljLabel.value.trim();
+
+      $pUplatilac.textContent    = uplatilacTekst;
+      $pSvrha1.textContent       = $svrha.value.trim();
+      $pSvrha2.textContent       = $svrha1.value.trim();
+      $pPrimatelj.textContent    = primateljTekst;
+      $pMjestoDatum.textContent  = ($mjesto.value.trim() + ' ' + ($datum.value || '')).trim();
+      $pIznos.textContent        = $iznos.value ? (parseFloat($iznos.value).toFixed(2) + ' ' + ($valuta.value || 'KM')) : '';
+      $pRacunPos.textContent     = $racunPos.value.trim();
+      $pRacunPrim.textContent    = $racunPrim.value.trim();
+      $pPorezni.textContent      = $brojPorezni.value.trim();
+      $pVrstaPrihoda.textContent = $vrstaPrihoda.value.trim();
+      $pOpcina.textContent       = $opcina.value.trim();
+      $pBudzetska.textContent    = $budzetska.value.trim();
+      $pPoziv.textContent        = $poziv.value.trim();
+    }
+
     // ---- učitaj partnere (za selecte) ----
     async function loadPartneri() {
       try {
@@ -148,24 +215,20 @@ const esc = s =>
         rows.forEach(p => {
           const id = parseInt(p.id, 10);
           if (!id) return;
-          // ime + prezime ili naziv
+
           const label = (p.naziv && p.naziv.trim())
             || [p.ime, p.prezime].filter(Boolean).join(' ')
             || ('Partner #' + id);
-          const mjestoPoreznaSifra = p.mjesto_porezna_sifra
-            || p.porezna_sifra_mjesta
-            || p.porezna_sifra_mjesto
-            || p.porezna_sifra
-            || '';
+
           state.partners.set(id, {
             id,
             label,
+            vrsta: p.vrsta_partnera || p.vrsta || '',
             broj_racuna: p.broj_racuna || p.racun || '',
-            id_broj: p.id_broj || p.idbroj || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
-            opcina_sifra: p.opcina_sifra || mjestoPoreznaSifra || '',
-            mjesto_naziv: p.mjesto_naziv || '',
-            mjesto_porezna_sifra: mjestoPoreznaSifra
+            mjesto_porezna_sifra: p.mjesto_porezna_sifra || p.porezna_sifra || '',
+            opcina_sifra: p.opcina_sifra || '',
+            mjesto_naziv: p.mjesto || p.mjesto_naziv || ''
           });
         });
 
@@ -204,62 +267,54 @@ const esc = s =>
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
-    function getMjestoPoreznaSifra(p) {
-      if (!p) return '';
-      return p.mjesto_porezna_sifra
-        || p.porezna_sifra_mjesta
-        || p.porezna_sifra_mjesto
-        || p.opcina_sifra
-        || '';
-    }
-
-    function updateBrojPoreskogObveznika(partner) {
-      const p = partner || state.partners.get(Number($uplatilacId.value)) || null;
-      if (!p) return;
-
-      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
-      const hasUvoz = svrhaText.includes('uvoz');
-
-      const labelUpper = (p.label || '').toUpperCase();
-      const vrstaUpper = (p.vrsta_partnera || p.vrsta || '').toUpperCase();
-      const vrstaLower = (p.vrsta_partnera || p.vrsta || '').toLowerCase();
-      const isStr = ['STR', 'SZR', 'OBRT', 'OBR'].some(k => labelUpper.includes(k) || vrstaUpper.includes(k));
-
-      const hasImePrezime = !!(p.ime || p.prezime);
-      const isVrstaFizicka = vrstaLower.includes('fizi');
-      const isVrstaPravna = vrstaLower.includes('prav');
-
-      const isFizicka = isVrstaFizicka || (!isVrstaPravna && !isStr && hasImePrezime);
-      const isPravna = isVrstaPravna || (!isVrstaFizicka && !isStr && !hasImePrezime);
-
-      const poreznaSifra = getMjestoPoreznaSifra(p);
-      const opcinaUplatilac = (p && p.opcina_sifra) || '';
-
-      if (hasUvoz) {
-        const opcinaSifra = opcinaUplatilac || poreznaSifra || '';
-        $opcina.value = opcinaSifra;
-        if (isFizicka) {
-          $brojPorezni.value = '0010000000019';
-        } else if (isPravna) {
-          const idBroj = (p.id_broj || '').trim();
-          const idBrojZamijenjen = idBroj ? idBroj.replace(/^\d/, '0') : '';
-          $brojPorezni.value = idBrojZamijenjen || p.porezni_broj || '';
-        } else {
-          $brojPorezni.value = '';
-        }
-      } else if (!$brojPorezni.value) {
-        const idBroj = p.id_broj || p.idBroj || '';
-        $brojPorezni.value = idBroj || p.porezni_broj || '';
-      }
-    }
-
     function applyUplatilacDefaults(p) {
       if (!p) return;
-      if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
-      if (!$racunPos.value)      $racunPos.value = p.broj_racuna || '';
-      if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
 
-      updateBrojPoreskogObveznika(p);
+      if (!$mjesto.value)   $mjesto.value   = p.mjesto_naziv || '';
+      if (!$racunPos.value) $racunPos.value = p.broj_racuna || '';
+
+      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+
+      const vrstaLower = (p.vrsta || '').toLowerCase();
+      const isPravna   = vrstaLower.includes('pravna') || vrstaLower.includes('pravno');
+      const isFizicka  = vrstaLower.includes('fizič') || vrstaLower.includes('fizic');
+      const isObrt     = vrstaLower.includes('obrt') || vrstaLower.includes('szr') || vrstaLower.includes('str');
+
+      const partnerOpcina =
+        p.mjesto_porezna_sifra ||
+        p.opcina_sifra ||
+        '';
+
+      if (svrhaText.includes('uvoz')) {
+        if (isFizicka) {
+          // fizička osoba + uvoz
+          $brojPorezni.value = '0010000000019';
+        } else if (isPravna) {
+          // pravna osoba + uvoz
+          $brojPorezni.value = (p.porezni_broj || '').trim();
+        } else if (isObrt) {
+          // obrt + uvoz → prazno
+          $brojPorezni.value = '';
+        } else {
+          // nepoznata vrsta – ako je prazno, stavi broj iz partnera
+          if (!$brojPorezni.value) {
+            $brojPorezni.value = (p.porezni_broj || '').trim();
+          }
+        }
+
+        // kod UVOZ u općinu upiši poreznu šifru mjesta uplatioca
+        if (partnerOpcina) {
+          $opcina.value = partnerOpcina;
+        }
+      } else {
+        // NIJE uvoz – samo default popune ako je prazno
+        if (!$brojPorezni.value) {
+          $brojPorezni.value = (p.porezni_broj || '').trim();
+        }
+        if (!$opcina.value && partnerOpcina) {
+          $opcina.value = partnerOpcina;
+        }
+      }
     }
 
     function applyPrimateljDefaults(p) {
@@ -267,10 +322,19 @@ const esc = s =>
       if (!$racunPrim.value) $racunPrim.value = p.broj_racuna || '';
     }
 
+    // kad promijenimo svrhu tekstom ili iz šifrarnika, ponovno primijeni pravila za uplatitelja
+    function recomputeFromSvrha() {
+      const uId = $uplatilacId.value ? parseInt($uplatilacId.value, 10) : 0;
+      if (!uId) return;
+      const p = state.partners.get(uId);
+      if (!p) return;
+      applyUplatilacDefaults(p);
+    }
+
     function onSvrhaChange() {
       const id = parseInt($svrhaSel.value, 10);
       const s = state.svrhe.get(id);
-      if (!s) return
+      if (!s) return;
 
       if (!$svrha.value)   $svrha.value = s.naziv || '';
       if (!$svrha1.value)  $svrha1.value = s.naziv2 || '';
@@ -278,7 +342,8 @@ const esc = s =>
       if (!$budzetska.value)    $budzetska.value = s.budzetska || '';
       if (!$poziv.value)        $poziv.value = s.poziv || '';
 
-      updateBrojPoreskogObveznika();
+      // nakon promjene šifre svrhe, ponovno primijeni pravila za uplatitelja
+      recomputeFromSvrha();
     }
 
     function setSvrhaNewMsg(msg = '', isError = false) {
@@ -346,6 +411,7 @@ const esc = s =>
       }
     }
 
+    // 🔧 OVDJE JE BITNA IZMJENA – MERGE partnerData + postojeći partner iz state.partners
     function setPartner(target, id, label, partnerData) {
       const isPrimatelj = target === 'primatelj';
       const $idField    = isPrimatelj ? $primateljId : $uplatilacId;
@@ -354,30 +420,52 @@ const esc = s =>
       $idField.value = id ? String(id) : '';
 
       let partner = null;
+      const existing = id ? state.partners.get(Number(id)) || null : null;
+
       if (partnerData && partnerData.id) {
+        const base = existing || {};
         partner = {
           id: Number(partnerData.id),
-          label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
-          ime: partnerData.ime || '',
-          prezime: partnerData.prezime || '',
-          naziv: partnerData.naziv || '',
-          vrsta_partnera: partnerData.vrsta_partnera || partnerData.vrsta || '',
-          id_broj: partnerData.id_broj || partnerData.idbroj || '',
-          broj_racuna: partnerData.broj_racuna || partnerData.racun || partnerData.racun_pos || '',
-          porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
-          mjesto_porezna_sifra: partnerData.mjesto_porezna_sifra
-            || partnerData.porezna_sifra_mjesta
-            || partnerData.porezna_sifra_mjesto
-            || partnerData.porezna_sifra
-            || '',
-          opcina_sifra: partnerData.opcina_sifra
-            || getMjestoPoreznaSifra(partnerData)
-            || '',
-          mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
+          label:
+            partnerData.label ||
+            label ||
+            base.label ||
+            partnerData.naziv ||
+            ('Partner #' + partnerData.id),
+          vrsta:
+            partnerData.vrsta ||
+            partnerData.vrsta_partnera ||
+            base.vrsta ||
+            '',
+          broj_racuna:
+            partnerData.broj_racuna ||
+            partnerData.racun ||
+            partnerData.racun_pos ||
+            base.broj_racuna ||
+            '',
+          porezni_broj:
+            partnerData.porezni_broj ||
+            partnerData.porezni ||
+            base.porezni_broj ||
+            '',
+          mjesto_porezna_sifra:
+            partnerData.mjesto_porezna_sifra ||
+            partnerData.porezna_sifra ||
+            base.mjesto_porezna_sifra ||
+            '',
+          opcina_sifra:
+            partnerData.opcina_sifra ||
+            base.opcina_sifra ||
+            '',
+          mjesto_naziv:
+            partnerData.mjesto ||
+            partnerData.mjesto_naziv ||
+            base.mjesto_naziv ||
+            ''
         };
         state.partners.set(partner.id, partner);
-      } else if (id) {
-        partner = state.partners.get(Number(id)) || null;
+      } else if (existing) {
+        partner = existing;
       }
 
       if ($labelField) {
@@ -394,8 +482,16 @@ const esc = s =>
     }
 
     function refreshPartnerLabels() {
-      setPartner('uplatilac', $uplatilacId.value ? parseInt($uplatilacId.value, 10) : null, $uplatilacLabel.value || '');
-      setPartner('primatelj', $primateljId.value ? parseInt($primateljId.value, 10) : null, $primateljLabel.value || '');
+      setPartner(
+        'uplatilac',
+        $uplatilacId.value ? parseInt($uplatilacId.value, 10) : null,
+        $uplatilacLabel.value || ''
+      );
+      setPartner(
+        'primatelj',
+        $primateljId.value ? parseInt($primateljId.value, 10) : null,
+        $primateljLabel.value || ''
+      );
     }
 
     window.setSelectedPartner = function (id, naziv, partner) {
@@ -412,17 +508,21 @@ const esc = s =>
       const x = Math.max(0, (screen.width - w) / 2);
       const y = Math.max(0, (screen.height - h) / 2);
       const url = basePageRoot + 'partneri.html?pick=1';
-      window.open(url, 'pick_partner_' + target,
-        `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
+      window.open(
+        url,
+        'pick_partner_' + target,
+        `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`
+      );
     }
 
     $svrhaSel.addEventListener('change', onSvrhaChange);
+    $svrha.addEventListener('input', recomputeFromSvrha);
+    $svrha1.addEventListener('input', recomputeFromSvrha);
     $svrhaNewBtn?.addEventListener('click', (e) => { e.preventDefault(); openSvrhaModal(); });
     $svrhaModalSave?.addEventListener('click', addSvrha);
     $svrhaModalCancel?.addEventListener('click', closeSvrhaModal);
     $svrhaModalClose?.addEventListener('click', closeSvrhaModal);
     $svrhaModal?.addEventListener('click', (e) => { if (e.target === $svrhaModal) closeSvrhaModal(); });
-    [$svrha, $svrha1].forEach($input => $input?.addEventListener('input', updateBrojPoreskogObveznika));
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
   
@@ -469,70 +569,68 @@ const esc = s =>
       updateInfo();
     }
 
-async function loadUplatnice() {
-  try {
-    const qs = new URLSearchParams();
-    if (state.q) qs.set('q', state.q);
+    async function loadUplatnice() {
+      try {
+        const qs = new URLSearchParams();
+        if (state.q) qs.set('q', state.q);
 
-    const out = await fetchJson(API.list + (state.q ? ('?' + qs.toString()) : ''));
-    const rows = Array.isArray(out) ? out : (out.data || out.rows || []);
+        const out = await fetchJson(API.list + (state.q ? ('?' + qs.toString()) : ''));
+        const rows = Array.isArray(out) ? out : (out.data || out.rows || []);
 
-    state.all = rows.map(r => {
-      const iznosVal = r.iznos !== undefined ? parseFloat(r.iznos) : null;
+        state.all = rows.map(r => {
+          const iznosVal = r.iznos !== undefined ? parseFloat(r.iznos) : null;
 
-      const uId = r.uplatilac_id ? parseInt(r.uplatilac_id, 10) : null;
-      const pId = r.primatelj_id ? parseInt(r.primatelj_id, 10) : null;
+          const uId = r.uplatilac_id ? parseInt(r.uplatilac_id, 10) : null;
+          const pId = r.primatelj_id ? parseInt(r.primatelj_id, 10) : null;
 
-      const pU = uId ? state.partners.get(uId) : null;
-      const pP = pId ? state.partners.get(pId) : null;
+          const pU = uId ? state.partners.get(uId) : null;
+          const pP = pId ? state.partners.get(pId) : null;
 
-      return {
-        id: parseInt(r.id, 10),
+          return {
+            id: parseInt(r.id, 10),
 
-        datum: r.datum || r.datum_uplate || '',
+            datum: r.datum || r.datum_uplate || '',
 
-        uplatilac_id: uId,
-        // prvo uzmi što dođe iz backenda, ako je prazno – iz partnera:
-        uplatilac_naziv:
-          r.uplatilac_naziv || r.uplatilac ||
-          (pU && pU.label) || '',
-        uplatilac_tekst: r.uplatilac_tekst || '',
+            uplatilac_id: uId,
+            uplatilac_naziv:
+              r.uplatilac_naziv || r.uplatilac ||
+              (pU && pU.label) || '',
+            uplatilac_tekst: r.uplatilac_tekst || '',
 
-        primatelj_id: pId,
-        primatelj_naziv:
-          r.primatelj_naziv || r.primatelj ||
-          (pP && pP.label) || '',
-        primatelj_tekst: r.primatelj_tekst || '',
+            primatelj_id: pId,
+            primatelj_naziv:
+              r.primatelj_naziv || r.primatelj ||
+              (pP && pP.label) || '',
+            primatelj_tekst: r.primatelj_tekst || '',
 
-        svrha_id: r.svrha_id ? parseInt(r.svrha_id, 10) : null,
-        svrha_tekst: r.svrha_tekst || r.svrha || '',
-        svrha1: r.svrha1 || '',
-        mjesto: r.mjesto_uplate || r.mjesto || '',
+            svrha_id: r.svrha_id ? parseInt(r.svrha_id, 10) : null,
+            svrha_tekst: r.svrha_tekst || r.svrha || '',
+            svrha1: r.svrha1 || '',
+            mjesto: r.mjesto_uplate || r.mjesto || '',
 
-        iznos: Number.isFinite(iznosVal) ? iznosVal : null,
-        valuta: r.valuta || '',
+            iznos: Number.isFinite(iznosVal) ? iznosVal : null,
+            valuta: r.valuta || '',
 
-        racun_posiljaoca: r.racun_posiljaoca || r.racun_platioca || '',
-        racun_primatelja: r.racun_primatelja || r.racun_primaoca || '',
+            racun_posiljaoca: r.racun_posiljaoca || r.racun_platioca || '',
+            racun_primatelja: r.racun_primatelja || r.racun_primaoca || '',
 
-        broj_poreskog_obv: r.broj_poreskog_obv || r.porezni_broj || '',
-        vrsta_prihoda_sifra: r.vrsta_prihoda_sifra || r.vrsta_prihoda || '',
-        opcina_sifra: r.opcina_sifra || r.opcina || '',
-        budzetska_org_sifra: r.budzetska_org_sifra || r.budzetska || '',
-        poziv_na_broj: r.poziv_na_broj || r.poziv || '',
-        napomena: r.napomena || ''
-      };
-    });
+            broj_poreskog_obv: r.broj_poreskog_obv || r.porezni_broj || '',
+            vrsta_prihoda_sifra: r.vrsta_prihoda_sifra || r.vrsta_prihoda || '',
+            opcina_sifra: r.opcina_sifra || r.opcina || '',
+            budzetska_org_sifra: r.budzetska_org_sifra || r.budzetska || '',
+            poziv_na_broj: r.poziv_na_broj || r.poziv || '',
+            napomena: r.napomena || ''
+          };
+        });
 
-    renderList();
-  } catch (err) {
-    console.error('loadUplatnice error', err);
-    state.all = [];
-    renderList();
-    if ($infoCnt) $infoCnt.textContent = 'Greška pri dohvaćanju podataka.';
-  }
-}
-
+        renderList();
+      } catch (err) {
+        console.error('loadUplatnice error', err);
+        state.all = [];
+        renderList();
+        if ($infoCnt) $infoCnt.textContent = 'Greška pri dohvaćanju podataka.';
+      }
+    }
 
     // ---- search ----
     let t = null;
@@ -718,6 +816,19 @@ async function loadUplatnice() {
         return;
       }
 
+          async function doPrint() {
+      // možeš, ako želiš, prvo auto-spremiti pa printati
+      // await save();
+
+      fillPrintSlip();
+      window.print();
+    }
+
+    if ($btnPrint) {
+      $btnPrint.addEventListener('click', doPrint);
+    }
+
+
       if (e.target.closest('.del')) {
         const id = parseInt(row.dataset.id, 10);
         if (!id) return;
@@ -745,7 +856,6 @@ async function loadUplatnice() {
       await Promise.all([loadPartneri(), loadSvrhe()]);
       await loadUplatnice();
     })();
-  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
