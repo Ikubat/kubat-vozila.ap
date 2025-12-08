@@ -535,6 +535,7 @@
           <div>${u.iznos != null ? esc(u.iznos.toFixed(2)) : ''}</div>
           <div class="acts">
             <button class="act edit" title="Uredi"><i class="fa-solid fa-pen"></i></button>
+            <button class="act print" title="Ispis"><i class="fa-solid fa-print"></i></button>
             <button class="act del"  title="Obriši"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
@@ -788,6 +789,15 @@
 
       if (e.target.closest('.edit')) {
         openEdit(row);
+        return;
+      }
+
+      if (e.target.closest('.print')) {
+        const id = parseInt(row.dataset.id, 10);
+        if (!id) return;
+
+        const url = basePageRoot + 'uplatnica_print.html?id=' + encodeURIComponent(id);
+        window.open(url, '_blank');
         return;
       }
 
