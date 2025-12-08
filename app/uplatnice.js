@@ -790,7 +790,22 @@
         console.warn('Spremanje podataka za print nije uspjelo', err);
       }
 
-      const url = 'uplatnica_print.html#payload=' + encodeURIComponent(payloadKey);
+      const urlParams = new URLSearchParams();
+      const currentId = parseInt($id && $id.value, 10);
+      if (currentId) {
+        urlParams.set('id', currentId);
+      }
+
+      const hashParams = new URLSearchParams();
+      hashParams.set('payload', payloadKey);
+
+      const url =
+        basePageRoot +
+        'uplatnica_print.html' +
+        (urlParams.toString() ? '?' + urlParams.toString() : '') +
+        '#' +
+        hashParams.toString();
+
       const printWin = window.open(url, '_blank', 'noopener');
 
       if (!printWin) {

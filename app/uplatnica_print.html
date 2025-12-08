@@ -139,7 +139,9 @@ body {
       return alert("Uplatnica nije pronađena (#" + id + ")");
     }
 
-    render(u);
+    if (!payloadPrimljen) {
+      render(u);
+    }
   })();
 })();
 </script>
