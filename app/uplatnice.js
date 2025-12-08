@@ -782,7 +782,16 @@
 
     function openPrintWindow() {
       const payload = buildPrintPayload();
-      const printWin = window.open('uplatnica_print.html', '_blank', 'noopener');
+      const payloadKey = 'uplatnica-print-' + Date.now();
+
+      try {
+        localStorage.setItem(payloadKey, JSON.stringify(payload));
+      } catch (err) {
+        console.warn('Spremanje podataka za print nije uspjelo', err);
+      }
+
+      const url = 'uplatnica_print.html#payload=' + encodeURIComponent(payloadKey);
+      const printWin = window.open(url, '_blank', 'noopener');
 
       if (!printWin) {
         alert('Nije moguće otvoriti prozor za print.');

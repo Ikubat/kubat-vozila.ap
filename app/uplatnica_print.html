@@ -70,7 +70,7 @@ body {
   // Slušaj podatke poslano preko postMessage (print iz modala "nova" / "uredi")
   let payloadPrimljen = false;
   const payloadTimer = setTimeout(() => {
-    if (!payloadPrimljen && !parsedId) {
+    if (!payloadPrimljen && !parsedId && !storagePayload) {
       alert("Nedostaje ID uplatnice.");
     }
   }, 1500);
@@ -86,9 +86,26 @@ body {
     }
   });
 
+  // Preuzmi payload iz localStorage ako je poslan preko hash parametra
+  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+  const storageKey = hashParams.get("payload");
+  let storagePayload = null;
+  if (storageKey) {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        storagePayload = JSON.parse(raw);
+        render(storagePayload);
+        payloadPrimljen = true;
+        localStorage.removeItem(storageKey);
+      }
+    } catch (err) {
+      console.warn("Ne mogu pročitati podatke iz localStorage", err);
+    }
+  }
+
   // Dobavi ID iz URL-a (podržava i hash #id=... kao fallback)
   const search = new URLSearchParams(location.search);
-  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
   const parsedId = parseInt(search.get("id") || hashParams.get("id") || hashParams.get("uplatnica_id"), 10);
   if (!parsedId) return;
 
