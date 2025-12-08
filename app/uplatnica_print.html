@@ -9,59 +9,313 @@
   margin: 8mm 10mm 8mm 10mm;
 }
 
+:root {
+  --border: #e5e7eb;
+  --primary: #2563eb;
+}
+
 body {
   font-family: "Courier New", monospace;
   font-size: 12pt;
   position: relative;
+  margin: 0;
+  padding: 16px;
+  background: #f3f4f6;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.06);
+  margin-bottom: 10px;
+}
+
+.toolbar .actions { display: flex; gap: 8px; }
+
+.btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 7px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn.ghost { background: #eef2ff; }
+
+.hint {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.paper {
+  position: relative;
+  width: 210mm;
+  height: 130mm;
+  background: #fff;
+  margin: 0 auto;
+  border: 1px dashed #cbd5e1;
+  overflow: hidden;
 }
 
 .field {
   position: absolute;
   white-space: nowrap;
+  user-select: none;
 }
 
-/* PRIMJER POZICIJA NA OBRASCU */
-#uplatioc      { top: 20mm; left: 10mm; }
-#uplatioc_txt  { top: 25mm; left: 10mm; }
-#primatelj     { top: 40mm; left: 10mm; }
-#svrha1        { top: 55mm; left: 10mm; }
-#svrha2        { top: 60mm; left: 10mm; }
-#iznos         { top: 70mm; left: 140mm; }
-#racunPrim     { top: 85mm; left: 10mm; }
-/* ... i tako dalje za svako polje ... */
+.field.editing {
+  outline: 1px dashed var(--primary);
+  cursor: move;
+  padding: 2px 3px;
+  border-radius: 4px;
+  background: rgba(37,99,235,.06);
+}
 
+.coords {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  margin-top: 6px;
+}
+
+@media print {
+  body { background: #fff; padding: 0; }
+  .no-print { display: none !important; }
+  .paper { border: none; }
+}
 </style>
 </head>
 <body>
+  <div class="toolbar no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button id="toggleEdit" class="btn">Uključi uređivanje</button>
+      <button id="resetLayout" class="btn ghost">Resetuj raspored</button>
+    </div>
+    <div class="actions">
+      <button id="printNow" class="btn primary">Printaj</button>
+    </div>
+  </div>
 
-<div id="uplatioc"     class="field"></div>
-<div id="uplatioc_txt" class="field"></div>
-<div id="primatelj"    class="field"></div>
-<div id="svrha1"       class="field"></div>
-<div id="svrha2"       class="field"></div>
-<div id="iznos"        class="field"></div>
-<div id="racunPrim"    class="field"></div>
+  <div class="hint no-print">
+    Povuci polja kada je uključeno uređivanje kako bi namjestio raspored za matični printer.
+    Raspored se pamti u pregledniku.
+  </div>
+
+  <div id="paper" class="paper">
+    <div id="uplatioc"     class="field" data-key="uplatioc"></div>
+    <div id="uplatioc_txt" class="field" data-key="uplatioc_txt"></div>
+    <div id="primatelj"    class="field" data-key="primatelj"></div>
+    <div id="svrha1"       class="field" data-key="svrha1"></div>
+    <div id="svrha2"       class="field" data-key="svrha2"></div>
+    <div id="iznos"        class="field" data-key="iznos"></div>
+    <div id="racunPos"     class="field" data-key="racun_posiljaoca"></div>
+    <div id="racunPrim"    class="field" data-key="racun_primatelja"></div>
+    <div id="porezni"      class="field" data-key="broj_poreskog_obv"></div>
+    <div id="vrstaPrihoda" class="field" data-key="vrsta_prihoda_sifra"></div>
+    <div id="opcina"       class="field" data-key="opcina_sifra"></div>
+    <div id="budzetska"    class="field" data-key="budzetska_org_sifra"></div>
+    <div id="poziv"        class="field" data-key="poziv_na_broj"></div>
+    <div id="mjestoDatum"  class="field" data-key="mjesto_datum"></div>
+    <div id="napomena"     class="field" data-key="napomena"></div>
+  </div>
+
+  <div id="coords" class="coords no-print"></div>
 
 <script>
 (async function(){
+  const $fields = Array.from(document.querySelectorAll('.field'));
+  const $coords = document.getElementById('coords');
+  const $toggleEdit = document.getElementById('toggleEdit');
+  const $resetLayout = document.getElementById('resetLayout');
+  const $printNow = document.getElementById('printNow');
 
-  // Dobavi ID iz URL-a
-  const id = new URLSearchParams(location.search).get("id");
-  if (!id) return alert("Nedostaje ID uplatnice.");
+  const defaultLayout = {
+    uplatioc:      { top: '20mm', left: '10mm' },
+    uplatioc_txt:  { top: '25mm', left: '10mm' },
+    primatelj:     { top: '40mm', left: '10mm' },
+    svrha1:        { top: '55mm', left: '10mm' },
+    svrha2:        { top: '60mm', left: '10mm' },
+    iznos:         { top: '70mm', left: '140mm' },
+    racunPos:      { top: '75mm', left: '10mm' },
+    racunPrim:     { top: '85mm', left: '10mm' },
+    porezni:       { top: '95mm', left: '10mm' },
+    vrstaPrihoda:  { top: '100mm', left: '10mm' },
+    opcina:        { top: '105mm', left: '10mm' },
+    budzetska:     { top: '110mm', left: '10mm' },
+    poziv:         { top: '115mm', left: '10mm' },
+    mjestoDatum:   { top: '120mm', left: '140mm' },
+    napomena:      { top: '125mm', left: '10mm' }
+  };
 
-  // Povuci podatke sa API-a
-  const res = await fetch("../api/uplatnica_get.php?id=" + id);
-  const u = await res.json();
+  const layoutKey = 'uplatnica-print-layout';
+  let editing = false;
 
-  // Popuni polja
-  document.getElementById("uplatioc").innerText     = u.uplatilac_naziv;
-  document.getElementById("uplatioc_txt").innerText = u.uplatilac_tekst;
-  document.getElementById("primatelj").innerText    = u.primatelj_naziv;
-  document.getElementById("svrha1").innerText       = u.svrha;
-  document.getElementById("svrha2").innerText       = u.svrha1;
-  document.getElementById("iznos").innerText        = u.iznos + " " + u.valuta;
-  document.getElementById("racunPrim").innerText    = u.racun_primatelja;
+  function applyLayout(layout) {
+    $fields.forEach(f => {
+      const pos = layout[f.id] || defaultLayout[f.id];
+      if (!pos) return;
+      f.style.top = pos.top;
+      f.style.left = pos.left;
+    });
+  }
 
+  function currentLayout() {
+    const out = {};
+    $fields.forEach(f => {
+      out[f.id] = {
+        top: f.style.top || (defaultLayout[f.id] && defaultLayout[f.id].top) || '0',
+        left: f.style.left || (defaultLayout[f.id] && defaultLayout[f.id].left) || '0'
+      };
+    });
+    return out;
+  }
+
+  function persistLayout() {
+    localStorage.setItem(layoutKey, JSON.stringify(currentLayout()));
+  }
+
+  function setEditing(on) {
+    editing = on;
+    $toggleEdit.textContent = on ? 'Završi uređivanje' : 'Uključi uređivanje';
+    $fields.forEach(f => f.classList.toggle('editing', on));
+    if (!on) {
+      $coords.textContent = '';
+      persistLayout();
+    }
+  }
+
+  function updateCoords(el) {
+    if (!editing || !$coords) return;
+    const rect = el.getBoundingClientRect();
+    const parentRect = document.getElementById('paper').getBoundingClientRect();
+    const top = Math.round(rect.top - parentRect.top);
+    const left = Math.round(rect.left - parentRect.left);
+    $coords.textContent = `Top: ${top}px, Left: ${left}px`;
+  }
+
+  function attachDrag(el) {
+    let pointerId = null;
+    let start = null;
+
+    el.addEventListener('pointerdown', e => {
+      if (!editing) return;
+      pointerId = e.pointerId;
+      start = {
+        x: e.clientX,
+        y: e.clientY,
+        top: parseFloat(el.style.top) || 0,
+        left: parseFloat(el.style.left) || 0
+      };
+      el.setPointerCapture(pointerId);
+      updateCoords(el);
+    });
+
+    el.addEventListener('pointermove', e => {
+      if (!editing || pointerId === null || start === null) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      el.style.top = `${start.top + dy}px`;
+      el.style.left = `${start.left + dx}px`;
+      updateCoords(el);
+    });
+
+    el.addEventListener('pointerup', e => {
+      if (pointerId === null) return;
+      el.releasePointerCapture(pointerId);
+      pointerId = null;
+      start = null;
+      updateCoords(el);
+      persistLayout();
+    });
+  }
+
+  function fillFields(data) {
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || '';
+    };
+
+    setText('uplatioc', data.uplatilac || '');
+    setText('uplatioc_txt', data.uplatilac_tekst || '');
+    setText('primatelj', data.primatelj || '');
+    setText('svrha1', data.svrha || '');
+    setText('svrha2', data.svrha1 || '');
+    setText('iznos', data.iznos_full || data.iznos || '');
+    setText('racunPos', data.racun_posiljaoca || '');
+    setText('racunPrim', data.racun_primatelja || '');
+    setText('porezni', data.broj_poreskog_obv || '');
+    setText('vrstaPrihoda', data.vrsta_prihoda_sifra || '');
+    setText('opcina', data.opcina_sifra || '');
+    setText('budzetska', data.budzetska_org_sifra || '');
+    setText('poziv', data.poziv_na_broj || '');
+    const mjestoDatum = [data.mjesto || '', data.datum || ''].filter(Boolean).join(' ');
+    setText('mjestoDatum', mjestoDatum);
+    setText('napomena', data.napomena || '');
+  }
+
+  $fields.forEach(attachDrag);
+
+  const savedLayout = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(layoutKey) || '{}');
+    } catch (err) {
+      return {};
+    }
+  })();
+
+  applyLayout(savedLayout);
+
+  $toggleEdit.addEventListener('click', () => setEditing(!editing));
+  $resetLayout.addEventListener('click', () => {
+    localStorage.removeItem(layoutKey);
+    applyLayout({});
+  });
+  $printNow.addEventListener('click', () => window.print());
+
+  // Podaci iz URL parametra (ako se otvara direktno)
+  const id = new URLSearchParams(location.search).get('id');
+  if (id) {
+    try {
+      const res = await fetch(`../api/uplatnica_get.php?id=${id}`);
+      const u = await res.json();
+      fillFields({
+        uplatilac: u.uplatilac_naziv,
+        uplatilac_tekst: u.uplatilac_tekst,
+        primatelj: u.primatelj_naziv,
+        svrha: u.svrha,
+        svrha1: u.svrha1,
+        iznos_full: u.iznos && u.valuta ? `${u.iznos} ${u.valuta}` : u.iznos,
+        racun_posiljaoca: u.racun_posiljaoca,
+        racun_primatelja: u.racun_primatelja,
+        broj_poreskog_obv: u.broj_poreskog_obv,
+        vrsta_prihoda_sifra: u.vrsta_prihoda_sifra,
+        opcina_sifra: u.opcina_sifra,
+        budzetska_org_sifra: u.budzetska_org_sifra,
+        poziv_na_broj: u.poziv_na_broj,
+        mjesto: u.mjesto,
+        datum: u.datum,
+        napomena: u.napomena
+      });
+    } catch (err) {
+      console.error('Ne mogu dohvatiti uplatnicu', err);
+    }
+  }
+
+  // Podaci iz modala (postMessage)
+  window.addEventListener('message', e => {
+    const data = e.data;
+    if (!data || data.type !== 'uplatnica-data') return;
+    fillFields(data.payload || {});
+  });
 })();
 </script>
 
