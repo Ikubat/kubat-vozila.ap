@@ -43,48 +43,122 @@ body {
 <div id="racunPrim"    class="field"></div>
 
 <script>
-(async function(){
+(function(){
+  const $uplatioc     = document.getElementById("uplatioc");
+  const $uplatiocTxt  = document.getElementById("uplatioc_txt");
+  const $primatelj    = document.getElementById("primatelj");
+  const $svrha1       = document.getElementById("svrha1");
+  const $svrha2       = document.getElementById("svrha2");
+  const $iznos        = document.getElementById("iznos");
+  const $racunPrim    = document.getElementById("racunPrim");
+
+  let autoPrintDone = false;
+
+  function triggerAutoPrint() {
+    if (autoPrintDone) return;
+    autoPrintDone = true;
+    setTimeout(() => {
+      try {
+        window.print();
+      } catch (err) {
+        console.warn("Automatski print nije uspio", err);
+      }
+    }, 300);
+  }
+
+  function render(u) {
+    if (!u) return;
+
+    $uplatioc.innerText    = u.uplatilac || u.uplatilac_naziv || "";
+    $uplatiocTxt.innerText = u.uplatilac_tekst || "";
+    $primatelj.innerText   = u.primatelj || u.primatelj_naziv || "";
+    $svrha1.innerText      = u.svrha || "";
+    $svrha2.innerText      = u.svrha1 || "";
+
+    const valuta = u.valuta || "KM";
+    const iznos  = typeof u.iznos === "number" ? u.iznos.toFixed(2) : (u.iznos || "");
+    $iznos.innerText     = (iznos ? iznos + " " : "") + valuta;
+    $racunPrim.innerText = u.racun_primatelja || u.racunPrim || "";
+
+    triggerAutoPrint();
+  }
+
+  // Slušaj podatke poslano preko postMessage (print iz modala "nova" / "uredi")
+  let payloadPrimljen = false;
+  const payloadTimer = setTimeout(() => {
+    if (!payloadPrimljen && !parsedId && !storagePayload) {
+      alert("Nedostaje ID uplatnice.");
+    }
+  }, 1500);
+
+  window.addEventListener("message", e => {
+    const data = e.data;
+    if (!data) return;
+
+    if (data.type === "uplatnica-data") {
+      payloadPrimljen = true;
+      clearTimeout(payloadTimer);
+      render(data.payload || data);
+    }
+  });
+
+  // Preuzmi payload iz localStorage ako je poslan preko hash parametra
+  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+  const storageKey = hashParams.get("payload");
+  let storagePayload = null;
+  if (storageKey) {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        storagePayload = JSON.parse(raw);
+        render(storagePayload);
+        payloadPrimljen = true;
+        localStorage.removeItem(storageKey);
+      }
+    } catch (err) {
+      console.warn("Ne mogu pročitati podatke iz localStorage", err);
+    }
+  }
+
   // Dobavi ID iz URL-a (podržava i hash #id=... kao fallback)
   const search = new URLSearchParams(location.search);
-  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
-  const id = parseInt(search.get("id") || hashParams.get("id") || hashParams.get("uplatnica_id"), 10);
-  if (!id) return alert("Nedostaje ID uplatnice.");
+  const parsedId = parseInt(search.get("id") || hashParams.get("id") || hashParams.get("uplatnica_id"), 10);
+  if (!parsedId) return;
 
-  // Odredi bazni API root (/api/ kada smo u /app/)
-  const apiBase = location.pathname.includes("/app/") ? "../api/" : "./api/";
+  (async function(){
+    const id = parsedId;
 
-  // Povuci podatke sa API-a
-  let res;
-  try {
-    res = await fetch(apiBase + "uplatnica_get.php?id=" + encodeURIComponent(id));
-  } catch (err) {
-    return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
-  }
+    // Odredi bazni API root (/api/ kada smo u /app/)
+    const apiBase = location.pathname.includes("/app/") ? "../api/" : "./api/";
 
-  if (!res.ok) {
-    return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
-  }
+    // Povuci podatke sa API-a
+    let res;
+    try {
+      res = await fetch(apiBase + "uplatnica_get.php?id=" + encodeURIComponent(id));
+    } catch (err) {
+      return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
+    }
 
-  let out;
-  try {
-    out = await res.json();
-  } catch (err) {
-    return alert("Neispravan odgovor sa servera (#" + id + ")");
-  }
+    if (!res.ok) {
+      return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
+    }
 
-  const u = out && (out.data || out);
-  if (!u || !u.id) {
-    return alert("Uplatnica nije pronađena (#" + id + ")");
-  }
+    let out;
+    try {
+      out = await res.json();
+    } catch (err) {
+      return alert("Neispravan odgovor sa servera (#" + id + ")");
+    }
 
-  // Popuni polja
-  document.getElementById("uplatioc").innerText     = u.uplatilac_naziv;
-  document.getElementById("uplatioc_txt").innerText = u.uplatilac_tekst;
-  document.getElementById("primatelj").innerText    = u.primatelj_naziv;
-  document.getElementById("svrha1").innerText       = u.svrha;
-  document.getElementById("svrha2").innerText       = u.svrha1;
-  document.getElementById("iznos").innerText        = u.iznos + " " + u.valuta;
-  document.getElementById("racunPrim").innerText    = u.racun_primatelja;
+    const u = out && (out.data || out);
+    if (!u || !u.id) {
+      return alert("Uplatnica nije pronađena (#" + id + ")");
+    }
+
+    if (!payloadPrimljen) {
+      render(u);
+    }
+  })();
 })();
 </script>
 

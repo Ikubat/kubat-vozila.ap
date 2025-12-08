@@ -782,7 +782,31 @@
 
     function openPrintWindow() {
       const payload = buildPrintPayload();
-      const printWin = window.open('uplatnica_print.html', '_blank', 'noopener');
+      const payloadKey = 'uplatnica-print-' + Date.now();
+
+      try {
+        localStorage.setItem(payloadKey, JSON.stringify(payload));
+      } catch (err) {
+        console.warn('Spremanje podataka za print nije uspjelo', err);
+      }
+
+      const urlParams = new URLSearchParams();
+      const currentId = parseInt($id && $id.value, 10);
+      if (currentId) {
+        urlParams.set('id', currentId);
+      }
+
+      const hashParams = new URLSearchParams();
+      hashParams.set('payload', payloadKey);
+
+      const url =
+        basePageRoot +
+        'uplatnica_print.html' +
+        (urlParams.toString() ? '?' + urlParams.toString() : '') +
+        '#' +
+        hashParams.toString();
+
+      const printWin = window.open(url, '_blank', 'noopener');
 
       if (!printWin) {
         alert('Nije moguće otvoriti prozor za print.');
