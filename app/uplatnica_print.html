@@ -9,15 +9,86 @@
   margin: 8mm 10mm 8mm 10mm;
 }
 
+:root {
+  --handle-size: 10px;
+}
+
 body {
   font-family: "Courier New", monospace;
   font-size: 12pt;
   position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+#hint {
+  color: #666;
+  font-size: 12px;
+}
+
+#print-area {
+  position: relative;
+  min-height: 120mm;
+  margin: 10px;
 }
 
 .field {
   position: absolute;
   white-space: nowrap;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: box-shadow 0.2s, background-color 0.2s, border-color 0.2s;
+}
+
+.field .resize-handle {
+  display: none;
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: var(--handle-size);
+  height: var(--handle-size);
+  background: #007bff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+}
+
+body.editing .field {
+  cursor: move;
+  background: rgba(0, 123, 255, 0.08);
+  border: 1px dashed #007bff;
+  box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.2);
+}
+
+body.editing .field .resize-handle {
+  display: block;
+}
+
+@media print {
+  #toolbar {
+    display: none;
+  }
+
+  body.editing .field {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .field .resize-handle {
+    display: none !important;
+  }
 }
 
 /* PRIMJER POZICIJA NA OBRASCU */
@@ -29,39 +100,206 @@ body {
 #iznos         { top: 70mm; left: 140mm; }
 #racunPrim     { top: 85mm; left: 10mm; }
 /* ... i tako dalje za svako polje ... */
-
 </style>
 </head>
 <body>
 
-<div id="uplatioc"     class="field"></div>
-<div id="uplatioc_txt" class="field"></div>
-<div id="primatelj"    class="field"></div>
-<div id="svrha1"       class="field"></div>
-<div id="svrha2"       class="field"></div>
-<div id="iznos"        class="field"></div>
-<div id="racunPrim"    class="field"></div>
+<div id="toolbar">
+  <button id="toggleEdit">Uredi raspored</button>
+  <button id="resetLayout" type="button">Resetuj raspored</button>
+  <button id="printBtn" type="button">Printaj</button>
+  <span id="hint">Povuci polja kada je uključeno uređivanje kako bi namjestio raspored za matični printer. Raspored se pamti u pregledniku.</span>
+</div>
+
+<div id="print-area">
+  <div id="uplatioc"     class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+  <div id="uplatioc_txt" class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+  <div id="primatelj"    class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+  <div id="svrha1"       class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+  <div id="svrha2"       class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+  <div id="iznos"        class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+  <div id="racunPrim"    class="field"><span class="text"></span><span class="resize-handle" aria-hidden="true"></span></div>
+</div>
 
 <script>
-(async function(){
+(function(){
+  const fields = ['uplatioc', 'uplatioc_txt', 'primatelj', 'svrha1', 'svrha2', 'iznos', 'racunPrim'];
+  const storageKey = 'uplatnica_layout_v1';
+  const $toggleEdit = document.getElementById('toggleEdit');
+  const $resetLayout = document.getElementById('resetLayout');
+  const $print = document.getElementById('printBtn');
+  const defaults = {};
 
-  // Dobavi ID iz URL-a
-  const id = new URLSearchParams(location.search).get("id");
-  if (!id) return alert("Nedostaje ID uplatnice.");
+  function captureDefaults() {
+    fields.forEach((id) => {
+      const el = document.getElementById(id);
+      const cs = window.getComputedStyle(el);
+      defaults[id] = {
+        left: parseFloat(cs.left) || 0,
+        top: parseFloat(cs.top) || 0,
+        width: parseFloat(cs.width) || el.offsetWidth || 0,
+        height: parseFloat(cs.height) || el.offsetHeight || 0,
+      };
+    });
+  }
 
-  // Povuci podatke sa API-a
-  const res = await fetch("../api/uplatnica_get.php?id=" + id);
-  const u = await res.json();
+  function loadLayout() {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (err) {
+      console.warn('Ne mogu učitati raspored:', err);
+      return null;
+    }
+  }
 
-  // Popuni polja
-  document.getElementById("uplatioc").innerText     = u.uplatilac_naziv;
-  document.getElementById("uplatioc_txt").innerText = u.uplatilac_tekst;
-  document.getElementById("primatelj").innerText    = u.primatelj_naziv;
-  document.getElementById("svrha1").innerText       = u.svrha;
-  document.getElementById("svrha2").innerText       = u.svrha1;
-  document.getElementById("iznos").innerText        = u.iznos + " " + u.valuta;
-  document.getElementById("racunPrim").innerText    = u.racun_primatelja;
+  function saveLayout(layout) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(layout));
+    } catch (err) {
+      console.warn('Ne mogu sačuvati raspored:', err);
+    }
+  }
 
+  function applyLayout(layout) {
+    fields.forEach((id) => {
+      const el = document.getElementById(id);
+      const cfg = layout[id] || defaults[id];
+      if (!cfg) return;
+      el.style.left = cfg.left + 'px';
+      el.style.top = cfg.top + 'px';
+      if (cfg.width) el.style.width = cfg.width + 'px';
+      if (cfg.height) el.style.height = cfg.height + 'px';
+    });
+  }
+
+  function resetLayout() {
+    localStorage.removeItem(storageKey);
+    applyLayout(defaults);
+  }
+
+  function setEditing(on) {
+    document.body.classList.toggle('editing', on);
+    $toggleEdit.textContent = on ? 'Završi uređivanje' : 'Uredi raspored';
+  }
+
+  function initDragAndResize() {
+    fields.forEach((id) => {
+      const el = document.getElementById(id);
+      const text = el.querySelector('.text');
+
+      let action = null;
+      let startX, startY, startLeft, startTop, startWidth, startHeight;
+
+      const pointerDown = (ev) => {
+        if (!document.body.classList.contains('editing')) return;
+        action = ev.target.classList.contains('resize-handle') ? 'resize' : 'drag';
+        startX = ev.clientX;
+        startY = ev.clientY;
+        const rect = el.getBoundingClientRect();
+        const parentRect = el.parentElement.getBoundingClientRect();
+        startLeft = rect.left - parentRect.left;
+        startTop = rect.top - parentRect.top;
+        startWidth = rect.width;
+        startHeight = rect.height;
+        ev.preventDefault();
+        window.addEventListener('pointermove', pointerMove);
+        window.addEventListener('pointerup', pointerUp);
+      };
+
+      const pointerMove = (ev) => {
+        if (!action) return;
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        if (action === 'drag') {
+          el.style.left = startLeft + dx + 'px';
+          el.style.top = startTop + dy + 'px';
+        } else {
+          el.style.width = Math.max(40, startWidth + dx) + 'px';
+          el.style.height = Math.max(16, startHeight + dy) + 'px';
+        }
+      };
+
+      const pointerUp = () => {
+        if (!action) return;
+        action = null;
+        window.removeEventListener('pointermove', pointerMove);
+        window.removeEventListener('pointerup', pointerUp);
+        const layout = {};
+        const baseRect = el.parentElement.getBoundingClientRect();
+        fields.forEach((fid) => {
+          const fel = document.getElementById(fid);
+          const rect = fel.getBoundingClientRect();
+          layout[fid] = {
+            left: rect.left - baseRect.left,
+            top: rect.top - baseRect.top,
+            width: rect.width,
+            height: rect.height,
+          };
+        });
+        saveLayout(layout);
+      };
+
+      el.addEventListener('pointerdown', pointerDown);
+      text.addEventListener('pointerdown', pointerDown);
+      el.querySelector('.resize-handle').addEventListener('pointerdown', pointerDown);
+    });
+  }
+
+  async function loadData() {
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) return alert('Nedostaje ID uplatnice.');
+
+    try {
+      const res = await fetch('../api/uplatnica_get.php?id=' + encodeURIComponent(id));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      const u = await res.json();
+      if (!u || u.ok === false) {
+        throw new Error(u && u.error ? u.error : 'Greška pri dohvatu uplatnice.');
+      }
+
+      const map = {
+        uplatioc: u.uplatilac_naziv || '',
+        uplatioc_txt: u.uplatilac_tekst || '',
+        primatelj: u.primatelj_naziv || '',
+        svrha1: u.svrha || '',
+        svrha2: u.svrha1 || '',
+        iznos: (u.iznos ? u.iznos + ' ' : '') + (u.valuta || ''),
+        racunPrim: u.racun_primatelja || '',
+      };
+
+      Object.entries(map).forEach(([id, val]) => {
+        const el = document.querySelector('#' + id + ' .text');
+        if (el) el.textContent = val || '';
+      });
+    } catch (err) {
+      alert(err && err.message ? err.message : 'Greška pri učitavanju uplatnice.');
+    }
+  }
+
+  function init() {
+    captureDefaults();
+    applyLayout(loadLayout() || defaults);
+    initDragAndResize();
+    loadData();
+
+    $toggleEdit.addEventListener('click', () => {
+      const next = !document.body.classList.contains('editing');
+      setEditing(next);
+    });
+
+    $resetLayout.addEventListener('click', () => {
+      resetLayout();
+    });
+
+    $print.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
 
