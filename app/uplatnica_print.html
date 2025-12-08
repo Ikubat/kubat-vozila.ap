@@ -474,26 +474,39 @@
   function render(u) {
     if (!u) return;
 
-    $uplatioc.innerText    = u.uplatilac || u.uplatilac_naziv || '';
-    $uplatiocTxt.innerText = u.uplatilac_tekst || '';
-    $primatelj.innerText   = u.primatelj || u.primatelj_naziv || '';
-    $svrha1.innerText      = u.svrha || '';
-    $svrha2.innerText      = u.svrha1 || '';
+    const pick = (...vals) => {
+      for (const v of vals) {
+        if (v === null || v === undefined) continue;
+        const s = typeof v === 'string' ? v.trim() : v;
+        if (s !== '' && s !== null && s !== undefined) return s;
+      }
+      return '';
+    };
 
-    const valuta = u.valuta || 'KM';
-    const iznos  = typeof u.iznos === 'number' ? u.iznos.toFixed(2) : (u.iznos || '');
-    const iznosFull = u.iznos_full || u.iznosFull || '';
+    $uplatioc.innerText    = pick(u.uplatilac, u.uplatilac_naziv, u.uplatilacNaziv);
+    $uplatiocTxt.innerText = pick(u.uplatilac_tekst, u.uplatilacTekst);
+    $primatelj.innerText   = pick(u.primatelj, u.primatelj_naziv, u.primateljNaziv);
+    $svrha1.innerText      = pick(u.svrha, u.svrha_uplate, u.svrhaUplate);
+    $svrha2.innerText      = pick(u.svrha1, u.svrha_2, u.svrha2);
+
+    const valuta = pick(u.valuta, 'KM') || 'KM';
+    const iznosVal = pick(u.iznos, u.iznos_value, u.iznosValue);
+    const iznosNum = typeof iznosVal === 'number'
+      ? iznosVal
+      : (iznosVal ? parseFloat(String(iznosVal).replace(',', '.')) : NaN);
+    const iznos = Number.isFinite(iznosNum) ? iznosNum.toFixed(2) : pick(iznosVal, '');
+    const iznosFull = pick(u.iznos_full, u.iznosFull);
     $iznos.innerText     = iznosFull || ((iznos ? iznos + ' ' : '') + valuta);
-    $racunPrim.innerText = u.racun_primatelja || u.racunPrim || '';
-    $racunPos.innerText  = u.racun_posiljaoca || u.racunPos || '';
-    $pozivNaBroj.innerText = u.poziv_na_broj || u.pozivNaBroj || '';
-    $brojPoreski.innerText = u.broj_poreskog_obv || u.brojPoreski || '';
-    $vrstaPrihoda.innerText = u.vrsta_prihoda_sifra || u.vrstaPrihoda || '';
-    $opcina.innerText = u.opcina_sifra || u.opcina || '';
-    $budzetska.innerText = u.budzetska_org_sifra || u.budzetska || '';
-    $mjesto.innerText = u.mjesto || '';
-    $datum.innerText = u.datum || '';
-    $napomena.innerText = u.napomena || '';
+    $racunPrim.innerText = pick(u.racun_primatelja, u.racunPrim, u.racun_primaoca);
+    $racunPos.innerText  = pick(u.racun_posiljaoca, u.racunPos, u.racun_platioca);
+    $pozivNaBroj.innerText = pick(u.poziv_na_broj, u.pozivNaBroj, u.poziv);
+    $brojPoreski.innerText = pick(u.broj_poreskog_obv, u.brojPoreski, u.porezni_broj);
+    $vrstaPrihoda.innerText = pick(u.vrsta_prihoda_sifra, u.vrstaPrihoda);
+    $opcina.innerText = pick(u.opcina_sifra, u.opcina);
+    $budzetska.innerText = pick(u.budzetska_org_sifra, u.budzetska);
+    $mjesto.innerText = pick(u.mjesto, u.mjesto_uplate, u.mjestoUplate);
+    $datum.innerText = pick(u.datum, u.datum_uplate, u.datumUplate);
+    $napomena.innerText = pick(u.napomena);
   }
 
   applyLayout();
