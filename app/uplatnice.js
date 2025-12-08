@@ -69,21 +69,8 @@
     const $poziv         = document.getElementById('u_poziv');
     const $napomena      = document.getElementById('u_napomena');
 
-        // --- PRINT elementi ---
+    // --- PRINT elementi ---
     const $btnPrint      = document.getElementById('u_print');
-    const $pUplatilac    = document.getElementById('p_uplatilac');
-    const $pSvrha1       = document.getElementById('p_svrha1');
-    const $pSvrha2       = document.getElementById('p_svrha2');
-    const $pPrimatelj    = document.getElementById('p_primatelj');
-    const $pMjestoDatum  = document.getElementById('p_mjesto_datum');
-    const $pIznos        = document.getElementById('p_iznos');
-    const $pRacunPos     = document.getElementById('p_racun_pos');
-    const $pRacunPrim    = document.getElementById('p_racun_prim');
-    const $pPorezni      = document.getElementById('p_porezni');
-    const $pVrstaPrihoda = document.getElementById('p_vrsta_prihoda');
-    const $pOpcina       = document.getElementById('p_opcina');
-    const $pBudzetska    = document.getElementById('p_budzetska');
-    const $pPoziv        = document.getElementById('p_poziv');
 
     const state = {
       q: '',
@@ -154,9 +141,7 @@
       throw lastErr || new Error('Nepoznata greška pri fetchu.');
     }
 
-        function fillPrintSlip() {
-      if (!$pUplatilac) return; // sigurnost
-
+    function buildPrintPayload() {
       const uplatilacTekst =
         ($uplatilacTekst && $uplatilacTekst.value.trim()) ||
         $uplatilacLabel.value.trim();
@@ -165,19 +150,32 @@
         ($primateljTekst && $primateljTekst.value.trim()) ||
         $primateljLabel.value.trim();
 
-      $pUplatilac.textContent    = uplatilacTekst;
-      $pSvrha1.textContent       = $svrha.value.trim();
-      $pSvrha2.textContent       = $svrha1.value.trim();
-      $pPrimatelj.textContent    = primateljTekst;
-      $pMjestoDatum.textContent  = ($mjesto.value.trim() + ' ' + ($datum.value || '')).trim();
-      $pIznos.textContent        = $iznos.value ? (parseFloat($iznos.value).toFixed(2) + ' ' + ($valuta.value || 'KM')) : '';
-      $pRacunPos.textContent     = $racunPos.value.trim();
-      $pRacunPrim.textContent    = $racunPrim.value.trim();
-      $pPorezni.textContent      = $brojPorezni.value.trim();
-      $pVrstaPrihoda.textContent = $vrstaPrihoda.value.trim();
-      $pOpcina.textContent       = $opcina.value.trim();
-      $pBudzetska.textContent    = $budzetska.value.trim();
-      $pPoziv.textContent        = $poziv.value.trim();
+      const valuta = $valuta.value.trim() || 'KM';
+      const iznosFull = $iznos.value
+        ? `${parseFloat($iznos.value).toFixed(2)} ${valuta}`
+        : '';
+
+      return {
+        uplatilac: uplatilacTekst,
+        uplatilac_tekst: $uplatilacTekst ? $uplatilacTekst.value.trim() : '',
+        primatelj: primateljTekst,
+        svrha: $svrha.value.trim(),
+        svrha1: $svrha1.value.trim(),
+        mjesto: $mjesto.value.trim(),
+        datum: $datum.value || '',
+        iznos: $iznos.value ? parseFloat($iznos.value).toFixed(2) : '',
+        valuta,
+        iznos_full: iznosFull,
+        racun_posiljaoca: $racunPos.value.trim(),
+        racun_primatelja: $racunPrim.value.trim(),
+        broj_poreskog_obv: $brojPorezni.value.trim(),
+        vrsta_prihoda_sifra: $vrstaPrihoda.value.trim(),
+        opcina_sifra: $opcina.value.trim(),
+        budzetska_org_sifra: $budzetska.value.trim(),
+        poziv_na_broj: $poziv.value.trim(),
+        napomena: $napomena.value.trim(),
+        valuta_label: valuta
+      };
     }
 
     // ---- učitaj partnere (za selecte) ----
@@ -781,6 +779,44 @@
 
     $save.addEventListener('click', save);
 
+    function openPrintWindow() {
+      const payload = buildPrintPayload();
+      const printWin = window.open('uplatnica_print.html', '_blank', 'noopener');
+
+      if (!printWin) {
+        alert('Nije moguće otvoriti prozor za print.');
+        return;
+      }
+
+      const sendPayload = () => {
+        try {
+          printWin.postMessage({ type: 'uplatnica-data', payload }, '*');
+        } catch (err) {
+          console.warn('Slanje podataka za print nije uspjelo', err);
+        }
+      };
+
+      let attempts = 0;
+      const timer = setInterval(() => {
+        if (printWin.closed || attempts > 15) {
+          clearInterval(timer);
+          return;
+        }
+        attempts += 1;
+        sendPayload();
+
+        if (printWin.document && printWin.document.readyState === 'complete') {
+          clearInterval(timer);
+        }
+      }, 200);
+
+      sendPayload();
+    }
+
+    if ($btnPrint) {
+      $btnPrint.addEventListener('click', openPrintWindow);
+    }
+
     // ---- delegacija klikova na listu (edit / delete) ----
     document.addEventListener('click', async e => {
       const row = e.target.closest('.row[data-id]');
@@ -790,18 +826,6 @@
         openEdit(row);
         return;
       }
-
-          async function doPrint() {
-      // možeš, ako želiš, prvo auto-spremiti pa printati
-      // await save();
-
-      fillPrintSlip();
-      window.print();
-    }
-
-    if ($btnPrint) {
-      $btnPrint.addEventListener('click', doPrint);
-    }
 
       if (e.target.closest('.del')) {
         const id = parseInt(row.dataset.id, 10);
