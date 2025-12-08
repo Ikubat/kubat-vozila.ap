@@ -7,7 +7,7 @@
 <style>
   :root {
     --sheet-width-mm: 210;
-    --sheet-height-mm: 120;
+    --sheet-height-mm: 150;
   }
 
   @page {
@@ -206,6 +206,15 @@
       <div id="svrha2"       class="field" data-field="svrha2"></div>
       <div id="iznos"        class="field" data-field="iznos"></div>
       <div id="racunPrim"    class="field" data-field="racunPrim"></div>
+      <div id="racunPos"     class="field" data-field="racunPos"></div>
+      <div id="pozivNaBroj"  class="field" data-field="pozivNaBroj"></div>
+      <div id="brojPoreski"  class="field" data-field="brojPoreski"></div>
+      <div id="vrstaPrihoda" class="field" data-field="vrstaPrihoda"></div>
+      <div id="opcina"       class="field" data-field="opcina"></div>
+      <div id="budzetska"    class="field" data-field="budzetska"></div>
+      <div id="mjesto"       class="field" data-field="mjesto"></div>
+      <div id="datum"        class="field" data-field="datum"></div>
+      <div id="napomena"     class="field" data-field="napomena"></div>
     </div>
   </div>
 
@@ -263,16 +272,25 @@
   const $printNow     = document.getElementById('printNow');
 
   const defaultLayout = {
-    uplatioc:    { top: 20, left: 10, fontSize: 12, width: 90, weight: 'normal' },
-    uplatioc_txt:{ top: 25, left: 10, fontSize: 10.5, width: 90, weight: 'normal' },
-    primatelj:   { top: 40, left: 10, fontSize: 12, width: 90, weight: 'bold' },
-    svrha1:      { top: 55, left: 10, fontSize: 11, width: 120, weight: 'normal' },
-    svrha2:      { top: 60, left: 10, fontSize: 11, width: 120, weight: 'normal' },
+    uplatioc:    { top: 18, left: 10, fontSize: 12, width: 90, weight: 'normal' },
+    uplatioc_txt:{ top: 24, left: 10, fontSize: 10.5, width: 90, weight: 'normal' },
+    primatelj:   { top: 38, left: 10, fontSize: 12, width: 90, weight: 'bold' },
+    svrha1:      { top: 52, left: 10, fontSize: 11, width: 120, weight: 'normal' },
+    svrha2:      { top: 57, left: 10, fontSize: 11, width: 120, weight: 'normal' },
     iznos:       { top: 70, left: 140, fontSize: 12, width: 60, weight: 'bold' },
-    racunPrim:   { top: 85, left: 10, fontSize: 11, width: 120, weight: 'normal' }
+    racunPrim:   { top: 84, left: 10, fontSize: 11, width: 120, weight: 'normal' },
+    racunPos:    { top: 96, left: 10, fontSize: 11, width: 120, weight: 'normal' },
+    pozivNaBroj: { top: 84, left: 140, fontSize: 11, width: 55, weight: 'normal' },
+    brojPoreski: { top: 96, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
+    vrstaPrihoda:{ top: 106, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
+    opcina:      { top: 116, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
+    budzetska:   { top: 126, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
+    mjesto:      { top: 110, left: 10, fontSize: 11, width: 60, weight: 'normal' },
+    datum:       { top: 110, left: 75, fontSize: 11, width: 40, weight: 'normal' },
+    napomena:    { top: 130, left: 10, fontSize: 10.5, width: 180, weight: 'normal' }
   };
 
-  const layoutKey = 'uplatnica-print-layout-v1';
+  const layoutKey = 'uplatnica-print-layout-v2';
   let layout = loadLayout();
   let selectedField = 'uplatioc';
   let dragState = null;
@@ -310,7 +328,16 @@
       svrha1: 'Svrha (prvi red)',
       svrha2: 'Svrha (drugi red)',
       iznos: 'Iznos',
-      racunPrim: 'Račun primatelja'
+      racunPrim: 'Račun primatelja',
+      racunPos: 'Račun pošiljaoca',
+      pozivNaBroj: 'Poziv na broj',
+      brojPoreski: 'Broj poreskog obveznika',
+      vrstaPrihoda: 'Vrsta prihoda (šifra)',
+      opcina: 'Općina (šifra)',
+      budzetska: 'Budžetska org. (šifra)',
+      mjesto: 'Mjesto',
+      datum: 'Datum',
+      napomena: 'Napomena'
     };
     return labels[name] || name;
   }
@@ -434,6 +461,15 @@
   const $svrha2       = document.getElementById('svrha2');
   const $iznos        = document.getElementById('iznos');
   const $racunPrim    = document.getElementById('racunPrim');
+  const $racunPos     = document.getElementById('racunPos');
+  const $pozivNaBroj  = document.getElementById('pozivNaBroj');
+  const $brojPoreski  = document.getElementById('brojPoreski');
+  const $vrstaPrihoda = document.getElementById('vrstaPrihoda');
+  const $opcina       = document.getElementById('opcina');
+  const $budzetska    = document.getElementById('budzetska');
+  const $mjesto       = document.getElementById('mjesto');
+  const $datum        = document.getElementById('datum');
+  const $napomena     = document.getElementById('napomena');
 
   function render(u) {
     if (!u) return;
@@ -446,8 +482,18 @@
 
     const valuta = u.valuta || 'KM';
     const iznos  = typeof u.iznos === 'number' ? u.iznos.toFixed(2) : (u.iznos || '');
-    $iznos.innerText     = (iznos ? iznos + ' ' : '') + valuta;
+    const iznosFull = u.iznos_full || u.iznosFull || '';
+    $iznos.innerText     = iznosFull || ((iznos ? iznos + ' ' : '') + valuta);
     $racunPrim.innerText = u.racun_primatelja || u.racunPrim || '';
+    $racunPos.innerText  = u.racun_posiljaoca || u.racunPos || '';
+    $pozivNaBroj.innerText = u.poziv_na_broj || u.pozivNaBroj || '';
+    $brojPoreski.innerText = u.broj_poreskog_obv || u.brojPoreski || '';
+    $vrstaPrihoda.innerText = u.vrsta_prihoda_sifra || u.vrstaPrihoda || '';
+    $opcina.innerText = u.opcina_sifra || u.opcina || '';
+    $budzetska.innerText = u.budzetska_org_sifra || u.budzetska || '';
+    $mjesto.innerText = u.mjesto || '';
+    $datum.innerText = u.datum || '';
+    $napomena.innerText = u.napomena || '';
   }
 
   applyLayout();

@@ -7,8 +7,9 @@
     const baseRoots = location.pathname.includes('/app/')
       ? ['../api/', '../']
       : ['./api/', './'];
-    // korištenje html baze (bez api/) za otvaranje novih prozora
-    const basePageRoot = baseRoots[0].replace(/api\/?$/, '');
+
+    // Bazni path za otvaranje HTML stranica (isti direktorij kao trenutna strana)
+    const basePageRoot = new URL('.', location.href).href;
 
     const API = {
       list:    'uplatnica_list.php',
