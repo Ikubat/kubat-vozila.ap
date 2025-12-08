@@ -44,14 +44,38 @@ body {
 
 <script>
 (async function(){
-
-  // Dobavi ID iz URL-a
-  const id = new URLSearchParams(location.search).get("id");
+  // Dobavi ID iz URL-a (podržava i hash #id=... kao fallback)
+  const search = new URLSearchParams(location.search);
+  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+  const id = parseInt(search.get("id") || hashParams.get("id") || hashParams.get("uplatnica_id"), 10);
   if (!id) return alert("Nedostaje ID uplatnice.");
 
+  // Odredi bazni API root (/api/ kada smo u /app/)
+  const apiBase = location.pathname.includes("/app/") ? "../api/" : "./api/";
+
   // Povuci podatke sa API-a
-  const res = await fetch("../api/uplatnica_get.php?id=" + id);
-  const u = await res.json();
+  let res;
+  try {
+    res = await fetch(apiBase + "uplatnica_get.php?id=" + encodeURIComponent(id));
+  } catch (err) {
+    return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
+  }
+
+  if (!res.ok) {
+    return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
+  }
+
+  let out;
+  try {
+    out = await res.json();
+  } catch (err) {
+    return alert("Neispravan odgovor sa servera (#" + id + ")");
+  }
+
+  const u = out && (out.data || out);
+  if (!u || !u.id) {
+    return alert("Uplatnica nije pronađena (#" + id + ")");
+  }
 
   // Popuni polja
   document.getElementById("uplatioc").innerText     = u.uplatilac_naziv;
@@ -61,7 +85,6 @@ body {
   document.getElementById("svrha2").innerText       = u.svrha1;
   document.getElementById("iznos").innerText        = u.iznos + " " + u.valuta;
   document.getElementById("racunPrim").innerText    = u.racun_primatelja;
-
 })();
 </script>
 
