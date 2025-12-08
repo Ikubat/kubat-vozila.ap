@@ -5,82 +5,466 @@
 <title>Ispis uplatnice</title>
 
 <style>
-@page {
-  margin: 8mm 10mm 8mm 10mm;
-}
+  :root {
+    --sheet-width-mm: 210;
+    --sheet-height-mm: 120;
+  }
 
-body {
-  font-family: "Courier New", monospace;
-  font-size: 12pt;
-  position: relative;
-}
+  @page {
+    margin: 8mm 10mm 8mm 10mm;
+  }
 
-.field {
-  position: absolute;
-  white-space: nowrap;
-}
+  * { box-sizing: border-box; }
 
-/* PRIMJER POZICIJA NA OBRASCU */
-#uplatioc      { top: 20mm; left: 10mm; }
-#uplatioc_txt  { top: 25mm; left: 10mm; }
-#primatelj     { top: 40mm; left: 10mm; }
-#svrha1        { top: 55mm; left: 10mm; }
-#svrha2        { top: 60mm; left: 10mm; }
-#iznos         { top: 70mm; left: 140mm; }
-#racunPrim     { top: 85mm; left: 10mm; }
-/* ... i tako dalje za svako polje ... */
+  body {
+    font-family: "Courier New", monospace;
+    font-size: 12pt;
+    margin: 0;
+    color: #1f2937;
+    background: #f5f5f5;
+  }
 
+  #wrap {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    align-items: start;
+  }
+
+  #toolbar {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  #toolbar h1 {
+    margin: 0 0 8px;
+    font-size: 18px;
+  }
+
+  #toolbar p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #4b5563;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    gap: 6px;
+    color: #111827;
+  }
+
+  input, select {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  input[type="number"] {
+    width: 100%;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #9ca3af;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  button.primary {
+    background: #2563eb;
+    color: #fff;
+    border-color: #1d4ed8;
+  }
+
+  button.danger {
+    background: #dc2626;
+    color: #fff;
+    border-color: #b91c1c;
+  }
+
+  #previewWrap {
+    background: #e5e7eb;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  #preview {
+    position: relative;
+    width: calc(var(--sheet-width-mm) * 1mm);
+    height: calc(var(--sheet-height-mm) * 1mm);
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    overflow: hidden;
+  }
+
+  #preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px dashed rgba(0,0,0,0.05);
+    background-image: linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 10mm 10mm;
+  }
+
+  .field {
+    position: absolute;
+    white-space: pre-wrap;
+    cursor: move;
+    border-radius: 4px;
+    padding: 2px 4px;
+    max-width: 120mm;
+    line-height: 1.2;
+  }
+
+  .field.selected {
+    outline: 1px dashed #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+  }
+
+  .field .hint {
+    display: none;
+  }
+
+  .ghost {
+    position: absolute;
+    border: 1px dashed #9ca3af;
+    background: rgba(148, 163, 184, 0.12);
+    pointer-events: none;
+  }
+
+  @media print {
+    #wrap, #toolbar, #previewWrap {
+      all: unset;
+    }
+
+    #wrap {
+      margin: 0;
+      padding: 0;
+    }
+
+    #toolbar {
+      display: none;
+    }
+
+    body {
+      background: #fff;
+    }
+
+    #previewWrap {
+      padding: 0;
+      background: transparent;
+    }
+
+    #preview {
+      border: none;
+    }
+
+    .field {
+      padding: 0;
+      outline: none;
+      background: transparent;
+      cursor: default;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div id="uplatioc"     class="field"></div>
-<div id="uplatioc_txt" class="field"></div>
-<div id="primatelj"    class="field"></div>
-<div id="svrha1"       class="field"></div>
-<div id="svrha2"       class="field"></div>
-<div id="iznos"        class="field"></div>
-<div id="racunPrim"    class="field"></div>
+<div id="wrap">
+  <div id="previewWrap">
+    <div id="preview">
+      <div id="uplatioc"     class="field" data-field="uplatioc"></div>
+      <div id="uplatioc_txt" class="field" data-field="uplatioc_txt"></div>
+      <div id="primatelj"    class="field" data-field="primatelj"></div>
+      <div id="svrha1"       class="field" data-field="svrha1"></div>
+      <div id="svrha2"       class="field" data-field="svrha2"></div>
+      <div id="iznos"        class="field" data-field="iznos"></div>
+      <div id="racunPrim"    class="field" data-field="racunPrim"></div>
+    </div>
+  </div>
+
+  <div id="toolbar">
+    <h1>Podešavanje ispisa uplatnice</h1>
+    <p>Povuci polje na željenu poziciju ili koristi unos u milimetrima. Podešena širina i veličina teksta pomažu da sadržaj stane na obrazac.</p>
+
+    <div class="controls">
+      <label>
+        Polje
+        <select id="fieldSelect"></select>
+      </label>
+      <label>
+        Veličina teksta (pt)
+        <input id="fontSize" type="number" min="6" max="24" step="0.5">
+      </label>
+      <label>
+        Širina (mm)
+        <input id="width" type="number" min="10" max="160" step="1">
+      </label>
+      <label>
+        Gornja margina (mm)
+        <input id="top" type="number" min="0" max="200" step="0.5">
+      </label>
+      <label>
+        Lijeva margina (mm)
+        <input id="left" type="number" min="0" max="200" step="0.5">
+      </label>
+      <label>
+        Deblji tekst
+        <select id="weight">
+          <option value="normal">Normal</option>
+          <option value="bold">Bold</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button id="resetLayout" class="danger" type="button">Vrati početne pozicije</button>
+      <button id="printNow" class="primary" type="button">Print</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
-  const $uplatioc     = document.getElementById("uplatioc");
-  const $uplatiocTxt  = document.getElementById("uplatioc_txt");
-  const $primatelj    = document.getElementById("primatelj");
-  const $svrha1       = document.getElementById("svrha1");
-  const $svrha2       = document.getElementById("svrha2");
-  const $iznos        = document.getElementById("iznos");
-  const $racunPrim    = document.getElementById("racunPrim");
-  const $mjestoUplate = document.getElementById("mjestoUplate ");
+  const $preview      = document.getElementById('preview');
+  const $fieldSelect  = document.getElementById('fieldSelect');
+  const $fontSize     = document.getElementById('fontSize');
+  const $width        = document.getElementById('width');
+  const $top          = document.getElementById('top');
+  const $left         = document.getElementById('left');
+  const $weight       = document.getElementById('weight');
+  const $reset        = document.getElementById('resetLayout');
+  const $printNow     = document.getElementById('printNow');
+
+  const defaultLayout = {
+    uplatioc:    { top: 20, left: 10, fontSize: 12, width: 90, weight: 'normal' },
+    uplatioc_txt:{ top: 25, left: 10, fontSize: 10.5, width: 90, weight: 'normal' },
+    primatelj:   { top: 40, left: 10, fontSize: 12, width: 90, weight: 'bold' },
+    svrha1:      { top: 55, left: 10, fontSize: 11, width: 120, weight: 'normal' },
+    svrha2:      { top: 60, left: 10, fontSize: 11, width: 120, weight: 'normal' },
+    iznos:       { top: 70, left: 140, fontSize: 12, width: 60, weight: 'bold' },
+    racunPrim:   { top: 85, left: 10, fontSize: 11, width: 120, weight: 'normal' }
+  };
+
+  const layoutKey = 'uplatnica-print-layout-v1';
+  let layout = loadLayout();
+  let selectedField = 'uplatioc';
+  let dragState = null;
+
+  const fields = {};
+  document.querySelectorAll('.field').forEach(el => {
+    const name = el.dataset.field;
+    if (!name) return;
+    fields[name] = el;
+    el.addEventListener('mousedown', e => startDrag(e, name));
+    el.addEventListener('click', () => selectField(name));
+  });
+
+  Object.keys(fields).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = labelFor(name);
+    $fieldSelect.appendChild(opt);
+  });
+
+  $fieldSelect.addEventListener('change', e => selectField(e.target.value));
+  $fontSize.addEventListener('input', () => updateField('fontSize', parseFloat($fontSize.value)));
+  $width.addEventListener('input', () => updateField('width', parseFloat($width.value)));
+  $top.addEventListener('input', () => updateField('top', parseFloat($top.value)));
+  $left.addEventListener('input', () => updateField('left', parseFloat($left.value)));
+  $weight.addEventListener('change', () => updateField('weight', $weight.value));
+  $reset.addEventListener('click', () => { layout = JSON.parse(JSON.stringify(defaultLayout)); applyLayout(); saveLayout(); });
+  $printNow.addEventListener('click', () => window.print());
+
+  function labelFor(name) {
+    const labels = {
+      uplatioc: 'Uplatilac',
+      uplatioc_txt: 'Uplatilac – dodatni tekst',
+      primatelj: 'Primatelj',
+      svrha1: 'Svrha (prvi red)',
+      svrha2: 'Svrha (drugi red)',
+      iznos: 'Iznos',
+      racunPrim: 'Račun primatelja'
+    };
+    return labels[name] || name;
+  }
+
+  function loadLayout() {
+    try {
+      const raw = localStorage.getItem(layoutKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { ...defaultLayout, ...parsed };
+      }
+    } catch (err) {
+      console.warn('Ne mogu učitati spremljene pozicije', err);
+    }
+    return JSON.parse(JSON.stringify(defaultLayout));
+  }
+
+  function saveLayout() {
+    try {
+      localStorage.setItem(layoutKey, JSON.stringify(layout));
+    } catch (err) {
+      console.warn('Spremanje izgleda nije uspjelo', err);
+    }
+  }
+
+  function pxToMm(px) {
+    const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheet-width-mm'));
+    const pxPerMm = $preview.getBoundingClientRect().width / mm;
+    return px / pxPerMm;
+  }
+
+  function applyLayout() {
+    Object.keys(fields).forEach(name => {
+      const cfg = layout[name] || defaultLayout[name];
+      const el = fields[name];
+      if (!cfg || !el) return;
+      el.style.top = cfg.top + 'mm';
+      el.style.left = cfg.left + 'mm';
+      el.style.fontSize = (cfg.fontSize || 12) + 'pt';
+      el.style.width = (cfg.width || 80) + 'mm';
+      el.style.fontWeight = cfg.weight || 'normal';
+    });
+    refreshInputs();
+  }
+
+  function refreshInputs() {
+    const cfg = layout[selectedField];
+    $fieldSelect.value = selectedField;
+    $fontSize.value = cfg.fontSize;
+    $width.value = cfg.width;
+    $top.value = cfg.top;
+    $left.value = cfg.left;
+    $weight.value = cfg.weight;
+    highlightSelected();
+  }
+
+  function selectField(name) {
+    if (!fields[name]) return;
+    selectedField = name;
+    refreshInputs();
+  }
+
+  function updateField(key, value) {
+    if (!(selectedField in layout)) return;
+    if (Number.isFinite(value) || typeof value === 'string') {
+      layout[selectedField][key] = value;
+      applyLayout();
+      saveLayout();
+    }
+  }
+
+  function highlightSelected() {
+    Object.keys(fields).forEach(name => {
+      fields[name].classList.toggle('selected', name === selectedField);
+    });
+  }
+
+  function startDrag(e, name) {
+    selectField(name);
+    const rect = $preview.getBoundingClientRect();
+    const elRect = fields[name].getBoundingClientRect();
+    dragState = {
+      name,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - elRect.left,
+      offsetY: e.clientY - elRect.top,
+      previewLeft: rect.left,
+      previewTop: rect.top
+    };
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+    e.preventDefault();
+  }
+
+  function onDrag(e) {
+    if (!dragState) return;
+    const { name, previewLeft, previewTop, offsetX, offsetY } = dragState;
+    const previewRect = $preview.getBoundingClientRect();
+    const x = e.clientX - previewLeft - offsetX;
+    const y = e.clientY - previewTop - offsetY;
+    const clampedX = Math.max(0, Math.min(x, previewRect.width - fields[name].offsetWidth));
+    const clampedY = Math.max(0, Math.min(y, previewRect.height - fields[name].offsetHeight));
+    layout[name].left = parseFloat(pxToMm(clampedX).toFixed(1));
+    layout[name].top  = parseFloat(pxToMm(clampedY).toFixed(1));
+    applyLayout();
+  }
+
+  function endDrag() {
+    dragState = null;
+    saveLayout();
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', endDrag);
+  }
+
+  // --- RENDER PODATAKA ---
+  const $uplatioc     = document.getElementById('uplatioc');
+  const $uplatiocTxt  = document.getElementById('uplatioc_txt');
+  const $primatelj    = document.getElementById('primatelj');
+  const $svrha1       = document.getElementById('svrha1');
+  const $svrha2       = document.getElementById('svrha2');
+  const $iznos        = document.getElementById('iznos');
+  const $racunPrim    = document.getElementById('racunPrim');
 
   function render(u) {
     if (!u) return;
 
-    $uplatioc.innerText    = u.uplatilac || u.uplatilac_naziv || "";
-    $uplatiocTxt.innerText = u.uplatilac_tekst || "";
-    $primatelj.innerText   = u.primatelj || u.primatelj_naziv || "";
-    $svrha1.innerText      = u.svrha || "";
-    $svrha2.innerText      = u.svrha1 || "";
+    $uplatioc.innerText    = u.uplatilac || u.uplatilac_naziv || '';
+    $uplatiocTxt.innerText = u.uplatilac_tekst || '';
+    $primatelj.innerText   = u.primatelj || u.primatelj_naziv || '';
+    $svrha1.innerText      = u.svrha || '';
+    $svrha2.innerText      = u.svrha1 || '';
 
-    const valuta = u.valuta || "KM";
-    const iznos  = typeof u.iznos === "number" ? u.iznos.toFixed(2) : (u.iznos || "");
-    $iznos.innerText     = (iznos ? iznos + " " : "") + valuta;
-    $racunPrim.innerText = u.racun_primatelja || u.racunPrim || "";
+    const valuta = u.valuta || 'KM';
+    const iznos  = typeof u.iznos === 'number' ? u.iznos.toFixed(2) : (u.iznos || '');
+    $iznos.innerText     = (iznos ? iznos + ' ' : '') + valuta;
+    $racunPrim.innerText = u.racun_primatelja || u.racunPrim || '';
   }
+
+  applyLayout();
 
   // Slušaj podatke poslano preko postMessage (print iz modala "nova" / "uredi")
   let payloadPrimljen = false;
   const payloadTimer = setTimeout(() => {
     if (!payloadPrimljen && !parsedId && !storagePayload) {
-      alert("Nedostaje ID uplatnice.");
+      alert('Nedostaje ID uplatnice.');
     }
   }, 1500);
 
-  window.addEventListener("message", e => {
+  window.addEventListener('message', e => {
     const data = e.data;
     if (!data) return;
 
-    if (data.type === "uplatnica-data") {
+    if (data.type === 'uplatnica-data') {
       payloadPrimljen = true;
       clearTimeout(payloadTimer);
       render(data.payload || data);
@@ -88,8 +472,8 @@ body {
   });
 
   // Preuzmi payload iz localStorage ako je poslan preko hash parametra
-  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
-  const storageKey = hashParams.get("payload");
+  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const storageKey = hashParams.get('payload');
   let storagePayload = null;
   if (storageKey) {
     try {
@@ -101,43 +485,43 @@ body {
         localStorage.removeItem(storageKey);
       }
     } catch (err) {
-      console.warn("Ne mogu pročitati podatke iz localStorage", err);
+      console.warn('Ne mogu pročitati podatke iz localStorage', err);
     }
   }
 
   // Dobavi ID iz URL-a (podržava i hash #id=... kao fallback)
   const search = new URLSearchParams(location.search);
-  const parsedId = parseInt(search.get("id") || hashParams.get("id") || hashParams.get("uplatnica_id"), 10);
+  const parsedId = parseInt(search.get('id') || hashParams.get('id') || hashParams.get('uplatnica_id'), 10);
   if (!parsedId) return;
 
   (async function(){
     const id = parsedId;
 
     // Odredi bazni API root (/api/ kada smo u /app/)
-    const apiBase = location.pathname.includes("/app/") ? "../api/" : "./api/";
+    const apiBase = location.pathname.includes('/app/') ? '../api/' : './api/';
 
     // Povuci podatke sa API-a
     let res;
     try {
-      res = await fetch(apiBase + "uplatnica_get.php?id=" + encodeURIComponent(id));
+      res = await fetch(apiBase + 'uplatnica_get.php?id=' + encodeURIComponent(id));
     } catch (err) {
-      return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
+      return alert('Greška pri dohvaćanju uplatnice (#' + id + ')');
     }
 
     if (!res.ok) {
-      return alert("Greška pri dohvaćanju uplatnice (#" + id + ")");
+      return alert('Greška pri dohvaćanju uplatnice (#' + id + ')');
     }
 
     let out;
     try {
       out = await res.json();
     } catch (err) {
-      return alert("Neispravan odgovor sa servera (#" + id + ")");
+      return alert('Neispravan odgovor sa servera (#' + id + ')');
     }
 
     const u = out && (out.data || out);
     if (!u || !u.id) {
-      return alert("Uplatnica nije pronađena (#" + id + ")");
+      return alert('Uplatnica nije pronađena (#' + id + ')');
     }
 
     if (!payloadPrimljen) {
