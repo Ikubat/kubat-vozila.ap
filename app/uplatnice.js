@@ -53,7 +53,6 @@
     const $svrhaModalSave    = document.getElementById('u_svrha_modal_save');
     const $svrhaModalCancel  = document.getElementById('u_svrha_modal_cancel');
     const $svrhaModalClose   = document.getElementById('u_svrha_modal_close');
-   
 
     const $svrha         = document.getElementById('u_svrha');
     const $svrha1        = document.getElementById('u_svrha1');
@@ -155,32 +154,8 @@
       throw lastErr || new Error('Nepoznata greška pri fetchu.');
     }
 
-      function fillPrintSlip() {
-  document.getElementById('p_uplatilac').textContent =
-    ($uplatilacTekst?.value?.trim() || $uplatilacLabel.value.trim());
-
-  document.getElementById('p_svrha1').textContent = $svrha.value.trim();
-  document.getElementById('p_svrha2').textContent = $svrha1.value.trim();
-
-  document.getElementById('p_primatelj').textContent =
-    ($primateljTekst?.value?.trim() || $primateljLabel.value.trim());
-
-  document.getElementById('p_mjesto_datum').textContent =
-    ($mjesto.value.trim() + ' ' + $datum.value).trim();
-
-  document.getElementById('p_iznos').textContent =
-    $iznos.value ? (parseFloat($iznos.value).toFixed(2) + ' ' + $valuta.value) : '';
-
-  document.getElementById('p_racun_pos').textContent = $racunPos.value.trim();
-  document.getElementById('p_racun_prim').textContent = $racunPrim.value.trim();
-
-  document.getElementById('p_porezni').textContent = $brojPorezni.value.trim();
-  document.getElementById('p_vrsta_prihoda').textContent = $vrstaPrihoda.value.trim();
-  document.getElementById('p_opcina').textContent = $opcina.value.trim();
-  document.getElementById('p_budzetska').textContent = $budzetska.value.trim();
-  document.getElementById('p_poziv').textContent = $poziv.value.trim();
-}
-
+        function fillPrintSlip() {
+      if (!$pUplatilac) return; // sigurnost
 
       const uplatilacTekst =
         ($uplatilacTekst && $uplatilacTekst.value.trim()) ||
@@ -828,7 +803,6 @@
       $btnPrint.addEventListener('click', doPrint);
     }
 
-
       if (e.target.closest('.del')) {
         const id = parseInt(row.dataset.id, 10);
         if (!id) return;
@@ -856,6 +830,7 @@
       await Promise.all([loadPartneri(), loadSvrhe()]);
       await loadUplatnice();
     })();
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

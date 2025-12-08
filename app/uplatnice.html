@@ -413,10 +413,11 @@
       <div id="u_msg" class="hint" style="display:none;text-align:left;color:#b91c1c;"></div>
 
       <div class="modal-footer">
-  <button id="u_save" class="btn primary" type="button">Spremi</button>
-  <button id="u_print" class="btn sec" type="button">Print</button>
-  <button id="u_cancel" class="btn sec" type="button">Odustani</button>
-</div>
+        <button id="u_save" class="btn primary" type="button">Spremi</button>
+        <button id="u_cancel" class="btn sec" type="button">Odustani</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: Dodaj svrhu -->
   <div id="u_svrha_modal" class="modal-wrap" role="dialog" aria-modal="true" aria-labelledby="u_svrha_modal_title">
@@ -439,82 +440,6 @@
       </div>
     </div>
   </div>
-
-  <!-- PRINT LAYOUT – vidi se samo kod printanja (@media print) -->
-<div id="print-slip">
-  <!-- Gore lijevo: uplatilac -->
-  <div class="ps-row">
-    <div class="ps-label">Uplatilac je (ime, adresa, telefon)</div>
-    <div class="ps-value" id="p_uplatilac"></div>
-  </div>
-
-  <!-- Svrha -->
-  <div class="ps-row">
-    <div class="ps-label">Svrha doznake</div>
-    <div class="ps-value" id="p_svrha1"></div>
-    <div class="ps-value" id="p_svrha2" style="margin-top:2px;"></div>
-  </div>
-
-  <!-- Primatelj -->
-  <div class="ps-row">
-    <div class="ps-label">Primatelj / Primatelj</div>
-    <div class="ps-value" id="p_primatelj"></div>
-  </div>
-
-  <!-- Mjesto i datum + iznos -->
-  <div class="ps-small-row">
-    <div class="ps-small">
-      <div class="ps-label">Mjesto i datum uplate</div>
-      <div class="ps-value" id="p_mjesto_datum"></div>
-    </div>
-    <div class="ps-small">
-      <div class="ps-label">Iznos (KM)</div>
-      <div class="ps-value" id="p_iznos"></div>
-    </div>
-  </div>
-
-  <!-- Računi -->
-  <div class="ps-small-row" style="margin-top:6mm;">
-    <div class="ps-small">
-      <div class="ps-label">Račun pošiljaoca</div>
-      <div class="ps-value" id="p_racun_pos"></div>
-    </div>
-    <div class="ps-small">
-      <div class="ps-label">Račun primatelja</div>
-      <div class="ps-value" id="p_racun_prim"></div>
-    </div>
-  </div>
-
-  <!-- Porezni dio -->
-  <div style="margin-top:8mm;">
-    <div class="ps-small-row">
-      <div class="ps-small">
-        <div class="ps-label">Broj poreskog obveznika</div>
-        <div class="ps-value" id="p_porezni"></div>
-      </div>
-      <div class="ps-small">
-        <div class="ps-label">Vrsta prihoda</div>
-        <div class="ps-value" id="p_vrsta_prihoda"></div>
-      </div>
-    </div>
-
-    <div class="ps-small-row">
-      <div class="ps-small">
-        <div class="ps-label">Općina</div>
-        <div class="ps-value" id="p_opcina"></div>
-      </div>
-      <div class="ps-small">
-        <div class="ps-label">Budžetska organizacija</div>
-        <div class="ps-value" id="p_budzetska"></div>
-      </div>
-    </div>
-
-    <div class="ps-row" style="margin-top:4mm;">
-      <div class="ps-label">Poziv na broj</div>
-      <div class="ps-value" id="p_poziv"></div>
-    </div>
-  </div>
-</div>
 
   <script src="uplatnice.js?v=1"></script>
 </body>
