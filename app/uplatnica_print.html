@@ -175,11 +175,14 @@
   }
 
   @media print {
-    #wrap, #toolbar, #previewWrap {
-      all: unset;
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
     }
 
     #wrap {
+      display: block;
       margin: 0;
       padding: 0;
     }
@@ -188,17 +191,20 @@
       display: none;
     }
 
-    body {
-      background: #fff;
-    }
-
     #previewWrap {
       padding: 0;
       background: transparent;
+      display: flex;
+      justify-content: center;
     }
 
     #preview {
       border: none;
+    }
+
+    /* Očuvaj vidljivost sadržaja u printu i ukloni pomoćne stilove. */
+    #preview, #preview * {
+      visibility: visible;
     }
 
     .field {
@@ -346,7 +352,7 @@
       return;
     }
 
-    window.print();
+    triggerPrint();
   });
 
   function labelFor(name) {
@@ -552,8 +558,14 @@
     if (hasData && !autoPrinted) {
       autoPrinted = true;
       // Automatski pokreni print kad prvi put stignu podaci da se izbjegne prazna stranica.
-      setTimeout(() => window.print(), 50);
+      triggerPrint();
     }
+  }
+
+  function triggerPrint() {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => window.print());
+    });
   }
 
   function updateStatus(customText) {
