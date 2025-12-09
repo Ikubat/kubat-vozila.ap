@@ -313,6 +313,7 @@
   let selectedField = 'uplatioc';
   let dragState = null;
   let hasData = false;
+  let autoPrinted = false;
 
   const fields = {};
   document.querySelectorAll('.field').forEach(el => {
@@ -337,7 +338,16 @@
   $left.addEventListener('input', () => updateField('left', parseFloat($left.value)));
   $weight.addEventListener('change', () => updateField('weight', $weight.value));
   $reset.addEventListener('click', () => { layout = JSON.parse(JSON.stringify(defaultLayout)); applyLayout(); saveLayout(); });
-  $printNow.addEventListener('click', () => window.print());
+  $printNow.addEventListener('click', () => {
+    if (!hasData) {
+      $status.textContent = 'Podaci za ispis još nisu učitani. Pričekajte da stignu ili pokušajte ponovo.';
+      $status.classList.remove('ok');
+      $status.style.display = 'block';
+      return;
+    }
+
+    window.print();
+  });
 
   function labelFor(name) {
     const labels = {
@@ -491,7 +501,11 @@
   const $napomena     = document.getElementById('napomena');
 
   function render(u) {
-    if (!u) return;
+    if (!u) {
+      hasData = false;
+      updateStatus('Nema dostupnih podataka za ispis. Provjerite da je prozor otvoren s ispravnim ID-em.');
+      return;
+    }
 
     // Dozvoli sendere koji šalju `data` ili `payload` čvor.
     if (u && typeof u === 'object') {
@@ -534,17 +548,23 @@
 
     hasData = Object.values(fields).some(el => (el.textContent || '').trim() !== '');
     updateStatus();
+
+    if (hasData && !autoPrinted) {
+      autoPrinted = true;
+      // Automatski pokreni print kad prvi put stignu podaci da se izbjegne prazna stranica.
+      setTimeout(() => window.print(), 50);
+    }
   }
 
-  function updateStatus() {
+  function updateStatus(customText) {
     if (!$status) return;
     if (hasData) {
-      $status.textContent = 'Podaci za ispis su učitani.';
+      $status.textContent = customText || 'Podaci za ispis su učitani.';
       $status.classList.add('ok');
       $status.style.display = 'block';
       $printNow.disabled = false;
     } else {
-      $status.textContent = 'Podaci za ispis još nisu stigli. Provjerite da je prozor dopušten da učita payload ili pokušajte ponovo.';
+      $status.textContent = customText || 'Podaci za ispis još nisu stigli. Provjerite da je prozor dopušten da učita payload ili pokušajte ponovo.';
       $status.classList.remove('ok');
       $status.style.display = 'block';
       $printNow.disabled = true;
@@ -552,7 +572,7 @@
   }
 
   applyLayout();
-  updateStatus();
+  updateStatus('Učitavanje podataka za ispis…');
 
   // Slušaj podatke poslano preko postMessage (print iz modala "nova" / "uredi")
   let payloadPrimljen = false;
