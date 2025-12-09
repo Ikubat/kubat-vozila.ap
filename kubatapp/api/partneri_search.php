@@ -33,29 +33,43 @@ $whereParts = [];
 $args = [];
 $types = '';
 
+// Struktura tablice kako bismo koristili dostupne kolone (stara ili nova imena)
+$cols = [];
+$rs = $conn->query('SHOW COLUMNS FROM partneri');
+while ($c = $rs->fetch_assoc()) {
+    $cols[strtolower($c['Field'])] = $c['Field'];
+}
+
+$fVrsta  = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
+$fIdBroj = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+
 if ($q !== '') {
     $like = '%' . $q . '%';
     $whereParts = [
         'p.ime LIKE ?',
-        'p.prezime LIKE ?',
-        'p.vrsta_partnera LIKE ?',
-        'p.id_broj LIKE ?',
+        'p.prezime LIKE ?'
+    ];
+
+    if ($fVrsta)  $whereParts[] = "p.`$fVrsta` LIKE ?";
+    if ($fIdBroj) $whereParts[] = "p.`$fIdBroj` LIKE ?";
+
+    $whereParts = array_merge($whereParts, [
         'p.kontakt LIKE ?',
         'p.email LIKE ?',
         'p.adresa LIKE ?',
         'm.naziv_mjesta LIKE ?'
-    ];
+    ]);
     $where = 'WHERE ' . implode(' OR ', $whereParts);
     $args = array_fill(0, count($whereParts), $like);
     $types = str_repeat('s', count($whereParts));
 }
 
-// 1) Ukupan broj␊
-$sqlTotal = "␊
-    SELECT COUNT(*)␊
-    FROM partneri p␊
-    LEFT JOIN mjesta m ON m.id = p.mjesto_id␊
-    $where␊
+// 1) Ukupan broj
+$sqlTotal = "
+    SELECT COUNT(*)
+    FROM partneri p
+    LEFT JOIN mjesta m ON m.id = p.mjesto_id
+    $where
 ";
 $stTot = $conn->prepare($sqlTotal);
 if ($args) {
@@ -66,16 +80,34 @@ $stTot->bind_result($total);
 $stTot->fetch();
 $stTot->close();
 
-// 2) Podaci za trenutnu stranicu␊
-$sqlData = "␊␊
-    SELECT␊␊
-      p.id, p.ime, p.prezime, p.vrsta_partnera, p.id_broj, p.kontakt, p.email, p.adresa, p.mjesto_id,␊
-      m.naziv_mjesta AS mjesto_naz␊␊
-    FROM partneri p␊␊
-    LEFT JOIN mjesta m ON m.id = p.mjesto_id␊
-    $where␊
-    ORDER BY p.prezime ASC, p.ime ASC␊
-    LIMIT ? OFFSET ?␊
+// 2) Podaci za trenutnu stranicu
+$select = [
+    'p.id',
+    'p.ime',
+    'p.prezime',
+];
+
+if ($fVrsta)  $select[] = "p.`$fVrsta` AS vrsta_partnera"; else $select[] = "'' AS vrsta_partnera";
+if ($fIdBroj) $select[] = "p.`$fIdBroj` AS id_broj"; else $select[] = "'' AS id_broj";
+
+$select = array_merge($select, [
+    'p.kontakt',
+    'p.email',
+    'p.adresa',
+    'p.mjesto_id',
+    'm.naziv_mjesta AS mjesto_naz'
+]);
+
+$sqlData = "
+
+    SELECT\n\n      " . implode(', ', $select) . "
+
+    FROM partneri p
+
+    LEFT JOIN mjesta m ON m.id = p.mjesto_id
+    $where
+    ORDER BY p.prezime ASC, p.ime ASC
+    LIMIT ? OFFSET ?
 ";
 $st = $conn->prepare($sqlData);
 $dataTypes = $types . 'ii';
@@ -86,7 +118,7 @@ $res = $st->get_result();
 $rows = $res->fetch_all(MYSQLI_ASSOC);
 $st->close();
 
-// 3) Odgovor␊
+// 3) Odgovor
 echo json_encode([
     'data'      => $rows,
     'total'     => (int)$total,

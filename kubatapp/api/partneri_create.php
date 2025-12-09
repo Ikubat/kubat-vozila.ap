@@ -51,10 +51,51 @@ try {
         $respond(false, ['error' => implode(' ', $err)]);
     }
 
-    $sql = "INSERT INTO partneri (ime, prezime, vrsta_partnera, id_broj, kontakt, email, adresa, mjesto_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    $cols = [];
+    $res = $conn->query('SHOW COLUMNS FROM partneri');
+    while ($c = $res->fetch_assoc()) {
+        $cols[strtolower($c['Field'])] = $c['Field'];
+    }
+
+    $fIme       = $cols['ime'] ?? null;
+    $fPrezime   = $cols['prezime'] ?? null;
+    $fNaziv     = $cols['naziv'] ?? null;
+    $fKontakt   = $cols['kontakt'] ?? $cols['telefon'] ?? $cols['tel'] ?? null;
+    $fEmail     = $cols['email'] ?? $cols['mail'] ?? null;
+    $fAdresa    = $cols['adresa'] ?? null;
+    $fMjestoId  = $cols['mjesto_id'] ?? $cols['id_mjesta'] ?? null;
+    $fVrsta     = $cols['vrsta_partnera'] ?? $cols['vrsta'] ?? null;
+    $fIdBroj    = $cols['id_broj'] ?? $cols['idbroj'] ?? $cols['id_broj_partnera'] ?? null;
+
+    $fields = [];
+    $placeholders = [];
+    $types = '';
+    $values = [];
+
+    $addField = function (string $name, $value, string $type = 's') use (&$fields, &$placeholders, &$types, &$values) {
+        $fields[] = "`$name`";
+        $placeholders[] = '?';
+        $types .= $type;
+        $values[] = $value;
+    };
+
+    if ($fIme) $addField($fIme, $ime);
+    if ($fPrezime) $addField($fPrezime, $prezime);
+    if ($fNaziv && !$fIme && !$fPrezime) $addField($fNaziv, trim($ime . ' ' . $prezime));
+    if ($fVrsta) $addField($fVrsta, $vrsta);
+    if ($fIdBroj) $addField($fIdBroj, $idBroj);
+    if ($fKontakt) $addField($fKontakt, $kontakt);
+    if ($fEmail) $addField($fEmail, $email);
+    if ($fAdresa) $addField($fAdresa, $adresa);
+    if ($fMjestoId) $addField($fMjestoId, $mjesto_id !== null ? $mjesto_id : null, 'i');
+
+    if (!$fields) {
+        throw new RuntimeException('Tablica partneri nema očekivane kolone.');
+    }
+
+    $sql = 'INSERT INTO partneri (' . implode(', ', $fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
     $st = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($st, 'sssssssi', $ime, $prezime, $vrsta, $idBroj, $kontakt, $email, $adresa, $mjesto_id);
+    mysqli_stmt_bind_param($st, $types, ...$values);
     mysqli_stmt_execute($st);
 
     $respond(true, ['id' => mysqli_insert_id($conn)]);
