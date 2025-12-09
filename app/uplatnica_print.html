@@ -51,6 +51,22 @@
     color: #4b5563;
   }
 
+  #status {
+    margin: 0 0 12px;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    display: none;
+  }
+  #status.ok {
+    background: #ecfdf3;
+    border-color: #bbf7d0;
+    color: #166534;
+  }
+
   .controls {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -221,6 +237,7 @@
   <div id="toolbar">
     <h1>Podešavanje ispisa uplatnice</h1>
     <p>Povuci polje na željenu poziciju ili koristi unos u milimetrima. Podešena širina i veličina teksta pomažu da sadržaj stane na obrazac.</p>
+    <p id="status" role="status"></p>
 
     <div class="controls">
       <label>
@@ -270,6 +287,7 @@
   const $weight       = document.getElementById('weight');
   const $reset        = document.getElementById('resetLayout');
   const $printNow     = document.getElementById('printNow');
+  const $status       = document.getElementById('status');
 
   const defaultLayout = {
     uplatioc:    { top: 18, left: 10, fontSize: 12, width: 90, weight: 'normal' },
@@ -294,6 +312,7 @@
   let layout = loadLayout();
   let selectedField = 'uplatioc';
   let dragState = null;
+  let hasData = false;
 
   const fields = {};
   document.querySelectorAll('.field').forEach(el => {
@@ -474,29 +493,66 @@
   function render(u) {
     if (!u) return;
 
-    $uplatioc.innerText    = u.uplatilac || u.uplatilac_naziv || '';
-    $uplatiocTxt.innerText = u.uplatilac_tekst || '';
-    $primatelj.innerText   = u.primatelj || u.primatelj_naziv || '';
-    $svrha1.innerText      = u.svrha || '';
-    $svrha2.innerText      = u.svrha1 || '';
+    // Dozvoli sendere koji šalju `data` ili `payload` čvor.
+    if (u && typeof u === 'object') {
+      u = u.data || u.payload || u;
+    }
 
-    const valuta = u.valuta || 'KM';
-    const iznos  = typeof u.iznos === 'number' ? u.iznos.toFixed(2) : (u.iznos || '');
-    const iznosFull = u.iznos_full || u.iznosFull || '';
+    const pick = (...vals) => {
+      for (const v of vals) {
+        if (v === null || v === undefined) continue;
+        const s = typeof v === 'string' ? v.trim() : v;
+        if (s !== '' && s !== null && s !== undefined) return s;
+      }
+      return '';
+    };
+
+    $uplatioc.innerText    = pick(u.uplatilac, u.uplatilac_naziv, u.uplatilacNaziv, u.uplatilac_label);
+    $uplatiocTxt.innerText = pick(u.uplatilac_tekst, u.uplatilacTekst, u.uplatilac_txt);
+    $primatelj.innerText   = pick(u.primatelj, u.primatelj_naziv, u.primateljNaziv, u.primatelj_label);
+    $svrha1.innerText      = pick(u.svrha, u.svrha_uplate, u.svrhaUplate, u.svrha_tekst);
+    $svrha2.innerText      = pick(u.svrha1, u.svrha_2, u.svrha2, u.svrha_dodatno);
+
+    const valuta = pick(u.valuta, 'KM') || 'KM';
+    const iznosVal = pick(u.iznos, u.iznos_value, u.iznosValue);
+    const iznosNum = typeof iznosVal === 'number'
+      ? iznosVal
+      : (iznosVal ? parseFloat(String(iznosVal).replace(',', '.')) : NaN);
+    const iznos = Number.isFinite(iznosNum) ? iznosNum.toFixed(2) : pick(iznosVal, '');
+    const iznosFull = pick(u.iznos_full, u.iznosFull);
     $iznos.innerText     = iznosFull || ((iznos ? iznos + ' ' : '') + valuta);
-    $racunPrim.innerText = u.racun_primatelja || u.racunPrim || '';
-    $racunPos.innerText  = u.racun_posiljaoca || u.racunPos || '';
-    $pozivNaBroj.innerText = u.poziv_na_broj || u.pozivNaBroj || '';
-    $brojPoreski.innerText = u.broj_poreskog_obv || u.brojPoreski || '';
-    $vrstaPrihoda.innerText = u.vrsta_prihoda_sifra || u.vrstaPrihoda || '';
-    $opcina.innerText = u.opcina_sifra || u.opcina || '';
-    $budzetska.innerText = u.budzetska_org_sifra || u.budzetska || '';
-    $mjesto.innerText = u.mjesto || '';
-    $datum.innerText = u.datum || '';
-    $napomena.innerText = u.napomena || '';
+    $racunPrim.innerText = pick(u.racun_primatelja, u.racunPrim, u.racun_primaoca);
+    $racunPos.innerText  = pick(u.racun_posiljaoca, u.racunPos, u.racun_platioca);
+    $pozivNaBroj.innerText = pick(u.poziv_na_broj, u.pozivNaBroj, u.poziv);
+    $brojPoreski.innerText = pick(u.broj_poreskog_obv, u.brojPoreski, u.porezni_broj);
+    $vrstaPrihoda.innerText = pick(u.vrsta_prihoda_sifra, u.vrstaPrihoda);
+    $opcina.innerText = pick(u.opcina_sifra, u.opcina);
+    $budzetska.innerText = pick(u.budzetska_org_sifra, u.budzetska);
+    $mjesto.innerText = pick(u.mjesto, u.mjesto_uplate, u.mjestoUplate);
+    $datum.innerText = pick(u.datum, u.datum_uplate, u.datumUplate);
+    $napomena.innerText = pick(u.napomena);
+
+    hasData = Object.values(fields).some(el => (el.textContent || '').trim() !== '');
+    updateStatus();
+  }
+
+  function updateStatus() {
+    if (!$status) return;
+    if (hasData) {
+      $status.textContent = 'Podaci za ispis su učitani.';
+      $status.classList.add('ok');
+      $status.style.display = 'block';
+      $printNow.disabled = false;
+    } else {
+      $status.textContent = 'Podaci za ispis još nisu stigli. Provjerite da je prozor dopušten da učita payload ili pokušajte ponovo.';
+      $status.classList.remove('ok');
+      $status.style.display = 'block';
+      $printNow.disabled = true;
+    }
   }
 
   applyLayout();
+  updateStatus();
 
   // Slušaj podatke poslano preko postMessage (print iz modala "nova" / "uredi")
   let payloadPrimljen = false;
