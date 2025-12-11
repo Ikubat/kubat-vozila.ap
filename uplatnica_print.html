@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <title>Ispis uplatnice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --sheet-margin: 8mm; /* početna margina – možeš mijenjati */
+      --handle-size: 8px;
+      --field-font: 12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+      background:#f3f4f6;
+      color:#111827;
+    }
+
+    .topbar{
+      padding:8px 12px;
+      background:#111827;
+      color:#e5e7eb;
+      font-size:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .topbar span.info{
+      flex:1;
+      min-width:140px;
+    }
+    .topbar button{
+      border:0;
+      border-radius:999px;
+      padding:5px 10px;
+      font-size:12px;
+      cursor:pointer;
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .topbar button:hover{
+      background:#d1d5db;
+    }
+    .topbar button.main{
+      background:#22c55e;
+      color:#052e16;
+      font-weight:600;
+    }
+    .topbar button.main:hover{
+      background:#16a34a;
+    }
+
+    .page-wrap{
+      display:flex;
+      justify-content:center;
+      padding:18px 0 24px;
+    }
+
+    .sheet{
+      position:relative;
+      width:210mm;
+      height: 99mm; /* približno pola A4; prilagodi po potrebi */
+      background:white;
+      margin: var(--sheet-margin) auto;
+      box-shadow:0 12px 25px rgba(15,23,42,.18);
+      overflow:hidden;
+    }
+
+    .field-box{
+      position:absolute;
+      min-width:24mm;
+      min-height:5mm;
+      border:1px dotted #3b82f6;
+      border-radius:2px;
+      padding:1px 3px;
+      font-size:var(--field-font);
+      line-height:1.1;
+      white-space:nowrap;
+      color:#111827;
+    }
+    .field-text{
+      display:inline-block;
+      transform-origin:left center;
+    }
+
+    .handle{
+      position:absolute;
+      width:var(--handle-size);
+      height:var(--handle-size);
+      border-radius:999px;
+      background:#2563eb;
+      border:1px solid #eff6ff;
+      box-shadow:0 0 0 1px rgba(15,23,42,.25);
+      cursor:pointer;
+    }
+    .handle.move{
+      top:-10px;
+      left:50%;
+      transform:translateX(-50%);
+      cursor:move;
+    }
+    .handle.right{
+      top:50%;
+      right:-10px;
+      transform:translateY(-50%);
+      cursor:ew-resize;
+    }
+
+    @media print{
+      body{
+        background:white;
+      }
+      .topbar{display:none !important;}
+      .page-wrap{
+        padding:0;
+      }
+      .sheet{
+        box-shadow:none;
+        margin:0 auto;
+      }
+      .field-box{
+        border:0;
+        padding:0;
+      }
+      .handle{
+        display:none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar no-print">
+    <span class="info">
+      Povuci plave točkice za pomicanje / širenje teksta. Margina: <span id="marginVal"></span>mm
+    </span>
+    <button id="btnMarginMinus">– margina</button>
+    <button id="btnMarginPlus">+ margina</button>
+    <button id="btnReset">Reset pozicija</button>
+    <button id="btnPrint" class="main">Print</button>
+  </div>
+
+  <div class="page-wrap">
+    <div id="sheet" class="sheet"></div>
+  </div>
+
+<script>
+(function(){
+  const sheet = document.getElementById('sheet');
+  const btnPrint = document.getElementById('btnPrint');
+  const btnMarginMinus = document.getElementById('btnMarginMinus');
+  const btnMarginPlus = document.getElementById('btnMarginPlus');
+  const btnReset = document.getElementById('btnReset');
+  const marginVal = document.getElementById('marginVal');
+
+  const STORAGE_LAYOUT = 'uplatnica-print-layout-v1';
+  const STORAGE_MARGIN = 'uplatnica-print-margin-v1';
+
+  // --- definiramo polja i početne pozicije (u mm, okvirno) ---
+  const fieldDefs = [
+    { key:'uplatilac',           maxChars:26, fontSize:12, x:20,  y:10,  w:80 },
+    { key:'racun_primatelja',    maxChars:26, fontSize:12, x:120, y:10,  w:70 },
+
+    { key:'svrha',               maxChars:30, fontSize:12, x:20,  y:22,  w:80 },
+    { key:'svrha1',              maxChars:30, fontSize:12, x:20,  y:32,  w:80 },
+
+    { key:'primatelj',           maxChars:30, fontSize:12, x:20,  y:42,  w:80 },
+    { key:'iznos_full',          maxChars:18, fontSize:12, x:132, y:32,  w:50 },
+
+    { key:'mjesto',              maxChars:26, fontSize:12, x:20,  y:58,  w:80 },
+    { key:'broj_poreskog_obv',   maxChars:13, fontSize:12, x:120, y:58,  w:40 },
+
+    { key:'opcina_sifra',        maxChars:6,  fontSize:12, x:20,  y:72,  w:30 },
+    { key:'vrsta_prihoda_sifra', maxChars:10, fontSize:12, x:70,  y:72,  w:40 },
+    { key:'budzetska_org_sifra', maxChars:10, fontSize:12, x:120, y:72,  w:40 },
+    { key:'poziv_na_broj',       maxChars:20, fontSize:12, x:20,  y:84,  w:80 }
+  ];
+
+  // Dopuna: mjesto + datum u istom polju
+  function combinePlaceAndDate(data){
+    const mjesto = (data.mjesto || '').trim();
+    const datum  = (data.datum || '').trim();
+    if (mjesto && datum) return mjesto + ', ' + datum;
+    return mjesto || datum || '';
+  }
+
+  // --- pomoćne pretvorbe mm <-> px ---
+  function mmToPx(mm){
+    // 96dpi * (mm/25.4)
+    return mm * 96 / 25.4;
+  }
+
+  // --- učitavanje margine ---
+  let sheetMargin = 8;
+  try{
+    const storedM = parseFloat(localStorage.getItem(STORAGE_MARGIN));
+    if (!isNaN(storedM) && storedM > 0 && storedM < 40) {
+      sheetMargin = storedM;
+    }
+  }catch(e){}
+  document.documentElement.style.setProperty('--sheet-margin', sheetMargin + 'mm');
+  if (marginVal) marginVal.textContent = sheetMargin.toFixed(1).replace('.0','');
+
+  // --- kreiranje field-box elemenata ---
+  const fieldEls = new Map();
+
+  function createFields(){
+    sheet.innerHTML = '';
+    fieldDefs.forEach(def => {
+      const el = document.createElement('div');
+      el.className = 'field-box';
+      el.dataset.key = def.key;
+      el.style.fontSize = (def.fontSize || 12) + 'px';
+
+      const txt = document.createElement('span');
+      txt.className = 'field-text';
+      txt.textContent = '';
+      el.appendChild(txt);
+
+      const hMove = document.createElement('div');
+      hMove.className = 'handle move';
+      el.appendChild(hMove);
+
+      const hRight = document.createElement('div');
+      hRight.className = 'handle right';
+      el.appendChild(hRight);
+
+      sheet.appendChild(el);
+      fieldEls.set(def.key, el);
+    });
+  }
+
+  createFields();
+
+  // --- učitaj layout iz localStorage ---
+  function loadLayout(){
+    let obj = null;
+    try{
+      const raw = localStorage.getItem(STORAGE_LAYOUT);
+      if (raw) obj = JSON.parse(raw);
+    }catch(e){}
+    if (!obj) obj = {};
+    return obj;
+  }
+  function saveLayout(layout){
+    try{
+      localStorage.setItem(STORAGE_LAYOUT, JSON.stringify(layout));
+    }catch(e){}
+  }
+
+  let layout = loadLayout();
+
+  function applyInitialPositions(){
+    fieldDefs.forEach(def => {
+      const el = fieldEls.get(def.key);
+      if (!el) return;
+      const saved = layout[def.key] || {};
+      const leftMm = saved.xMm != null ? saved.xMm : def.x;
+      const topMm  = saved.yMm != null ? saved.yMm : def.y;
+      const wMm    = saved.wMm != null ? saved.wMm : def.w;
+      el.style.left = mmToPx(leftMm) + 'px';
+      el.style.top  = mmToPx(topMm) + 'px';
+      el.style.width = mmToPx(wMm) + 'px';
+    });
+  }
+
+  applyInitialPositions();
+
+  // --- popuni tekst iz payload-a ---
+  let payloadData = null;
+
+  function setData(data){
+    if (!data) return;
+    payloadData = data;
+
+    const mjDat = combinePlaceAndDate(data);
+
+    const map = {
+      uplatilac:           (data.uplatilac_tekst || data.uplatilac || '').trim(),
+      primatelj:           (data.primatelj || '').trim(),
+      svrha:               (data.svrha || '').trim(),
+      svrha1:              (data.svrha1 || '').trim(),
+      iznos_full:          (data.iznos_full || (data.iznos ? (data.iznos + ' ' + (data.valuta || 'KM')) : '')).trim(),
+      racun_primatelja:    (data.racun_primatelja || '').trim(),
+      mjesto:              mjDat,
+      broj_poreskog_obv:   (data.broj_poreskog_obv || '').trim(),
+      opcina_sifra:        (data.opcina_sifra || '').trim(),
+      vrsta_prihoda_sifra: (data.vrsta_prihoda_sifra || '').trim(),
+      budzetska_org_sifra: (data.budzetska_org_sifra || '').trim(),
+      poziv_na_broj:       (data.poziv_na_broj || '').trim()
+    };
+
+    Object.keys(map).forEach(k=>{
+      const el = fieldEls.get(k);
+      if (!el) return;
+      const txt = el.querySelector('.field-text');
+      if (!txt) return;
+      txt.textContent = map[k];
+    });
+
+    // nakon postavljanja teksta, prilagodi scale
+    requestAnimationFrame(autoFitAll);
+  }
+
+  function autoFitAll(){
+    fieldDefs.forEach(def=>{
+      const el = fieldEls.get(def.key);
+      if (!el) return;
+      autoFitField(el);
+    });
+  }
+
+  function autoFitField(el){
+    const txt = el.querySelector('.field-text');
+    if (!txt) return;
+    txt.style.transform = 'scaleX(1)';
+    const natural = txt.getBoundingClientRect().width || 1;
+    const boxW = el.getBoundingClientRect().width || 1;
+    let scale = boxW / natural;
+    if (!isFinite(scale) || scale <= 0) scale = 1;
+    scale = Math.max(0.5, Math.min(3, scale)); // da ne poludi
+    txt.style.transform = 'scaleX(' + scale.toFixed(3) + ')';
+  }
+
+  // --- parsiranje payload-a iz URL hash-a ili localStorage-a ---
+  function tryDecodePayloadFromHash(){
+    try{
+      const hash = location.hash.replace(/^#/, '');
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      const base64 = params.get('payloadData');
+      const key    = params.get('payload');
+      if (base64){
+        const json = decodeURIComponent(escape(atob(base64)));
+        return JSON.parse(json);
+      }
+      if (key){
+        const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (raw){
+          return JSON.parse(raw);
+        }
+      }
+    }catch(e){}
+    return null;
+  }
+
+  const initialPayload = tryDecodePayloadFromHash();
+  if (initialPayload) {
+    setData(initialPayload);
+  }
+
+  // --- sluša poruku iz matičnog prozora (uplatnice.js -> postMessage) ---
+  window.addEventListener('message', (ev)=>{
+    if (!ev || !ev.data) return;
+    if (ev.data.type === 'uplatnica-data' && ev.data.payload){
+      setData(ev.data.payload);
+    }
+  });
+
+  // --- drag & resize logika ---
+  let dragState = null;
+
+  sheet.addEventListener('mousedown', function(e){
+    const handle = e.target.closest('.handle');
+    if (!handle) return;
+
+    const box = handle.parentElement;
+    if (!box) return;
+    e.preventDefault();
+
+    const rectSheet = sheet.getBoundingClientRect();
+    const rectBox   = box.getBoundingClientRect();
+
+    dragState = {
+      mode: handle.classList.contains('right') ? 'resize' : 'move',
+      box,
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: rectBox.left - rectSheet.left,
+      startTop:  rectBox.top  - rectSheet.top,
+      startWidth: rectBox.width
+    };
+  });
+
+  window.addEventListener('mousemove', function(e){
+    if (!dragState) return;
+    e.preventDefault();
+    const rectSheet = sheet.getBoundingClientRect();
+    if (dragState.mode === 'move'){
+      let nx = dragState.startLeft + (e.clientX - dragState.startX);
+      let ny = dragState.startTop  + (e.clientY - dragState.startY);
+      nx = Math.max(0, Math.min(nx, rectSheet.width - dragState.box.offsetWidth));
+      ny = Math.max(0, Math.min(ny, rectSheet.height - dragState.box.offsetHeight));
+      dragState.box.style.left = nx + 'px';
+      dragState.box.style.top  = ny + 'px';
+    } else if (dragState.mode === 'resize'){
+      let nw = dragState.startWidth + (e.clientX - dragState.startX);
+      nw = Math.max(mmToPx(10), Math.min(nw, rectSheet.width - dragState.startLeft));
+      dragState.box.style.width = nw + 'px';
+      autoFitField(dragState.box);
+    }
+  });
+
+  window.addEventListener('mouseup', function(){
+    if (!dragState) return;
+    // spremi layout
+    const rectSheet = sheet.getBoundingClientRect();
+    const layoutNew = layout || {};
+    fieldEls.forEach((el,key)=>{
+      const r = el.getBoundingClientRect();
+      const xMm = (r.left - rectSheet.left) * 25.4 / 96;
+      const yMm = (r.top  - rectSheet.top)  * 25.4 / 96;
+      const wMm = (r.width) * 25.4 / 96;
+      layoutNew[key] = { xMm, yMm, wMm };
+    });
+    layout = layoutNew;
+    saveLayout(layoutNew);
+    dragState = null;
+  });
+
+  // --- margine + reset + print ---
+  function updateMarginDisplay(){
+    if (marginVal) marginVal.textContent = sheetMargin.toFixed(1).replace('.0','');
+  }
+
+  if (btnMarginMinus){
+    btnMarginMinus.addEventListener('click', ()=>{
+      sheetMargin = Math.max(2, sheetMargin - 1);
+      document.documentElement.style.setProperty('--sheet-margin', sheetMargin + 'mm');
+      updateMarginDisplay();
+      try{ localStorage.setItem(STORAGE_MARGIN, String(sheetMargin)); }catch(e){}
+    });
+  }
+  if (btnMarginPlus){
+    btnMarginPlus.addEventListener('click', ()=>{
+      sheetMargin = Math.min(30, sheetMargin + 1);
+      document.documentElement.style.setProperty('--sheet-margin', sheetMargin + 'mm');
+      updateMarginDisplay();
+      try{ localStorage.setItem(STORAGE_MARGIN, String(sheetMargin)); }catch(e){}
+    });
+  }
+
+  if (btnReset){
+    btnReset.addEventListener('click', ()=>{
+      layout = {};
+      saveLayout(layout);
+      applyInitialPositions();
+      requestAnimationFrame(autoFitAll);
+    });
+  }
+
+  if (btnPrint){
+    btnPrint.addEventListener('click', ()=>{
+      window.print();
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
