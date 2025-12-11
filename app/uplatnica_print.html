@@ -8,6 +8,8 @@
   <style>
     :root{
       --sheet-margin: 8mm; /* početna margina – možeš mijenjati */
+      --sheet-width: 168mm;
+      --sheet-height: 100mm;
       --handle-size: 8px;
       --field-font: 12px;
     }
@@ -64,8 +66,8 @@
 
     .sheet{
       position:relative;
-      width:168mm;
-      height:100mm; /* dimenzije papira */
+      width:var(--sheet-width);
+      height:var(--sheet-height); /* dimenzije papira */
       background:white;
       margin: var(--sheet-margin) auto;
       box-shadow:0 12px 25px rgba(15,23,42,.18);
@@ -113,8 +115,13 @@
     }
 
     @media print{
+      @page {
+        size: var(--sheet-width) var(--sheet-height);
+        margin: 0;
+      }
       body{
         background:white;
+        margin:0;
       }
       .topbar{display:none !important;}
       .page-wrap{
@@ -133,6 +140,7 @@
       }
     }
   </style>
+  <style id="pageSizeStyle"></style>
 </head>
 <body>
 
@@ -140,6 +148,10 @@
     <span class="info">
       Povuci plave točkice za pomicanje / širenje teksta. Margina: <span id="marginVal"></span>mm
     </span>
+    <label>
+      Format papira:
+      <select id="paperSelect"></select>
+    </label>
     <button id="btnMarginMinus">– margina</button>
     <button id="btnMarginPlus">+ margina</button>
     <label>
@@ -169,43 +181,51 @@
   const btnReset = document.getElementById('btnReset');
   const marginVal = document.getElementById('marginVal');
   const fieldSelect = document.getElementById('fieldSelect');
+  const paperSelect = document.getElementById('paperSelect');
   const fontVal = document.getElementById('fontVal');
   const fontMinus = document.getElementById('fontMinus');
   const fontPlus = document.getElementById('fontPlus');
   const padMinus = document.getElementById('padMinus');
   const padPlus = document.getElementById('padPlus');
   const padVal = document.getElementById('padVal');
+  const pageSizeStyle = document.getElementById('pageSizeStyle');
 
   const STORAGE_LAYOUT = 'uplatnica-print-layout-v2';
   const STORAGE_MARGIN = 'uplatnica-print-margin-v1';
+  const STORAGE_PAPER = 'uplatnica-print-paper-v1';
 
-  // --- definiramo polja i početne pozicije (u mm, okvirno) ---
+  const DEFAULT_FONT_PX = 12;
   const DEFAULT_PAD_MM = 1.5;
 
-  const fieldDefs = [
-    { key:'uplatilac',           maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:10,  w:70 },
-    { key:'primatelj',           maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:22,  w:70 },
-
-    { key:'svrha',               maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:34,  w:70 },
-    { key:'svrha1',              maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:42,  w:70 },
-
-    { key:'iznos_full',          maxChars:18, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:34,  w:40 },
-    { key:'racun_primatelja',    maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:22,  w:40 },
-
-    { key:'mjesto',              maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:55,  w:60 },
-    { key:'broj_poreskog_obv',   maxChars:13, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:55,  w:40 },
-
-    { key:'opcina_sifra',        maxChars:6,  fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:63,  w:40 },
-    { key:'poziv_na_broj',       maxChars:20, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:71,  w:40 }
+  const PAPER_SIZES = [
+    { key:'slip', label:'Uplatnica 168×100mm', w:168, h:100 },
+    { key:'a4p',  label:'A4 (210×297mm)', w:210, h:297 },
+    { key:'a4l',  label:'A4 landscape (297×210mm)', w:297, h:210 }
   ];
 
-  // Dopuna: mjesto + datum u istom polju
-  function combinePlaceAndDate(data){
-    const mjesto = (data.mjesto || '').trim();
-    const datum  = (data.datum || '').trim();
-    if (mjesto && datum) return mjesto + ', ' + datum;
-    return mjesto || datum || '';
-  }
+  // --- definiramo polja i početne pozicije (u mm, okvirno) ---
+  const fieldDefs = [
+    { key:'uplatilac',           maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:8,   w:72 },
+    { key:'uplatilac_tekst',     maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:16,  w:72 },
+    { key:'primatelj',           maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:28,  w:72 },
+    { key:'svrha',               maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:38,  w:72 },
+    { key:'svrha1',              maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:46,  w:72 },
+    { key:'napomena',            maxChars:40, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:54,  w:72 },
+    { key:'mjesto',              maxChars:24, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:66,  w:45 },
+    { key:'datum',               maxChars:14, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:55,  y:66,  w:25 },
+    { key:'racun_posiljaoca',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:74,  w:72 },
+
+    { key:'primatelj_detalj',    maxChars:34, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:10,  w:65 },
+    { key:'racun_primatelja',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:18,  w:65 },
+    { key:'iznos',               maxChars:18, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:30,  w:40 },
+    { key:'valuta_label',        maxChars:6,  fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:132, y:30,  w:18 },
+    { key:'iznos_full',          maxChars:22, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:38,  w:60 },
+    { key:'broj_poreskog_obv',   maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:48,  w:65 },
+    { key:'vrsta_prihoda_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:58,  w:65 },
+    { key:'opcina_sifra',        maxChars:10, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:66,  w:65 },
+    { key:'budzetska_org_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:74,  w:65 },
+    { key:'poziv_na_broj',       maxChars:26, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:82,  w:65 }
+  ];
 
   // --- pomoćne pretvorbe mm <-> px ---
   function mmToPx(mm){
@@ -265,6 +285,43 @@
       fieldSelect.appendChild(opt);
     });
   }
+
+  function updatePageSizeStyle(wMm, hMm){
+    const css = `@page { size: ${wMm}mm ${hMm}mm; margin: 0; }`;
+    if (pageSizeStyle) pageSizeStyle.textContent = css;
+    document.documentElement.style.setProperty('--sheet-width', wMm + 'mm');
+    document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
+  }
+
+  function applyPaperSize(key){
+    const found = PAPER_SIZES.find(p=>p.key===key) || PAPER_SIZES[0];
+    updatePageSizeStyle(found.w, found.h);
+    if (paperSelect && paperSelect.value !== found.key){
+      paperSelect.value = found.key;
+    }
+    try{ localStorage.setItem(STORAGE_PAPER, found.key); }catch(e){}
+  }
+
+  function initPaperSelect(){
+    if (!paperSelect) return;
+    PAPER_SIZES.forEach(p=>{
+      const opt = document.createElement('option');
+      opt.value = p.key;
+      opt.textContent = p.label;
+      paperSelect.appendChild(opt);
+    });
+    let stored = PAPER_SIZES[0].key;
+    try{
+      const raw = localStorage.getItem(STORAGE_PAPER);
+      if (raw && PAPER_SIZES.some(p=>p.key===raw)) stored = raw;
+    }catch(e){}
+    applyPaperSize(stored);
+    paperSelect.addEventListener('change', ()=>{
+      applyPaperSize(paperSelect.value);
+    });
+  }
+
+  initPaperSelect();
 
   function applyPadding(el, padMm){
     const padPx = mmToPx(padMm);
@@ -334,18 +391,25 @@
     if (!data) return;
     payloadData = data;
 
-    const mjDat = combinePlaceAndDate(data);
-
     const map = {
-      uplatilac:           (data.uplatilac_tekst || data.uplatilac || '').trim(),
+      uplatilac:           (data.uplatilac || '').trim(),
+      uplatilac_tekst:     (data.uplatilac_tekst || '').trim(),
       primatelj:           (data.primatelj || '').trim(),
+      primatelj_detalj:    (data.primatelj || '').trim(),
       svrha:               (data.svrha || '').trim(),
       svrha1:              (data.svrha1 || '').trim(),
+      napomena:            (data.napomena || '').trim(),
+      mjesto:              (data.mjesto || '').trim(),
+      datum:               (data.datum || '').trim(),
+      iznos:               (data.iznos || '').trim(),
+      valuta_label:        (data.valuta_label || data.valuta || 'KM').trim(),
       iznos_full:          (data.iznos_full || (data.iznos ? (data.iznos + ' ' + (data.valuta || 'KM')) : '')).trim(),
+      racun_posiljaoca:    (data.racun_posiljaoca || '').trim(),
       racun_primatelja:    (data.racun_primatelja || '').trim(),
-      mjesto:              mjDat,
       broj_poreskog_obv:   (data.broj_poreskog_obv || '').trim(),
+      vrsta_prihoda_sifra: (data.vrsta_prihoda_sifra || '').trim(),
       opcina_sifra:        (data.opcina_sifra || '').trim(),
+      budzetska_org_sifra: (data.budzetska_org_sifra || '').trim(),
       poziv_na_broj:       (data.poziv_na_broj || '').trim()
     };
 
