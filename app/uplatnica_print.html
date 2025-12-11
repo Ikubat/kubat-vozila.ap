@@ -142,6 +142,16 @@
     </span>
     <button id="btnMarginMinus">– margina</button>
     <button id="btnMarginPlus">+ margina</button>
+    <label>
+      Polje:
+      <select id="fieldSelect"></select>
+    </label>
+    <span>
+      Font: <button id="fontMinus">–</button> <span id="fontVal"></span>px <button id="fontPlus">+</button>
+    </span>
+    <span>
+      Margina polja: <button id="padMinus">–</button> <span id="padVal"></span>mm <button id="padPlus">+</button>
+    </span>
     <button id="btnReset">Reset pozicija</button>
     <button id="btnPrint" class="main">Print</button>
   </div>
@@ -158,26 +168,35 @@
   const btnMarginPlus = document.getElementById('btnMarginPlus');
   const btnReset = document.getElementById('btnReset');
   const marginVal = document.getElementById('marginVal');
+  const fieldSelect = document.getElementById('fieldSelect');
+  const fontVal = document.getElementById('fontVal');
+  const fontMinus = document.getElementById('fontMinus');
+  const fontPlus = document.getElementById('fontPlus');
+  const padMinus = document.getElementById('padMinus');
+  const padPlus = document.getElementById('padPlus');
+  const padVal = document.getElementById('padVal');
 
-  const STORAGE_LAYOUT = 'uplatnica-print-layout-v1';
+  const STORAGE_LAYOUT = 'uplatnica-print-layout-v2';
   const STORAGE_MARGIN = 'uplatnica-print-margin-v1';
 
   // --- definiramo polja i početne pozicije (u mm, okvirno) ---
+  const DEFAULT_PAD_MM = 1.5;
+
   const fieldDefs = [
-    { key:'uplatilac',           maxChars:26, fontSize:12, x:10,  y:10,  w:70 },
-    { key:'primatelj',           maxChars:30, fontSize:12, x:10,  y:22,  w:70 },
+    { key:'uplatilac',           maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:10,  w:70 },
+    { key:'primatelj',           maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:22,  w:70 },
 
-    { key:'svrha',               maxChars:30, fontSize:12, x:10,  y:34,  w:70 },
-    { key:'svrha1',              maxChars:30, fontSize:12, x:10,  y:42,  w:70 },
+    { key:'svrha',               maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:34,  w:70 },
+    { key:'svrha1',              maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:42,  w:70 },
 
-    { key:'iznos_full',          maxChars:18, fontSize:12, x:120, y:34,  w:40 },
-    { key:'racun_primatelja',    maxChars:26, fontSize:12, x:120, y:22,  w:40 },
+    { key:'iznos_full',          maxChars:18, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:34,  w:40 },
+    { key:'racun_primatelja',    maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:22,  w:40 },
 
-    { key:'mjesto',              maxChars:26, fontSize:12, x:10,  y:55,  w:60 },
-    { key:'broj_poreskog_obv',   maxChars:13, fontSize:12, x:120, y:55,  w:40 },
+    { key:'mjesto',              maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:55,  w:60 },
+    { key:'broj_poreskog_obv',   maxChars:13, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:55,  w:40 },
 
-    { key:'opcina_sifra',        maxChars:6,  fontSize:12, x:120, y:63,  w:40 },
-    { key:'poziv_na_broj',       maxChars:20, fontSize:12, x:120, y:71,  w:40 }
+    { key:'opcina_sifra',        maxChars:6,  fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:63,  w:40 },
+    { key:'poziv_na_broj',       maxChars:20, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:71,  w:40 }
   ];
 
   // Dopuna: mjesto + datum u istom polju
@@ -207,6 +226,7 @@
 
   // --- kreiranje field-box elemenata ---
   const fieldEls = new Map();
+  let activeKey = null;
 
   function createFields(){
     sheet.innerHTML = '';
@@ -215,6 +235,7 @@
       el.className = 'field-box';
       el.dataset.key = def.key;
       el.style.fontSize = (def.fontSize || 12) + 'px';
+      applyPadding(el, def.padMm || DEFAULT_PAD_MM);
 
       const txt = document.createElement('span');
       txt.className = 'field-text';
@@ -235,6 +256,35 @@
   }
 
   createFields();
+
+  if (fieldSelect){
+    fieldDefs.forEach(def=>{
+      const opt = document.createElement('option');
+      opt.value = def.key;
+      opt.textContent = def.key;
+      fieldSelect.appendChild(opt);
+    });
+  }
+
+  function applyPadding(el, padMm){
+    const padPx = mmToPx(padMm);
+    el.style.padding = padPx + 'px';
+  }
+
+  function setActive(key){
+    activeKey = key;
+    fieldEls.forEach((el,k)=>{
+      el.style.outline = k===key ? '1px solid #10b981' : '';
+    });
+    if (fieldSelect && fieldSelect.value !== key) fieldSelect.value = key || '';
+    updateFieldControlDisplay();
+  }
+
+  sheet.addEventListener('click', (e)=>{
+    const box = e.target.closest('.field-box');
+    if (!box) return;
+    setActive(box.dataset.key);
+  });
 
   // --- učitaj layout iz localStorage ---
   function loadLayout(){
@@ -262,13 +312,20 @@
       const leftMm = saved.xMm != null ? saved.xMm : def.x;
       const topMm  = saved.yMm != null ? saved.yMm : def.y;
       const wMm    = saved.wMm != null ? saved.wMm : def.w;
+      const fontSize = saved.fontSizePx != null ? saved.fontSizePx : (def.fontSize || 12);
+      const padMm = saved.padMm != null ? saved.padMm : (def.padMm || DEFAULT_PAD_MM);
       el.style.left = mmToPx(leftMm) + 'px';
       el.style.top  = mmToPx(topMm) + 'px';
       el.style.width = mmToPx(wMm) + 'px';
+      el.style.fontSize = fontSize + 'px';
+      applyPadding(el, padMm);
     });
   }
 
   applyInitialPositions();
+  if (fieldDefs[0]){
+    setActive(fieldDefs[0].key);
+  }
 
   // --- popuni tekst iz payload-a ---
   let payloadData = null;
@@ -413,7 +470,10 @@
       const xMm = (r.left - rectSheet.left) * 25.4 / 96;
       const yMm = (r.top  - rectSheet.top)  * 25.4 / 96;
       const wMm = (r.width) * 25.4 / 96;
-      layoutNew[key] = { xMm, yMm, wMm };
+      const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+      const padMm = padPx * 25.4 / 96;
+      const fontSizePx = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===key)?.fontSize || 12);
+      layoutNew[key] = { xMm, yMm, wMm, padMm, fontSizePx };
     });
     layout = layoutNew;
     saveLayout(layoutNew);
@@ -449,6 +509,80 @@
       applyInitialPositions();
       requestAnimationFrame(autoFitAll);
     });
+  }
+
+  function updateFieldControlDisplay(){
+    if (!activeKey) return;
+    const el = fieldEls.get(activeKey);
+    if (!el) return;
+    const layoutInfo = layout[activeKey] || {};
+    const fontSize = parseFloat(el.style.fontSize) || layoutInfo.fontSizePx || (fieldDefs.find(f=>f.key===activeKey)?.fontSize || 12);
+    const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+    const padMm = layoutInfo.padMm != null ? layoutInfo.padMm : (padPx * 25.4 / 96);
+    if (fontVal) fontVal.textContent = fontSize.toFixed(1).replace('.0','');
+    if (padVal) padVal.textContent = padMm.toFixed(1).replace('.0','');
+  }
+
+  function adjustFont(delta){
+    if (!activeKey) return;
+    const el = fieldEls.get(activeKey);
+    if (!el) return;
+    const current = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===activeKey)?.fontSize || 12);
+    const next = Math.max(6, Math.min(32, current + delta));
+    el.style.fontSize = next + 'px';
+    updateFieldControlDisplay();
+    autoFitField(el);
+    saveCurrentFieldState(activeKey);
+  }
+
+  function adjustPadding(delta){
+    if (!activeKey) return;
+    const el = fieldEls.get(activeKey);
+    if (!el) return;
+    const currentPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+    const currentMm = currentPx * 25.4 / 96;
+    const nextMm = Math.max(0, Math.min(6, currentMm + delta));
+    applyPadding(el, nextMm);
+    updateFieldControlDisplay();
+    autoFitField(el);
+    saveCurrentFieldState(activeKey);
+  }
+
+  function saveCurrentFieldState(key){
+    const el = fieldEls.get(key);
+    if (!el) return;
+    const rectSheet = sheet.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const xMm = (r.left - rectSheet.left) * 25.4 / 96;
+    const yMm = (r.top  - rectSheet.top)  * 25.4 / 96;
+    const wMm = (r.width) * 25.4 / 96;
+    const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+    const padMm = padPx * 25.4 / 96;
+    const fontSizePx = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===key)?.fontSize || 12);
+    layout[key] = { xMm, yMm, wMm, padMm, fontSizePx };
+    saveLayout(layout);
+  }
+
+  if (fieldSelect){
+    fieldSelect.addEventListener('change', ()=>{
+      if (fieldSelect.value){
+        setActive(fieldSelect.value);
+      }
+    });
+  }
+
+  if (fontMinus){
+    fontMinus.addEventListener('click', ()=> adjustFont(-1));
+  }
+  if (fontPlus){
+    fontPlus.addEventListener('click', ()=> adjustFont(1));
+  }
+
+  if (padMinus){
+    padMinus.addEventListener('click', ()=> adjustPadding(-0.5));
+  }
+  if (padPlus){
+    padPlus.addEventListener('click', ()=> adjustPadding(0.5));
   }
 
   if (btnPrint){
