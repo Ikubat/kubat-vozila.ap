@@ -12,12 +12,12 @@
     const basePageRoot = new URL('.', location.href).href;
 
     const API = {
-      list:    'uplatnica_list.php',
-      create:  'uplatnica_create.php',
-      update:  'uplatnica_update.php',
-      delete:  'uplatnica_delete.php',
-      partneri:'partneri_list.php',
-      svrhe:   'svrha_list.php',
+      list:        'uplatnica_list.php',
+      create:      'uplatnica_create.php',
+      update:      'uplatnica_update.php',
+      delete:      'uplatnica_delete.php',
+      partneri:    'partneri_list.php',
+      svrhe:       'svrha_list.php',
       svrhaCreate: 'svrha_create.php'
     };
 
@@ -46,6 +46,7 @@
     const $primateljTekst = document.getElementById('u_primatelj_tekst');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
+
     const $svrhaSel          = document.getElementById('u_svrha_id');
     const $svrhaNew          = document.getElementById('u_svrha_new');
     const $svrhaNewBtn       = document.getElementById('u_svrha_new_btn');
@@ -70,8 +71,8 @@
     const $poziv         = document.getElementById('u_poziv');
     const $napomena      = document.getElementById('u_napomena');
 
-    // --- PRINT elementi ---
-    const $btnPrint      = document.getElementById('u_print');
+    // --- PRINT gumb ---
+    const $btnPrint = document.getElementById('u_print');
 
     const state = {
       q: '',
@@ -117,7 +118,7 @@
                 errMsg = body.error.trim();
               }
             } catch (_) {
-              // fallback to default errMsg
+              // fallback
             }
 
             const err = new Error(errMsg);
@@ -142,7 +143,8 @@
       throw lastErr || new Error('Nepoznata greška pri fetchu.');
     }
 
-    function buildPrintPayload() {
+    // --- PRINT payload iz forme ---
+    function buildPrintPayloadFromForm() {
       const uplatilacTekst =
         ($uplatilacTekst && $uplatilacTekst.value.trim()) ||
         $uplatilacLabel.value.trim();
@@ -175,6 +177,39 @@
         budzetska_org_sifra: $budzetska.value.trim(),
         poziv_na_broj: $poziv.value.trim(),
         napomena: $napomena.value.trim(),
+        valuta_label: valuta
+      };
+    }
+
+    // --- PRINT payload iz stavke u listi ---
+    function buildPrintPayloadFromItem(item) {
+      if (!item) return null;
+      const valuta = (item.valuta || 'KM').trim() || 'KM';
+      const iznosVal = item.iznos === undefined || item.iznos === null
+        ? ''
+        : parseFloat(item.iznos);
+      const iznos = Number.isFinite(iznosVal) ? iznosVal.toFixed(2) : '';
+
+      return {
+        id: item.id,
+        uplatilac: item.uplatilac_naziv || '',
+        uplatilac_tekst: item.uplatilac_tekst || '',
+        primatelj: item.primatelj_naziv || '',
+        svrha: item.svrha_tekst || item.svrha || '',
+        svrha1: item.svrha1 || '',
+        mjesto: item.mjesto || item.mjesto_uplate || '',
+        datum: item.datum || item.datum_uplate || '',
+        iznos: iznos,
+        iznos_full: iznos ? `${iznos} ${valuta}` : '',
+        valuta,
+        racun_posiljaoca: item.racun_posiljaoca || '',
+        racun_primatelja: item.racun_primatelja || '',
+        broj_poreskog_obv: item.broj_poreskog_obv || '',
+        vrsta_prihoda_sifra: item.vrsta_prihoda_sifra || '',
+        opcina_sifra: item.opcina_sifra || '',
+        budzetska_org_sifra: item.budzetska_org_sifra || '',
+        poziv_na_broj: item.poziv_na_broj || '',
+        napomena: item.napomena || '',
         valuta_label: valuta
       };
     }
@@ -385,7 +420,7 @@
       }
     }
 
-    // 🔧 OVDJE JE BITNA IZMJENA – MERGE partnerData + postojeći partner iz state.partners
+    // 🔧 setPartner – merge partnerData + postojeći partner iz state.partners
     function setPartner(target, id, label, partnerData) {
       const isPrimatelj = target === 'primatelj';
       const $idField    = isPrimatelj ? $primateljId : $uplatilacId;
@@ -489,6 +524,7 @@
       );
     }
 
+    // event listenere za svrhu i pickere
     $svrhaSel.addEventListener('change', onSvrhaChange);
     $svrha.addEventListener('input', recomputeFromSvrha);
     $svrha1.addEventListener('input', recomputeFromSvrha);
@@ -499,7 +535,7 @@
     $svrhaModal?.addEventListener('click', (e) => { if (e.target === $svrhaModal) closeSvrhaModal(); });
     $btnPickUplat?.addEventListener('click', () => openPartnerPicker('uplatilac'));
     $btnPickPrim?.addEventListener('click', () => openPartnerPicker('primatelj'));
-  
+
     // ---- lista uplatnica ----
     function setEmpty(on) {
       if ($empty) $empty.style.display = on ? 'block' : 'none';
@@ -781,31 +817,57 @@
 
     $save.addEventListener('click', save);
 
-    function openPrintWindow() {
-      const payload = buildPrintPayload();
-      const payloadKey = 'uplatnica-print-' + Date.now();
+    // ---- otvaranje prozora za print (uplatnica_print.html) ----
+    function openPrintWindow(payloadOverride = null, idOverride = null) {
+      const payload = payloadOverride || buildPrintPayloadFromForm() || null;
+      const hasPayload = payload && Object.keys(payload).length > 0;
 
-      try {
-        localStorage.setItem(payloadKey, JSON.stringify(payload));
-      } catch (err) {
-        console.warn('Spremanje podataka za print nije uspjelo', err);
+      const payloadKey = hasPayload ? ('uplatnica-print-' + Date.now()) : null;
+      let payloadEncoded = '';
+
+      if (hasPayload) {
+        try {
+          payloadEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+        } catch (err) {
+          console.warn('Serijalizacija podataka za print nije uspjela', err);
+          payloadEncoded = '';
+        }
+      }
+
+      // pokušaj spremiti JSON i u localStorage i u sessionStorage (opcionalno)
+      if (hasPayload && payloadKey) {
+        try {
+          const payloadJson = JSON.stringify(payload);
+          try { localStorage.setItem(payloadKey, payloadJson); } catch (err) {
+            console.warn('Spremanje podataka za print u localStorage nije uspjelo', err);
+          }
+          try { sessionStorage.setItem(payloadKey, payloadJson); } catch (err) {
+            console.warn('Spremanje podataka za print u sessionStorage nije uspjelo', err);
+          }
+        } catch (err) {
+          console.warn('Spremanje podataka za print nije uspjelo', err);
+        }
       }
 
       const urlParams = new URLSearchParams();
-      const currentId = parseInt($id && $id.value, 10);
+      const currentId = idOverride || parseInt($id && $id.value, 10);
       if (currentId) {
         urlParams.set('id', currentId);
       }
 
-      const hashParams = new URLSearchParams();
-      hashParams.set('payload', payloadKey);
+      const hashPart = (() => {
+        if (!hasPayload) return '';
+        const hashParams = new URLSearchParams();
+        if (payloadKey) hashParams.set('payload', payloadKey);
+        if (payloadEncoded) hashParams.set('payloadData', payloadEncoded);
+        return '#' + hashParams.toString();
+      })();
 
       const url =
         basePageRoot +
         'uplatnica_print.html' +
         (urlParams.toString() ? '?' + urlParams.toString() : '') +
-        '#' +
-        hashParams.toString();
+        hashPart;
 
       const printWin = window.open(url, '_blank', 'noopener');
 
@@ -814,36 +876,42 @@
         return;
       }
 
-      const sendPayload = () => {
-        try {
-          printWin.postMessage({ type: 'uplatnica-data', payload }, '*');
-        } catch (err) {
-          console.warn('Slanje podataka za print nije uspjelo', err);
-        }
-      };
+      // dodatno pošalji payload preko postMessage, za slučaj da hash/storage ne prođu
+      if (hasPayload) {
+        const sendPayload = () => {
+          try {
+            printWin.postMessage({ type: 'uplatnica-data', payload }, '*');
+          } catch (err) {
+            console.warn('Slanje podataka za print nije uspjelo', err);
+          }
+        };
 
-      let attempts = 0;
-      const timer = setInterval(() => {
-        if (printWin.closed || attempts > 15) {
-          clearInterval(timer);
-          return;
-        }
-        attempts += 1;
+        let attempts = 0;
+        const timer = setInterval(() => {
+          if (printWin.closed || attempts > 15) {
+            clearInterval(timer);
+            return;
+          }
+          attempts += 1;
+          sendPayload();
+
+          if (printWin.document && printWin.document.readyState === 'complete') {
+            clearInterval(timer);
+          }
+        }, 200);
+
         sendPayload();
-
-        if (printWin.document && printWin.document.readyState === 'complete') {
-          clearInterval(timer);
-        }
-      }, 200);
-
-      sendPayload();
+      }
     }
 
+    // toolbar Print – koristi podatke iz trenutnog modala (ako je otvoren)
     if ($btnPrint) {
-      $btnPrint.addEventListener('click', openPrintWindow);
+      $btnPrint.addEventListener('click', () => {
+        openPrintWindow();
+      });
     }
 
-    // ---- delegacija klikova na listu (edit / delete) ----
+    // ---- delegacija klikova na listu (edit / print / delete) ----
     document.addEventListener('click', async e => {
       const row = e.target.closest('.row[data-id]');
       if (!row) return;
@@ -857,8 +925,9 @@
         const id = parseInt(row.dataset.id, 10);
         if (!id) return;
 
-        const url = basePageRoot + 'uplatnica_print.html?id=' + encodeURIComponent(id);
-        window.open(url, '_blank');
+        const item = state.all.find(x => x.id === id) || null;
+        const payload = buildPrintPayloadFromItem(item);
+        openPrintWindow(payload, id);
         return;
       }
 

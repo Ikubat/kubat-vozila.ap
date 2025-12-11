@@ -1,677 +1,400 @@
 <!DOCTYPE html>
-<html>
+<html lang="hr">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8" />
 <title>Ispis uplatnice</title>
 
 <style>
-  :root {
-    --sheet-width-mm: 210;
-    --sheet-height-mm: 150;
+  :root{
+    --sheet-margin: 8mm;   /* margina papira (podesivo) */
+    --handle-size: 8px;
   }
 
-  @page {
-    margin: 8mm 10mm 8mm 10mm;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
+  body{
     font-family: "Courier New", monospace;
-    font-size: 12pt;
-    margin: 0;
-    color: #1f2937;
-    background: #f5f5f5;
+    background:#f3f4f6;
+    color:#111;
+    margin:0;
+    padding:0;
+    user-select:none;
   }
 
-  #wrap {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 16px;
-    padding: 16px;
-    align-items: start;
+  /* Glavni papir 168×100 mm */
+  .sheet{
+    position:relative;
+    width:168mm;
+    height:100mm;
+    background:white;
+    margin: var(--sheet-margin) auto;
+    box-shadow:0 12px 25px rgba(0,0,0,.25);
+    overflow:hidden;
   }
 
-  #toolbar {
-    background: #fff;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-
-  #toolbar h1 {
-    margin: 0 0 8px;
-    font-size: 18px;
-  }
-
-  #toolbar p {
-    margin: 0 0 10px;
-    font-size: 13px;
-    color: #4b5563;
-  }
-
-  #status {
-    margin: 0 0 12px;
-    font-size: 13px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-    display: none;
-  }
-  #status.ok {
-    background: #ecfdf3;
-    border-color: #bbf7d0;
-    color: #166534;
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  label {
-    display: flex;
-    flex-direction: column;
-    font-size: 13px;
-    gap: 6px;
-    color: #111827;
-  }
-
-  input, select {
-    padding: 8px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    font-family: inherit;
-  }
-
-  input[type="number"] {
-    width: 100%;
-  }
-
-  .actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  button {
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #9ca3af;
-    background: #fff;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  button.primary {
-    background: #2563eb;
-    color: #fff;
-    border-color: #1d4ed8;
-  }
-
-  button.danger {
-    background: #dc2626;
-    color: #fff;
-    border-color: #b91c1c;
-  }
-
-  #previewWrap {
-    background: #e5e7eb;
-    padding: 12px;
-    border-radius: 8px;
-  }
-
-  #preview {
-    position: relative;
-    width: calc(var(--sheet-width-mm) * 1mm);
-    height: calc(var(--sheet-height-mm) * 1mm);
-    margin: 0 auto;
-    background: #fff;
-    border: 1px solid #d1d5db;
-    overflow: hidden;
-  }
-
-  #preview::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border: 1px dashed rgba(0,0,0,0.05);
-    background-image: linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
-                      linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px);
-    background-size: 10mm 10mm;
-  }
-
-  .field {
-    position: absolute;
-    white-space: pre-wrap;
-    cursor: move;
-    border-radius: 4px;
-    padding: 2px 4px;
-    max-width: 120mm;
-    line-height: 1.2;
-  }
-
-  .field.selected {
-    outline: 1px dashed #2563eb;
-    background: rgba(37, 99, 235, 0.08);
-  }
-
-  .field .hint {
-    display: none;
-  }
-
-  .ghost {
-    position: absolute;
-    border: 1px dashed #9ca3af;
-    background: rgba(148, 163, 184, 0.12);
-    pointer-events: none;
-  }
-
-  @media print {
-    body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
+  /* Print bez margina */
+  @media print{
+    body{
+      background:white;
     }
-
-    #wrap {
-      display: block;
-      margin: 0;
-      padding: 0;
+    @page{
+      size:168mm 100mm;
+      margin:0;
     }
-
-    #toolbar {
-      display: none;
+    .no-print{display:none !important;}
+    .sheet{
+      margin:0 !important;
+      box-shadow:none !important;
+      background:white !important;
     }
+  }
 
-    #previewWrap {
-      padding: 0;
-      background: transparent;
-      display: flex;
-      justify-content: center;
-    }
+  /* PODESIVA POLJA */
+  .fld{
+    position:absolute;
+    min-width:20mm;
+    padding:0;
+    margin:0;
+    font-size:12px;
+    line-height:1.1;
+    white-space:nowrap;
+    border:1px dashed transparent;   /* ne vidi se u normalnom radu */
+  }
+  .fld.editing{
+    border-color:#4b9cff;
+    background:rgba(100,150,255,0.06);
+  }
 
-    #preview {
-      border: none;
-    }
+  /* Plave točkice – resize */
+  .h{
+    width:var(--handle-size);
+    height:var(--handle-size);
+    background:#1d4ed8;
+    border-radius:50%;
+    position:absolute;
+    cursor:pointer;
+  }
+  .h.br{ right:-4px; bottom:-4px; }
+  .h.bl{ left:-4px;  bottom:-4px; }
+  .h.tr{ right:-4px; top:-4px; }
+  .h.tl{ left:-4px;  top:-4px; }
 
-    /* Očuvaj vidljivost sadržaja u printu i ukloni pomoćne stilove. */
-    #preview, #preview * {
-      visibility: visible;
-    }
-
-    .field {
-      padding: 0;
-      outline: none;
-      background: transparent;
-      cursor: default;
-    }
+  /* Toolbar */
+  #toolbar{
+    position:fixed;
+    top:10px; left:50%;
+    transform:translateX(-50%);
+    background:white;
+    padding:8px 14px;
+    border-radius:6px;
+    box-shadow:0 3px 10px rgba(0,0,0,.2);
+    z-index:2000;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+  }
+  #toolbar button{
+    padding:4px 8px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  #fontSlider{
+    width:100px;
   }
 </style>
 </head>
 <body>
 
-<div id="wrap">
-  <div id="previewWrap">
-    <div id="preview">
-      <div id="uplatioc"     class="field" data-field="uplatioc"></div>
-      <div id="uplatioc_txt" class="field" data-field="uplatioc_txt"></div>
-      <div id="primatelj"    class="field" data-field="primatelj"></div>
-      <div id="svrha1"       class="field" data-field="svrha1"></div>
-      <div id="svrha2"       class="field" data-field="svrha2"></div>
-      <div id="iznos"        class="field" data-field="iznos"></div>
-      <div id="racunPrim"    class="field" data-field="racunPrim"></div>
-      <div id="racunPos"     class="field" data-field="racunPos"></div>
-      <div id="pozivNaBroj"  class="field" data-field="pozivNaBroj"></div>
-      <div id="brojPoreski"  class="field" data-field="brojPoreski"></div>
-      <div id="vrstaPrihoda" class="field" data-field="vrstaPrihoda"></div>
-      <div id="opcina"       class="field" data-field="opcina"></div>
-      <div id="budzetska"    class="field" data-field="budzetska"></div>
-      <div id="mjesto"       class="field" data-field="mjesto"></div>
-      <div id="datum"        class="field" data-field="datum"></div>
-      <div id="napomena"     class="field" data-field="napomena"></div>
-    </div>
-  </div>
+<!-- alatna traka -->
+<div id="toolbar" class="no-print">
+  <button type="button" onclick="decMargin()">– margina</button>
+  <button type="button" onclick="incMargin()">+ margina</button>
 
-  <div id="toolbar">
-    <h1>Podešavanje ispisa uplatnice</h1>
-    <p>Povuci polje na željenu poziciju ili koristi unos u milimetrima. Podešena širina i veličina teksta pomažu da sadržaj stane na obrazac.</p>
-    <p id="status" role="status"></p>
+  <label>
+    Font:
+    <input id="fontSlider" type="range" min="8" max="18" step="1" value="12">
+  </label>
 
-    <div class="controls">
-      <label>
-        Polje
-        <select id="fieldSelect"></select>
-      </label>
-      <label>
-        Veličina teksta (pt)
-        <input id="fontSize" type="number" min="6" max="24" step="0.5">
-      </label>
-      <label>
-        Širina (mm)
-        <input id="width" type="number" min="10" max="160" step="1">
-      </label>
-      <label>
-        Gornja margina (mm)
-        <input id="top" type="number" min="0" max="200" step="0.5">
-      </label>
-      <label>
-        Lijeva margina (mm)
-        <input id="left" type="number" min="0" max="200" step="0.5">
-      </label>
-      <label>
-        Deblji tekst
-        <select id="weight">
-          <option value="normal">Normal</option>
-          <option value="bold">Bold</option>
-        </select>
-      </label>
-    </div>
+  <button type="button" onclick="saveLayout()">💾 Spremi pozicije</button>
+  <button type="button" onclick="window.print()">🖨 Ispis</button>
+</div>
 
-    <div class="actions">
-      <button id="resetLayout" class="danger" type="button">Vrati početne pozicije</button>
-      <button id="printNow" class="primary" type="button">Print</button>
-    </div>
-  </div>
+<!-- radna površina (papir) -->
+<div id="sheet" class="sheet">
+
+  <!-- SVA POLJA – početne pozicije (možeš ih kasnije ručno pomjeriti i spremiti) -->
+
+  <div class="fld" id="f_uplatilac" style="left:10mm; top:10mm; width:70mm;">Uplatilac</div>
+
+  <div class="fld" id="f_primatelj" style="left:10mm; top:22mm; width:70mm;">Primatelj</div>
+
+  <div class="fld" id="f_svrha" style="left:10mm; top:34mm; width:70mm;">Svrha</div>
+
+  <div class="fld" id="f_svrha1" style="left:10mm; top:42mm; width:70mm;">Svrha 2</div>
+
+  <div class="fld" id="f_iznos" style="left:120mm; top:34mm; width:40mm;">Iznos</div>
+
+  <div class="fld" id="f_racunPrim" style="left:120mm; top:22mm; width:40mm;">Račun primatelja</div>
+
+  <div class="fld" id="f_mjesto" style="left:10mm; top:55mm; width:60mm;">Mjesto, datum</div>
+
+  <div class="fld" id="f_porezni" style="left:120mm; top:55mm; width:40mm;">Porezni</div>
+
+  <div class="fld" id="f_opcina" style="left:120mm; top:63mm; width:40mm;">Općina</div>
+
+  <div class="fld" id="f_poziv" style="left:120mm; top:71mm; width:40mm;">Poziv na broj</div>
+
 </div>
 
 <script>
-(function(){
-  const $preview      = document.getElementById('preview');
-  const $fieldSelect  = document.getElementById('fieldSelect');
-  const $fontSize     = document.getElementById('fontSize');
-  const $width        = document.getElementById('width');
-  const $top          = document.getElementById('top');
-  const $left         = document.getElementById('left');
-  const $weight       = document.getElementById('weight');
-  const $reset        = document.getElementById('resetLayout');
-  const $printNow     = document.getElementById('printNow');
-  const $status       = document.getElementById('status');
+/* -------------------------------------------------
+   GLOBALNE POSTAVKE
+--------------------------------------------------*/
+const GRID_PX = 2; // veličina grida za snap (u px)
+let selectedField = null;
+const fontSlider = document.getElementById("fontSlider");
 
-  const defaultLayout = {
-    uplatioc:    { top: 18, left: 10, fontSize: 12, width: 90, weight: 'normal' },
-    uplatioc_txt:{ top: 24, left: 10, fontSize: 10.5, width: 90, weight: 'normal' },
-    primatelj:   { top: 38, left: 10, fontSize: 12, width: 90, weight: 'bold' },
-    svrha1:      { top: 52, left: 10, fontSize: 11, width: 120, weight: 'normal' },
-    svrha2:      { top: 57, left: 10, fontSize: 11, width: 120, weight: 'normal' },
-    iznos:       { top: 70, left: 140, fontSize: 12, width: 60, weight: 'bold' },
-    racunPrim:   { top: 84, left: 10, fontSize: 11, width: 120, weight: 'normal' },
-    racunPos:    { top: 96, left: 10, fontSize: 11, width: 120, weight: 'normal' },
-    pozivNaBroj: { top: 84, left: 140, fontSize: 11, width: 55, weight: 'normal' },
-    brojPoreski: { top: 96, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
-    vrstaPrihoda:{ top: 106, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
-    opcina:      { top: 116, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
-    budzetska:   { top: 126, left: 140, fontSize: 10.5, width: 55, weight: 'normal' },
-    mjesto:      { top: 110, left: 10, fontSize: 11, width: 60, weight: 'normal' },
-    datum:       { top: 110, left: 75, fontSize: 11, width: 40, weight: 'normal' },
-    napomena:    { top: 130, left: 10, fontSize: 10.5, width: 180, weight: 'normal' }
-  };
+/* -------------------------------------------------
+   UČITAVANJE PODATAKA IZ parent window (postMessage)
+--------------------------------------------------*/
+let payload = null;
 
-  const layoutKey = 'uplatnica-print-layout-v2';
-  let layout = loadLayout();
-  let selectedField = 'uplatioc';
-  let dragState = null;
-  let hasData = false;
-  let autoPrinted = false;
+window.addEventListener("message", (event)=>{
+  if(event.data?.type === "uplatnica-data"){
+    payload = event.data.payload;
+    fillFields();
+  }
+});
 
-  const fields = {};
-  document.querySelectorAll('.field').forEach(el => {
-    const name = el.dataset.field;
-    if (!name) return;
-    fields[name] = el;
-    el.addEventListener('mousedown', e => startDrag(e, name));
-    el.addEventListener('click', () => selectField(name));
+function fillFields(){
+  if(!payload) return;
+
+  setText("f_uplatilac", payload.uplatilac || payload.uplatilac_tekst || "");
+  setText("f_primatelj", payload.primatelj || "");
+  setText("f_svrha", payload.svrha || "");
+  setText("f_svrha1", payload.svrha1 || "");
+  setText("f_iznos", payload.iznos_full || "");
+  setText("f_racunPrim", payload.racun_primatelja || "");
+  setText("f_mjesto", (payload.mjesto || "") + (payload.datum ? ", " + payload.datum : ""));
+  setText("f_porezni", payload.broj_poreskog_obv || "");
+  setText("f_opcina", payload.opcina_sifra || "");
+  setText("f_poziv", payload.poziv_na_broj || "");
+}
+
+function setText(id, txt){
+  const el = document.getElementById(id);
+  if(el) el.textContent = txt;
+}
+
+/* -------------------------------------------------
+   DODAVANJE HANDLES + DRAG
+--------------------------------------------------*/
+document.querySelectorAll(".fld").forEach(f=>{
+  addHandles(f);
+  makeDraggable(f);
+});
+
+function addHandles(f){
+  ["tl","tr","bl","br"].forEach(pos=>{
+    const h = document.createElement("div");
+    h.className = "h " + pos;
+    f.appendChild(h);
+    h.addEventListener("mousedown", resizeStart);
   });
+}
 
-  Object.keys(fields).forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = labelFor(name);
-    $fieldSelect.appendChild(opt);
-  });
+/* ---------- RESIZE ---------- */
+let rTarget=null, rStartX=0, rStartWidthPx=0;
 
-  $fieldSelect.addEventListener('change', e => selectField(e.target.value));
-  $fontSize.addEventListener('input', () => updateField('fontSize', parseFloat($fontSize.value)));
-  $width.addEventListener('input', () => updateField('width', parseFloat($width.value)));
-  $top.addEventListener('input', () => updateField('top', parseFloat($top.value)));
-  $left.addEventListener('input', () => updateField('left', parseFloat($left.value)));
-  $weight.addEventListener('change', () => updateField('weight', $weight.value));
-  $reset.addEventListener('click', () => { layout = JSON.parse(JSON.stringify(defaultLayout)); applyLayout(); saveLayout(); });
-  $printNow.addEventListener('click', () => {
-    if (!hasData) {
-      $status.textContent = 'Podaci za ispis još nisu učitani. Pričekajte da stignu ili pokušajte ponovo.';
-      $status.classList.remove('ok');
-      $status.style.display = 'block';
-      return;
-    }
+function resizeStart(e){
+  e.preventDefault();
+  rTarget = this.parentElement;
+  const cs = getComputedStyle(rTarget);
+  rStartWidthPx = parseFloat(cs.width);
+  rStartX = e.clientX;
 
-    triggerPrint();
-  });
+  document.addEventListener("mousemove", resizeMove);
+  document.addEventListener("mouseup", resizeStop);
+}
 
-  function labelFor(name) {
-    const labels = {
-      uplatioc: 'Uplatilac',
-      uplatioc_txt: 'Uplatilac – dodatni tekst',
-      primatelj: 'Primatelj',
-      svrha1: 'Svrha (prvi red)',
-      svrha2: 'Svrha (drugi red)',
-      iznos: 'Iznos',
-      racunPrim: 'Račun primatelja',
-      racunPos: 'Račun pošiljaoca',
-      pozivNaBroj: 'Poziv na broj',
-      brojPoreski: 'Broj poreskog obveznika',
-      vrstaPrihoda: 'Vrsta prihoda (šifra)',
-      opcina: 'Općina (šifra)',
-      budzetska: 'Budžetska org. (šifra)',
-      mjesto: 'Mjesto',
-      datum: 'Datum',
-      napomena: 'Napomena'
-    };
-    return labels[name] || name;
+function resizeMove(e){
+  if(!rTarget) return;
+  const dx = e.clientX - rStartX;
+  const newW = rStartWidthPx + dx;
+  if(newW > 10) {
+    rTarget.style.width = newW + "px";
   }
+}
 
-  function loadLayout() {
-    try {
-      const raw = localStorage.getItem(layoutKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return { ...defaultLayout, ...parsed };
-      }
-    } catch (err) {
-      console.warn('Ne mogu učitati spremljene pozicije', err);
-    }
-    return JSON.parse(JSON.stringify(defaultLayout));
+function resizeStop(){
+  if(rTarget){
+    // snap širine na grid
+    const cs = getComputedStyle(rTarget);
+    const w = parseFloat(cs.width);
+    const wSnap = Math.round(w / GRID_PX) * GRID_PX;
+    rTarget.style.width = wSnap + "px";
   }
+  document.removeEventListener("mousemove", resizeMove);
+  document.removeEventListener("mouseup", resizeStop);
+  rTarget = null;
+}
 
-  function saveLayout() {
-    try {
-      localStorage.setItem(layoutKey, JSON.stringify(layout));
-    } catch (err) {
-      console.warn('Spremanje izgleda nije uspjelo', err);
-    }
-  }
+/* ---------- DRAG + SELEKCIJA ---------- */
+function makeDraggable(el){
+  let dragging = false;
+  let ox=0, oy=0, sx=0, sy=0;
 
-  function pxToMm(px) {
-    const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheet-width-mm'));
-    const pxPerMm = $preview.getBoundingClientRect().width / mm;
-    return px / pxPerMm;
-  }
+  el.addEventListener("mousedown", e=>{
+    // klik na handle -> resize, ne drag
+    if(e.target.classList.contains("h")) return;
 
-  function applyLayout() {
-    Object.keys(fields).forEach(name => {
-      const cfg = layout[name] || defaultLayout[name];
-      const el = fields[name];
-      if (!cfg || !el) return;
-      el.style.top = cfg.top + 'mm';
-      el.style.left = cfg.left + 'mm';
-      el.style.fontSize = (cfg.fontSize || 12) + 'pt';
-      el.style.width = (cfg.width || 80) + 'mm';
-      el.style.fontWeight = cfg.weight || 'normal';
-    });
-    refreshInputs();
-  }
-
-  function refreshInputs() {
-    const cfg = layout[selectedField];
-    $fieldSelect.value = selectedField;
-    $fontSize.value = cfg.fontSize;
-    $width.value = cfg.width;
-    $top.value = cfg.top;
-    $left.value = cfg.left;
-    $weight.value = cfg.weight;
-    highlightSelected();
-  }
-
-  function selectField(name) {
-    if (!fields[name]) return;
-    selectedField = name;
-    refreshInputs();
-  }
-
-  function updateField(key, value) {
-    if (!(selectedField in layout)) return;
-    if (Number.isFinite(value) || typeof value === 'string') {
-      layout[selectedField][key] = value;
-      applyLayout();
-      saveLayout();
-    }
-  }
-
-  function highlightSelected() {
-    Object.keys(fields).forEach(name => {
-      fields[name].classList.toggle('selected', name === selectedField);
-    });
-  }
-
-  function startDrag(e, name) {
-    selectField(name);
-    const rect = $preview.getBoundingClientRect();
-    const elRect = fields[name].getBoundingClientRect();
-    dragState = {
-      name,
-      startX: e.clientX,
-      startY: e.clientY,
-      offsetX: e.clientX - elRect.left,
-      offsetY: e.clientY - elRect.top,
-      previewLeft: rect.left,
-      previewTop: rect.top
-    };
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', endDrag);
     e.preventDefault();
-  }
 
-  function onDrag(e) {
-    if (!dragState) return;
-    const { name, previewLeft, previewTop, offsetX, offsetY } = dragState;
-    const previewRect = $preview.getBoundingClientRect();
-    const x = e.clientX - previewLeft - offsetX;
-    const y = e.clientY - previewTop - offsetY;
-    const clampedX = Math.max(0, Math.min(x, previewRect.width - fields[name].offsetWidth));
-    const clampedY = Math.max(0, Math.min(y, previewRect.height - fields[name].offsetHeight));
-    layout[name].left = parseFloat(pxToMm(clampedX).toFixed(1));
-    layout[name].top  = parseFloat(pxToMm(clampedY).toFixed(1));
-    applyLayout();
-  }
+    // selekcija polja
+    selectField(el);
 
-  function endDrag() {
-    dragState = null;
-    saveLayout();
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', endDrag);
-  }
+    const cs = getComputedStyle(el);
+    ox = parseFloat(cs.left);
+    oy = parseFloat(cs.top);
+    sx = e.clientX;
+    sy = e.clientY;
 
-  // --- RENDER PODATAKA ---
-  const $uplatioc     = document.getElementById('uplatioc');
-  const $uplatiocTxt  = document.getElementById('uplatioc_txt');
-  const $primatelj    = document.getElementById('primatelj');
-  const $svrha1       = document.getElementById('svrha1');
-  const $svrha2       = document.getElementById('svrha2');
-  const $iznos        = document.getElementById('iznos');
-  const $racunPrim    = document.getElementById('racunPrim');
-  const $racunPos     = document.getElementById('racunPos');
-  const $pozivNaBroj  = document.getElementById('pozivNaBroj');
-  const $brojPoreski  = document.getElementById('brojPoreski');
-  const $vrstaPrihoda = document.getElementById('vrstaPrihoda');
-  const $opcina       = document.getElementById('opcina');
-  const $budzetska    = document.getElementById('budzetska');
-  const $mjesto       = document.getElementById('mjesto');
-  const $datum        = document.getElementById('datum');
-  const $napomena     = document.getElementById('napomena');
-
-  function render(u) {
-    if (!u) {
-      hasData = false;
-      updateStatus('Nema dostupnih podataka za ispis. Provjerite da je prozor otvoren s ispravnim ID-em.');
-      return;
-    }
-
-    // Dozvoli sendere koji šalju `data` ili `payload` čvor.
-    if (u && typeof u === 'object') {
-      u = u.data || u.payload || u;
-    }
-
-    const pick = (...vals) => {
-      for (const v of vals) {
-        if (v === null || v === undefined) continue;
-        const s = typeof v === 'string' ? v.trim() : v;
-        if (s !== '' && s !== null && s !== undefined) return s;
-      }
-      return '';
-    };
-
-    $uplatioc.innerText    = pick(u.uplatilac, u.uplatilac_naziv, u.uplatilacNaziv, u.uplatilac_label);
-    $uplatiocTxt.innerText = pick(u.uplatilac_tekst, u.uplatilacTekst, u.uplatilac_txt);
-    $primatelj.innerText   = pick(u.primatelj, u.primatelj_naziv, u.primateljNaziv, u.primatelj_label);
-    $svrha1.innerText      = pick(u.svrha, u.svrha_uplate, u.svrhaUplate, u.svrha_tekst);
-    $svrha2.innerText      = pick(u.svrha1, u.svrha_2, u.svrha2, u.svrha_dodatno);
-
-    const valuta = pick(u.valuta, 'KM') || 'KM';
-    const iznosVal = pick(u.iznos, u.iznos_value, u.iznosValue);
-    const iznosNum = typeof iznosVal === 'number'
-      ? iznosVal
-      : (iznosVal ? parseFloat(String(iznosVal).replace(',', '.')) : NaN);
-    const iznos = Number.isFinite(iznosNum) ? iznosNum.toFixed(2) : pick(iznosVal, '');
-    const iznosFull = pick(u.iznos_full, u.iznosFull);
-    $iznos.innerText     = iznosFull || ((iznos ? iznos + ' ' : '') + valuta);
-    $racunPrim.innerText = pick(u.racun_primatelja, u.racunPrim, u.racun_primaoca);
-    $racunPos.innerText  = pick(u.racun_posiljaoca, u.racunPos, u.racun_platioca);
-    $pozivNaBroj.innerText = pick(u.poziv_na_broj, u.pozivNaBroj, u.poziv);
-    $brojPoreski.innerText = pick(u.broj_poreskog_obv, u.brojPoreski, u.porezni_broj);
-    $vrstaPrihoda.innerText = pick(u.vrsta_prihoda_sifra, u.vrstaPrihoda);
-    $opcina.innerText = pick(u.opcina_sifra, u.opcina);
-    $budzetska.innerText = pick(u.budzetska_org_sifra, u.budzetska);
-    $mjesto.innerText = pick(u.mjesto, u.mjesto_uplate, u.mjestoUplate);
-    $datum.innerText = pick(u.datum, u.datum_uplate, u.datumUplate);
-    $napomena.innerText = pick(u.napomena);
-
-    hasData = Object.values(fields).some(el => (el.textContent || '').trim() !== '');
-    updateStatus();
-
-    if (hasData && !autoPrinted) {
-      autoPrinted = true;
-      // Automatski pokreni print kad prvi put stignu podaci da se izbjegne prazna stranica.
-      triggerPrint();
-    }
-  }
-
-  async function triggerPrint() {
-    // Sačekaj da se svi fontovi i layout do kraja prikažu prije ispisa.
-    if (document.fonts && document.fonts.ready) {
-      try {
-        await document.fonts.ready;
-      } catch (err) {
-        console.warn('Ne mogu čekati fontove za print', err);
-      }
-    }
-
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    window.print();
-  }
-
-  function updateStatus(customText) {
-    if (!$status) return;
-    if (hasData) {
-      $status.textContent = customText || 'Podaci za ispis su učitani.';
-      $status.classList.add('ok');
-      $status.style.display = 'block';
-      $printNow.disabled = false;
-    } else {
-      $status.textContent = customText || 'Podaci za ispis još nisu stigli. Provjerite da je prozor dopušten da učita payload ili pokušajte ponovo.';
-      $status.classList.remove('ok');
-      $status.style.display = 'block';
-      $printNow.disabled = true;
-    }
-  }
-
-  applyLayout();
-  updateStatus('Učitavanje podataka za ispis…');
-
-  // Slušaj podatke poslano preko postMessage (print iz modala "nova" / "uredi")
-  let payloadPrimljen = false;
-  const payloadTimer = setTimeout(() => {
-    if (!payloadPrimljen && !parsedId && !storagePayload) {
-      alert('Nedostaje ID uplatnice.');
-    }
-  }, 1500);
-
-  window.addEventListener('message', e => {
-    const data = e.data;
-    if (!data) return;
-
-    if (data.type === 'uplatnica-data') {
-      payloadPrimljen = true;
-      clearTimeout(payloadTimer);
-      render(data.payload || data);
-    }
+    dragging = true;
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", stop);
   });
 
-  // Preuzmi payload iz localStorage ako je poslan preko hash parametra
-  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
-  const storageKey = hashParams.get('payload');
-  let storagePayload = null;
-  if (storageKey) {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        storagePayload = JSON.parse(raw);
-        render(storagePayload);
-        payloadPrimljen = true;
-        localStorage.removeItem(storageKey);
-      }
-    } catch (err) {
-      console.warn('Ne mogu pročitati podatke iz localStorage', err);
-    }
+  function move(e){
+    if(!dragging) return;
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    el.style.left = (ox + dx) + "px";
+    el.style.top  = (oy + dy) + "px";
   }
 
-  // Dobavi ID iz URL-a (podržava i hash #id=... kao fallback)
-  const search = new URLSearchParams(location.search);
-  const parsedId = parseInt(search.get('id') || hashParams.get('id') || hashParams.get('uplatnica_id'), 10);
-  if (!parsedId) return;
-
-  (async function(){
-    const id = parsedId;
-
-    // Odredi bazni API root (/api/ kada smo u /app/)
-    const apiBase = location.pathname.includes('/app/') ? '../api/' : './api/';
-
-    // Povuci podatke sa API-a
-    let res;
-    try {
-      res = await fetch(apiBase + 'uplatnica_get.php?id=' + encodeURIComponent(id));
-    } catch (err) {
-      return alert('Greška pri dohvaćanju uplatnice (#' + id + ')');
+  function stop(){
+    if(dragging){
+      // snap na grid
+      const cs = getComputedStyle(el);
+      let l = parseFloat(cs.left);
+      let t = parseFloat(cs.top);
+      l = Math.round(l / GRID_PX) * GRID_PX;
+      t = Math.round(t / GRID_PX) * GRID_PX;
+      el.style.left = l + "px";
+      el.style.top  = t + "px";
     }
+    dragging = false;
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("mouseup", stop);
+  }
+}
 
-    if (!res.ok) {
-      return alert('Greška pri dohvaćanju uplatnice (#' + id + ')');
-    }
+/* -------------------------------------------------
+   SELEKCIJA POLJA + SLIDER FONT SIZE
+--------------------------------------------------*/
+function selectField(el){
+  if(selectedField === el) return;
 
-    let out;
-    try {
-      out = await res.json();
-    } catch (err) {
-      return alert('Neispravan odgovor sa servera (#' + id + ')');
-    }
+  if(selectedField){
+    selectedField.classList.remove("editing");
+  }
+  selectedField = el;
+  if(selectedField){
+    selectedField.classList.add("editing");
 
-    const u = out && (out.data || out);
-    if (!u || !u.id) {
-      return alert('Uplatnica nije pronađena (#' + id + ')');
-    }
+    // postavi slider na trenutni font selektiranog polja
+    const cs = getComputedStyle(selectedField);
+    const fs = parseFloat(cs.fontSize) || 12;
+    fontSlider.value = Math.round(fs);
+  }
+}
 
-    if (!payloadPrimljen) {
-      render(u);
-    }
-  })();
+// klik bilo gdje na polje također ga selektira (i bez pomjeranja)
+document.querySelectorAll(".fld").forEach(f=>{
+  f.addEventListener("click", e=>{
+    if(e.target.classList.contains("h")) return;
+    selectField(f);
+  });
+});
+
+// promjena fonta sa slidera
+fontSlider.addEventListener("input", ()=>{
+  if(!selectedField) return;
+  const v = parseInt(fontSlider.value, 10) || 12;
+  selectedField.style.fontSize = v + "px";
+});
+
+/* -------------------------------------------------
+   MARGINE PAPIRA
+--------------------------------------------------*/
+function incMargin(){
+  const cs = getComputedStyle(document.documentElement);
+  const cur = parseFloat(cs.getPropertyValue("--sheet-margin")) || 0;
+  const next = cur + 1;
+  document.documentElement.style.setProperty("--sheet-margin", next + "mm");
+  saveMargin();
+}
+function decMargin(){
+  const cs = getComputedStyle(document.documentElement);
+  const cur = parseFloat(cs.getPropertyValue("--sheet-margin")) || 0;
+  const next = Math.max(0, cur - 1);
+  document.documentElement.style.setProperty("--sheet-margin", next + "mm");
+  saveMargin();
+}
+function saveMargin(){
+  const cs = getComputedStyle(document.documentElement);
+  const cur = cs.getPropertyValue("--sheet-margin");
+  try{
+    localStorage.setItem("uplatnica-margin", cur);
+  }catch(e){}
+}
+(function loadMargin(){
+  try{
+    const m = localStorage.getItem("uplatnica-margin");
+    if(m) document.documentElement.style.setProperty("--sheet-margin", m);
+  }catch(e){}
+})();
+
+/* -------------------------------------------------
+   SPREMANJE / UČITAVANJE LAYOUTA
+--------------------------------------------------*/
+function saveLayout(){
+  const obj = {};
+  document.querySelectorAll(".fld").forEach(f=>{
+    const cs = getComputedStyle(f);
+    obj[f.id] = {
+      left: cs.left,
+      top: cs.top,
+      width: cs.width,
+      fontSize: cs.fontSize
+    };
+  });
+  try{
+    localStorage.setItem("uplatnica-layout", JSON.stringify(obj));
+    alert("Pozicije i fontovi spremljeni.");
+  }catch(e){
+    alert("Ne mogu spremiti layout: " + e.message);
+  }
+}
+
+(function loadLayout(){
+  let raw = null;
+  try{
+    raw = localStorage.getItem("uplatnica-layout");
+  }catch(e){}
+  if(!raw) return;
+  try{
+    const obj = JSON.parse(raw);
+    Object.keys(obj).forEach(id=>{
+      const f = document.getElementById(id);
+      if(!f) return;
+      const cfg = obj[id];
+      if(cfg.left) f.style.left = cfg.left;
+      if(cfg.top) f.style.top = cfg.top;
+      if(cfg.width) f.style.width = cfg.width;
+      if(cfg.fontSize) f.style.fontSize = cfg.fontSize;
+    });
+  }catch(e){}
 })();
 </script>
-
 </body>
 </html>
