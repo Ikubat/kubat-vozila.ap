@@ -215,16 +215,14 @@
     { key:'datum',               maxChars:14, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:55,  y:66,  w:25 },
     { key:'racun_posiljaoca',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:74,  w:72 },
 
-    { key:'primatelj_detalj',    maxChars:34, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:10,  w:65 },
-    { key:'racun_primatelja',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:18,  w:65 },
-    { key:'iznos',               maxChars:18, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:30,  w:40 },
-    { key:'valuta_label',        maxChars:6,  fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:132, y:30,  w:18 },
-    { key:'iznos_full',          maxChars:22, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:38,  w:60 },
-    { key:'broj_poreskog_obv',   maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:48,  w:65 },
-    { key:'vrsta_prihoda_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:58,  w:65 },
-    { key:'opcina_sifra',        maxChars:10, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:66,  w:65 },
-    { key:'budzetska_org_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:74,  w:65 },
-    { key:'poziv_na_broj',       maxChars:26, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:82,  w:65 }
+    { key:'racun_primatelja',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:10,  w:65 },
+    { key:'iznos',               maxChars:18, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:24,  w:40 },
+    { key:'valuta',              maxChars:6,  fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:132, y:24,  w:18 },
+    { key:'broj_poreskog_obv',   maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:36,  w:65 },
+    { key:'vrsta_prihoda_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:46,  w:65 },
+    { key:'opcina_sifra',        maxChars:10, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:56,  w:65 },
+    { key:'budzetska_org_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:66,  w:65 },
+    { key:'poziv_na_broj',       maxChars:26, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:76,  w:65 }
   ];
 
   // --- pomoćne pretvorbe mm <-> px ---
@@ -360,6 +358,13 @@
   }
 
   let layout = loadLayout();
+  const validKeys = new Set(fieldDefs.map(f=>f.key));
+  Object.keys(layout).forEach(key=>{
+    if (!validKeys.has(key)){
+      delete layout[key];
+    }
+  });
+  saveLayout(layout);
 
   function applyInitialPositions(){
     fieldDefs.forEach(def => {
@@ -395,15 +400,13 @@
       uplatilac:           (data.uplatilac || '').trim(),
       uplatilac_tekst:     (data.uplatilac_tekst || '').trim(),
       primatelj:           (data.primatelj || '').trim(),
-      primatelj_detalj:    (data.primatelj || '').trim(),
       svrha:               (data.svrha || '').trim(),
       svrha1:              (data.svrha1 || '').trim(),
       napomena:            (data.napomena || '').trim(),
       mjesto:              (data.mjesto || '').trim(),
       datum:               (data.datum || '').trim(),
       iznos:               (data.iznos || '').trim(),
-      valuta_label:        (data.valuta_label || data.valuta || 'KM').trim(),
-      iznos_full:          (data.iznos_full || (data.iznos ? (data.iznos + ' ' + (data.valuta || 'KM')) : '')).trim(),
+      valuta:              (data.valuta || 'KM').trim(),
       racun_posiljaoca:    (data.racun_posiljaoca || '').trim(),
       racun_primatelja:    (data.racun_primatelja || '').trim(),
       broj_poreskog_obv:   (data.broj_poreskog_obv || '').trim(),
