@@ -1,399 +1,698 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hr">
 <head>
-<meta charset="UTF-8" />
-<title>Ispis uplatnice</title>
+  <meta charset="utf-8" />
+  <title>Ispis uplatnice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
-  :root{
-    --sheet-margin: 8mm;   /* margina papira (podesivo) */
-    --handle-size: 8px;
-  }
-
-  body{
-    font-family: "Courier New", monospace;
-    background:#f3f4f6;
-    color:#111;
-    margin:0;
-    padding:0;
-    user-select:none;
-  }
-
-  /* Glavni papir 168×100 mm */
-  .sheet{
-    position:relative;
-    width:168mm;
-    height:100mm;
-    background:white;
-    margin: var(--sheet-margin) auto;
-    box-shadow:0 12px 25px rgba(0,0,0,.25);
-    overflow:hidden;
-  }
-
-  /* Print bez margina */
-  @media print{
+  <style>
+    :root{
+      --sheet-margin: 8mm; /* početna margina – možeš mijenjati */
+      --sheet-width: 168mm;
+      --sheet-height: 100mm;
+      --handle-size: 8px;
+      --field-font: 12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
     body{
-      background:white;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+      background:#f3f4f6;
+      color:#111827;
     }
-    @page{
-      size:168mm 100mm;
-      margin:0;
+
+    .topbar{
+      padding:8px 12px;
+      background:#111827;
+      color:#e5e7eb;
+      font-size:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:20;
     }
-    .no-print{display:none !important;}
+    .topbar span.info{
+      flex:1 0 180px;
+      min-width:140px;
+    }
+    .topbar button{
+      border:0;
+      border-radius:999px;
+      padding:5px 10px;
+      font-size:12px;
+      cursor:pointer;
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .topbar button:hover{
+      background:#d1d5db;
+    }
+    .topbar button.main{
+      background:#22c55e;
+      color:#052e16;
+      font-weight:600;
+    }
+    .topbar button.main:hover{
+      background:#16a34a;
+    }
+    .topbar .group{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .topbar label{white-space:nowrap;}
+    .topbar input[type="number"]{
+      width:70px;
+      padding:4px 6px;
+      border-radius:6px;
+      border:1px solid #d1d5db;
+      background:#f8fafc;
+      color:#111827;
+      font-size:12px;
+    }
+    .topbar .field-edit{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .page-wrap{
+      display:flex;
+      justify-content:center;
+      padding:18px 0 24px;
+    }
+
     .sheet{
-      margin:0 !important;
-      box-shadow:none !important;
-      background:white !important;
+      position:relative;
+      width:var(--sheet-width);
+      height:var(--sheet-height); /* dimenzije papira */
+      background:white;
+      margin: var(--sheet-margin) auto;
+      box-shadow:0 12px 25px rgba(15,23,42,.18);
+      overflow:hidden;
     }
-  }
 
-  /* PODESIVA POLJA */
-  .fld{
-    position:absolute;
-    min-width:20mm;
-    padding:0;
-    margin:0;
-    font-size:12px;
-    line-height:1.1;
-    white-space:nowrap;
-    border:1px dashed transparent;   /* ne vidi se u normalnom radu */
-  }
-  .fld.editing{
-    border-color:#4b9cff;
-    background:rgba(100,150,255,0.06);
-  }
+    .field-box{
+      position:absolute;
+      min-width:24mm;
+      min-height:5mm;
+      border:1px dotted #3b82f6;
+      border-radius:2px;
+      padding:1px 3px;
+      font-size:var(--field-font);
+      line-height:1.1;
+      white-space:nowrap;
+      color:#111827;
+    }
+    .field-text{
+      display:inline-block;
+      transform-origin:left center;
+    }
 
-  /* Plave točkice – resize */
-  .h{
-    width:var(--handle-size);
-    height:var(--handle-size);
-    background:#1d4ed8;
-    border-radius:50%;
-    position:absolute;
-    cursor:pointer;
-  }
-  .h.br{ right:-4px; bottom:-4px; }
-  .h.bl{ left:-4px;  bottom:-4px; }
-  .h.tr{ right:-4px; top:-4px; }
-  .h.tl{ left:-4px;  top:-4px; }
+    .handle{
+      position:absolute;
+      width:var(--handle-size);
+      height:var(--handle-size);
+      border-radius:999px;
+      background:#2563eb;
+      border:1px solid #eff6ff;
+      box-shadow:0 0 0 1px rgba(15,23,42,.25);
+      cursor:pointer;
+    }
+    .handle.move{
+      top:-10px;
+      left:50%;
+      transform:translateX(-50%);
+      cursor:move;
+    }
+    .handle.right{
+      top:50%;
+      right:-10px;
+      transform:translateY(-50%);
+      cursor:ew-resize;
+    }
 
-  /* Toolbar */
-  #toolbar{
-    position:fixed;
-    top:10px; left:50%;
-    transform:translateX(-50%);
-    background:white;
-    padding:8px 14px;
-    border-radius:6px;
-    box-shadow:0 3px 10px rgba(0,0,0,.2);
-    z-index:2000;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:13px;
-  }
-  #toolbar button{
-    padding:4px 8px;
-    font-size:13px;
-    cursor:pointer;
-  }
-  #fontSlider{
-    width:100px;
-  }
-</style>
+    @media print{
+      @page {
+        size: var(--sheet-width) var(--sheet-height);
+        margin: 0;
+      }
+      body{
+        background:white;
+        margin:0;
+      }
+      .topbar{display:none !important;}
+      .page-wrap{
+        padding:0;
+      }
+      .sheet{
+        box-shadow:none;
+        margin:0 auto;
+      }
+      .field-box{
+        border:0;
+        padding:0;
+      }
+      .handle{
+        display:none !important;
+      }
+    }
+  </style>
+  <style id="pageSizeStyle"></style>
 </head>
 <body>
 
-<!-- alatna traka -->
-<div id="toolbar" class="no-print">
-  <button type="button" onclick="decMargin()">– margina</button>
-  <button type="button" onclick="incMargin()">+ margina</button>
+  <div class="topbar no-print">
+    <span class="info">
+      Povuci plave točkice ili mijenjaj vrijednosti ispod. Margina: <span id="marginVal"></span>mm
+    </span>
+    <label>
+      Format papira:
+      <select id="paperSelect"></select>
+    </label>
+    <div class="group">
+      <button id="btnMarginMinus">– margina</button>
+      <button id="btnMarginPlus">+ margina</button>
+      <button id="btnReset">Reset pozicija</button>
+    </div>
+    <div class="field-edit">
+      <label>
+        Polje:
+        <select id="fieldSelect"></select>
+      </label>
+      <label>X: <input id="posX" type="number" step="0.5" aria-label="X pozicija" /> mm</label>
+      <label>Y: <input id="posY" type="number" step="0.5" aria-label="Y pozicija" /> mm</label>
+      <label>Širina: <input id="posW" type="number" step="0.5" aria-label="Širina polja" /> mm</label>
+      <label>Font: <input id="fontInput" type="number" step="0.5" min="6" max="32" aria-label="Veličina fonta" /> px</label>
+      <label>Padding: <input id="padInput" type="number" step="0.5" min="0" max="6" aria-label="Unutarnja margina" /> mm</label>
+    </div>
+    <button id="btnPrint" class="main">Print</button>
+  </div>
 
-  <label>
-    Font:
-    <input id="fontSlider" type="range" min="8" max="18" step="1" value="12">
-  </label>
-
-  <button type="button" onclick="saveLayout()">💾 Spremi pozicije</button>
-  <button type="button" onclick="window.print()">🖨 Ispis</button>
-</div>
-
-<!-- radna površina (papir) -->
-<div id="sheet" class="sheet">
-
-  <!-- SVA POLJA – početne pozicije (možeš ih kasnije ručno pomjeriti i spremiti) -->
-
-  <div class="fld" id="f_uplatilac" style="left:10mm; top:10mm; width:70mm;">Uplatilac</div>
-
-  <div class="fld" id="f_primatelj" style="left:10mm; top:22mm; width:70mm;">Primatelj</div>
-
-  <div class="fld" id="f_svrha" style="left:10mm; top:34mm; width:70mm;">Svrha</div>
-
-  <div class="fld" id="f_svrha1" style="left:10mm; top:42mm; width:70mm;">Svrha 2</div>
-
-  <div class="fld" id="f_iznos" style="left:120mm; top:34mm; width:40mm;">Iznos</div>
-
-  <div class="fld" id="f_racunPrim" style="left:120mm; top:22mm; width:40mm;">Račun primatelja</div>
-
-  <div class="fld" id="f_mjesto" style="left:10mm; top:55mm; width:60mm;">Mjesto, datum</div>
-
-  <div class="fld" id="f_porezni" style="left:120mm; top:55mm; width:40mm;">Porezni</div>
-
-  <div class="fld" id="f_opcina" style="left:120mm; top:63mm; width:40mm;">Općina</div>
-
-  <div class="fld" id="f_poziv" style="left:120mm; top:71mm; width:40mm;">Poziv na broj</div>
-
-</div>
+  <div class="page-wrap">
+    <div id="sheet" class="sheet"></div>
+  </div>
 
 <script>
-/* -------------------------------------------------
-   GLOBALNE POSTAVKE
---------------------------------------------------*/
-const GRID_PX = 2; // veličina grida za snap (u px)
-let selectedField = null;
-const fontSlider = document.getElementById("fontSlider");
+(function(){
+  const sheet = document.getElementById('sheet');
+  const btnPrint = document.getElementById('btnPrint');
+  const btnMarginMinus = document.getElementById('btnMarginMinus');
+  const btnMarginPlus = document.getElementById('btnMarginPlus');
+  const btnReset = document.getElementById('btnReset');
+  const marginVal = document.getElementById('marginVal');
+  const fieldSelect = document.getElementById('fieldSelect');
+  const paperSelect = document.getElementById('paperSelect');
+  const posX = document.getElementById('posX');
+  const posY = document.getElementById('posY');
+  const posW = document.getElementById('posW');
+  const fontInput = document.getElementById('fontInput');
+  const padInput = document.getElementById('padInput');
+  const pageSizeStyle = document.getElementById('pageSizeStyle');
 
-/* -------------------------------------------------
-   UČITAVANJE PODATAKA IZ parent window (postMessage)
---------------------------------------------------*/
-let payload = null;
+  const STORAGE_LAYOUT = 'uplatnica-print-layout-v2';
+  const STORAGE_MARGIN = 'uplatnica-print-margin-v1';
+  const STORAGE_PAPER = 'uplatnica-print-paper-v1';
 
-window.addEventListener("message", (event)=>{
-  if(event.data?.type === "uplatnica-data"){
-    payload = event.data.payload;
-    fillFields();
+  const DEFAULT_FONT_PX = 12;
+  const DEFAULT_PAD_MM = 1.5;
+
+  const PAPER_SIZES = [
+    { key:'slip', label:'Uplatnica 168×100mm', w:168, h:100 },
+    { key:'a4p',  label:'A4 (210×297mm)', w:210, h:297 },
+    { key:'a4l',  label:'A4 landscape (297×210mm)', w:297, h:210 }
+  ];
+
+  // --- definiramo polja i početne pozicije (u mm, okvirno) ---
+  const fieldDefs = [
+    { key:'uplatilac_tel',       maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:6,   w:72 },
+    { key:'uplatilac_ime',       maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:14,  w:72 },
+    { key:'uplatilac_adresa',    maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:22,  w:72 },
+    { key:'uplatilac_jmbg',      maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:30,  w:72 },
+    { key:'svrha',               maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:40,  w:72 },
+    { key:'svrha1',              maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:48,  w:72 },
+    { key:'primatelj',           maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:60,  w:72 },
+    { key:'primatelj_adresa',    maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:68,  w:72 },
+    { key:'mjesto',              maxChars:24, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:80,  w:45 },
+    { key:'datum',               maxChars:14, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:55,  y:80,  w:25 },
+    { key:'racun_posiljaoca',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:90,  w:72 },
+
+    { key:'racun_primatelja',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:10,  w:65 },
+    { key:'iznos',               maxChars:18, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:24,  w:40 },
+    { key:'valuta',              maxChars:6,  fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:132, y:24,  w:18 },
+    { key:'broj_poreskog_obv',   maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:36,  w:65 },
+    { key:'vrsta_prihoda_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:46,  w:65 },
+    { key:'opcina_sifra',        maxChars:10, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:56,  w:65 },
+    { key:'budzetska_org_sifra', maxChars:16, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:66,  w:65 },
+    { key:'poziv_na_broj',       maxChars:26, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:76,  w:65 }
+  ];
+
+  // --- pomoćne pretvorbe mm <-> px ---
+  function mmToPx(mm){
+    // 96dpi * (mm/25.4)
+    return mm * 96 / 25.4;
   }
-});
 
-function fillFields(){
-  if(!payload) return;
+  function pxToMm(px){
+    return px * 25.4 / 96;
+  }
 
-  setText("f_uplatilac", payload.uplatilac || payload.uplatilac_tekst || "");
-  setText("f_primatelj", payload.primatelj || "");
-  setText("f_svrha", payload.svrha || "");
-  setText("f_svrha1", payload.svrha1 || "");
-  setText("f_iznos", payload.iznos_full || "");
-  setText("f_racunPrim", payload.racun_primatelja || "");
-  setText("f_mjesto", (payload.mjesto || "") + (payload.datum ? ", " + payload.datum : ""));
-  setText("f_porezni", payload.broj_poreskog_obv || "");
-  setText("f_opcina", payload.opcina_sifra || "");
-  setText("f_poziv", payload.poziv_na_broj || "");
-}
+  // --- učitavanje margine ---
+  let sheetMargin = 8;
+  try{
+    const storedM = parseFloat(localStorage.getItem(STORAGE_MARGIN));
+    if (!isNaN(storedM) && storedM > 0 && storedM < 40) {
+      sheetMargin = storedM;
+    }
+  }catch(e){}
+  document.documentElement.style.setProperty('--sheet-margin', sheetMargin + 'mm');
+  if (marginVal) marginVal.textContent = sheetMargin.toFixed(1).replace('.0','');
 
-function setText(id, txt){
-  const el = document.getElementById(id);
-  if(el) el.textContent = txt;
-}
+  // --- kreiranje field-box elemenata ---
+  const fieldEls = new Map();
+  let activeKey = null;
 
-/* -------------------------------------------------
-   DODAVANJE HANDLES + DRAG
---------------------------------------------------*/
-document.querySelectorAll(".fld").forEach(f=>{
-  addHandles(f);
-  makeDraggable(f);
-});
+  function createFields(){
+    sheet.innerHTML = '';
+    fieldDefs.forEach(def => {
+      const el = document.createElement('div');
+      el.className = 'field-box';
+      el.dataset.key = def.key;
+      el.style.fontSize = (def.fontSize || 12) + 'px';
+      applyPadding(el, def.padMm || DEFAULT_PAD_MM);
 
-function addHandles(f){
-  ["tl","tr","bl","br"].forEach(pos=>{
-    const h = document.createElement("div");
-    h.className = "h " + pos;
-    f.appendChild(h);
-    h.addEventListener("mousedown", resizeStart);
+      const txt = document.createElement('span');
+      txt.className = 'field-text';
+      txt.textContent = '';
+      el.appendChild(txt);
+
+      const hMove = document.createElement('div');
+      hMove.className = 'handle move';
+      el.appendChild(hMove);
+
+      const hRight = document.createElement('div');
+      hRight.className = 'handle right';
+      el.appendChild(hRight);
+
+      sheet.appendChild(el);
+      fieldEls.set(def.key, el);
+    });
+  }
+
+  createFields();
+
+  if (fieldSelect){
+    fieldDefs.forEach(def=>{
+      const opt = document.createElement('option');
+      opt.value = def.key;
+      opt.textContent = def.key;
+      fieldSelect.appendChild(opt);
+    });
+  }
+
+  function updatePageSizeStyle(wMm, hMm){
+    const css = `@page { size: ${wMm}mm ${hMm}mm; margin: 0; }`;
+    if (pageSizeStyle) pageSizeStyle.textContent = css;
+    document.documentElement.style.setProperty('--sheet-width', wMm + 'mm');
+    document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
+  }
+
+  function applyPaperSize(key){
+    const found = PAPER_SIZES.find(p=>p.key===key) || PAPER_SIZES[0];
+    updatePageSizeStyle(found.w, found.h);
+    if (paperSelect && paperSelect.value !== found.key){
+      paperSelect.value = found.key;
+    }
+    try{ localStorage.setItem(STORAGE_PAPER, found.key); }catch(e){}
+  }
+
+  function initPaperSelect(){
+    if (!paperSelect) return;
+    PAPER_SIZES.forEach(p=>{
+      const opt = document.createElement('option');
+      opt.value = p.key;
+      opt.textContent = p.label;
+      paperSelect.appendChild(opt);
+    });
+    let stored = PAPER_SIZES[0].key;
+    try{
+      const raw = localStorage.getItem(STORAGE_PAPER);
+      if (raw && PAPER_SIZES.some(p=>p.key===raw)) stored = raw;
+    }catch(e){}
+    applyPaperSize(stored);
+    paperSelect.addEventListener('change', ()=>{
+      applyPaperSize(paperSelect.value);
+    });
+  }
+
+  initPaperSelect();
+
+  function applyPadding(el, padMm){
+    const padPx = mmToPx(padMm);
+    el.style.padding = padPx + 'px';
+  }
+
+  function setActive(key){
+    activeKey = key;
+    fieldEls.forEach((el,k)=>{
+      el.style.outline = k===key ? '1px solid #10b981' : '';
+    });
+    if (fieldSelect && fieldSelect.value !== key) fieldSelect.value = key || '';
+    updateFieldControlDisplay();
+  }
+
+  sheet.addEventListener('click', (e)=>{
+    const box = e.target.closest('.field-box');
+    if (!box) return;
+    setActive(box.dataset.key);
   });
-}
 
-/* ---------- RESIZE ---------- */
-let rTarget=null, rStartX=0, rStartWidthPx=0;
-
-function resizeStart(e){
-  e.preventDefault();
-  rTarget = this.parentElement;
-  const cs = getComputedStyle(rTarget);
-  rStartWidthPx = parseFloat(cs.width);
-  rStartX = e.clientX;
-
-  document.addEventListener("mousemove", resizeMove);
-  document.addEventListener("mouseup", resizeStop);
-}
-
-function resizeMove(e){
-  if(!rTarget) return;
-  const dx = e.clientX - rStartX;
-  const newW = rStartWidthPx + dx;
-  if(newW > 10) {
-    rTarget.style.width = newW + "px";
+  // --- učitaj layout iz localStorage ---
+  function loadLayout(){
+    let obj = null;
+    try{
+      const raw = localStorage.getItem(STORAGE_LAYOUT);
+      if (raw) obj = JSON.parse(raw);
+    }catch(e){}
+    if (!obj) obj = {};
+    return obj;
   }
-}
-
-function resizeStop(){
-  if(rTarget){
-    // snap širine na grid
-    const cs = getComputedStyle(rTarget);
-    const w = parseFloat(cs.width);
-    const wSnap = Math.round(w / GRID_PX) * GRID_PX;
-    rTarget.style.width = wSnap + "px";
+  function saveLayout(layout){
+    try{
+      localStorage.setItem(STORAGE_LAYOUT, JSON.stringify(layout));
+    }catch(e){}
   }
-  document.removeEventListener("mousemove", resizeMove);
-  document.removeEventListener("mouseup", resizeStop);
-  rTarget = null;
-}
 
-/* ---------- DRAG + SELEKCIJA ---------- */
-function makeDraggable(el){
-  let dragging = false;
-  let ox=0, oy=0, sx=0, sy=0;
+  let layout = loadLayout();
+  const validKeys = new Set(fieldDefs.map(f=>f.key));
+  Object.keys(layout).forEach(key=>{
+    if (!validKeys.has(key)){
+      delete layout[key];
+    }
+  });
+  saveLayout(layout);
 
-  el.addEventListener("mousedown", e=>{
-    // klik na handle -> resize, ne drag
-    if(e.target.classList.contains("h")) return;
+  function applyInitialPositions(){
+    fieldDefs.forEach(def => {
+      const el = fieldEls.get(def.key);
+      if (!el) return;
+      const saved = layout[def.key] || {};
+      const leftMm = saved.xMm != null ? saved.xMm : def.x;
+      const topMm  = saved.yMm != null ? saved.yMm : def.y;
+      const wMm    = saved.wMm != null ? saved.wMm : def.w;
+      const fontSize = saved.fontSizePx != null ? saved.fontSizePx : (def.fontSize || 12);
+      const padMm = saved.padMm != null ? saved.padMm : (def.padMm || DEFAULT_PAD_MM);
+      el.style.left = mmToPx(leftMm) + 'px';
+      el.style.top  = mmToPx(topMm) + 'px';
+      el.style.width = mmToPx(wMm) + 'px';
+      el.style.fontSize = fontSize + 'px';
+      applyPadding(el, padMm);
+    });
+  }
 
+  applyInitialPositions();
+  if (fieldDefs[0]){
+    setActive(fieldDefs[0].key);
+  }
+
+  // --- popuni tekst iz payload-a ---
+  let payloadData = null;
+
+  function setData(data){
+    if (!data) return;
+    payloadData = data;
+
+    const map = {
+      uplatilac_tel:       (data.uplatilac_tel || data.uplatilac_kontakt || data.uplatilac_kontakt_tel || '').trim(),
+      uplatilac_ime:       (data.uplatilac || data.uplatilac_ime || '').trim(),
+      uplatilac_adresa:    (data.uplatilac_adresa || data.uplatilac_adresa2 || '').trim(),
+      uplatilac_jmbg:      (data.uplatilac_jmbg || data.uplatilac_id || data.jmbg || '').trim(),
+      primatelj:           (data.primatelj || data.primatelj_ime || '').trim(),
+      primatelj_adresa:    (data.primatelj_adresa || '').trim(),
+      svrha:               (data.svrha || '').trim(),
+      svrha1:              (data.svrha1 || '').trim(),
+      mjesto:              (data.mjesto || '').trim(),
+      datum:               (data.datum || '').trim(),
+      iznos:               (data.iznos || '').trim(),
+      valuta:              (data.valuta || 'KM').trim(),
+      racun_posiljaoca:    (data.racun_posiljaoca || '').trim(),
+      racun_primatelja:    (data.racun_primatelja || '').trim(),
+      broj_poreskog_obv:   (data.broj_poreskog_obv || '').trim(),
+      vrsta_prihoda_sifra: (data.vrsta_prihoda_sifra || '').trim(),
+      opcina_sifra:        (data.opcina_sifra || '').trim(),
+      budzetska_org_sifra: (data.budzetska_org_sifra || '').trim(),
+      poziv_na_broj:       (data.poziv_na_broj || '').trim()
+    };
+
+    Object.keys(map).forEach(k=>{
+      const el = fieldEls.get(k);
+      if (!el) return;
+      const txt = el.querySelector('.field-text');
+      if (!txt) return;
+      txt.textContent = map[k];
+    });
+
+    // nakon postavljanja teksta, prilagodi scale
+    requestAnimationFrame(autoFitAll);
+  }
+
+  function autoFitAll(){
+    fieldDefs.forEach(def=>{
+      const el = fieldEls.get(def.key);
+      if (!el) return;
+      autoFitField(el);
+    });
+  }
+
+  function autoFitField(el){
+    const txt = el.querySelector('.field-text');
+    if (!txt) return;
+    txt.style.transform = 'scaleX(1)';
+    const natural = txt.getBoundingClientRect().width || 1;
+    const boxW = el.getBoundingClientRect().width || 1;
+    let scale = boxW / natural;
+    if (!isFinite(scale) || scale <= 0) scale = 1;
+    scale = Math.max(0.5, Math.min(3, scale)); // da ne poludi
+    txt.style.transform = 'scaleX(' + scale.toFixed(3) + ')';
+  }
+
+  // --- parsiranje payload-a iz URL hash-a ili localStorage-a ---
+  function tryDecodePayloadFromHash(){
+    try{
+      const hash = location.hash.replace(/^#/, '');
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      const base64 = params.get('payloadData');
+      const key    = params.get('payload');
+      if (base64){
+        const json = decodeURIComponent(escape(atob(base64)));
+        return JSON.parse(json);
+      }
+      if (key){
+        const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (raw){
+          return JSON.parse(raw);
+        }
+      }
+    }catch(e){}
+    return null;
+  }
+
+  const initialPayload = tryDecodePayloadFromHash();
+  if (initialPayload) {
+    setData(initialPayload);
+  }
+
+  // --- sluša poruku iz matičnog prozora (uplatnice.js -> postMessage) ---
+  window.addEventListener('message', (ev)=>{
+    if (!ev || !ev.data) return;
+    if (ev.data.type === 'uplatnica-data' && ev.data.payload){
+      setData(ev.data.payload);
+    }
+  });
+
+  // --- drag & resize logika ---
+  let dragState = null;
+
+  sheet.addEventListener('mousedown', function(e){
+    const handle = e.target.closest('.handle');
+    if (!handle) return;
+
+    const box = handle.parentElement;
+    if (!box) return;
     e.preventDefault();
 
-    // selekcija polja
-    selectField(el);
+    const rectSheet = sheet.getBoundingClientRect();
+    const rectBox   = box.getBoundingClientRect();
 
-    const cs = getComputedStyle(el);
-    ox = parseFloat(cs.left);
-    oy = parseFloat(cs.top);
-    sx = e.clientX;
-    sy = e.clientY;
-
-    dragging = true;
-    document.addEventListener("mousemove", move);
-    document.addEventListener("mouseup", stop);
-  });
-
-  function move(e){
-    if(!dragging) return;
-    const dx = e.clientX - sx;
-    const dy = e.clientY - sy;
-    el.style.left = (ox + dx) + "px";
-    el.style.top  = (oy + dy) + "px";
-  }
-
-  function stop(){
-    if(dragging){
-      // snap na grid
-      const cs = getComputedStyle(el);
-      let l = parseFloat(cs.left);
-      let t = parseFloat(cs.top);
-      l = Math.round(l / GRID_PX) * GRID_PX;
-      t = Math.round(t / GRID_PX) * GRID_PX;
-      el.style.left = l + "px";
-      el.style.top  = t + "px";
-    }
-    dragging = false;
-    document.removeEventListener("mousemove", move);
-    document.removeEventListener("mouseup", stop);
-  }
-}
-
-/* -------------------------------------------------
-   SELEKCIJA POLJA + SLIDER FONT SIZE
---------------------------------------------------*/
-function selectField(el){
-  if(selectedField === el) return;
-
-  if(selectedField){
-    selectedField.classList.remove("editing");
-  }
-  selectedField = el;
-  if(selectedField){
-    selectedField.classList.add("editing");
-
-    // postavi slider na trenutni font selektiranog polja
-    const cs = getComputedStyle(selectedField);
-    const fs = parseFloat(cs.fontSize) || 12;
-    fontSlider.value = Math.round(fs);
-  }
-}
-
-// klik bilo gdje na polje također ga selektira (i bez pomjeranja)
-document.querySelectorAll(".fld").forEach(f=>{
-  f.addEventListener("click", e=>{
-    if(e.target.classList.contains("h")) return;
-    selectField(f);
-  });
-});
-
-// promjena fonta sa slidera
-fontSlider.addEventListener("input", ()=>{
-  if(!selectedField) return;
-  const v = parseInt(fontSlider.value, 10) || 12;
-  selectedField.style.fontSize = v + "px";
-});
-
-/* -------------------------------------------------
-   MARGINE PAPIRA
---------------------------------------------------*/
-function incMargin(){
-  const cs = getComputedStyle(document.documentElement);
-  const cur = parseFloat(cs.getPropertyValue("--sheet-margin")) || 0;
-  const next = cur + 1;
-  document.documentElement.style.setProperty("--sheet-margin", next + "mm");
-  saveMargin();
-}
-function decMargin(){
-  const cs = getComputedStyle(document.documentElement);
-  const cur = parseFloat(cs.getPropertyValue("--sheet-margin")) || 0;
-  const next = Math.max(0, cur - 1);
-  document.documentElement.style.setProperty("--sheet-margin", next + "mm");
-  saveMargin();
-}
-function saveMargin(){
-  const cs = getComputedStyle(document.documentElement);
-  const cur = cs.getPropertyValue("--sheet-margin");
-  try{
-    localStorage.setItem("uplatnica-margin", cur);
-  }catch(e){}
-}
-(function loadMargin(){
-  try{
-    const m = localStorage.getItem("uplatnica-margin");
-    if(m) document.documentElement.style.setProperty("--sheet-margin", m);
-  }catch(e){}
-})();
-
-/* -------------------------------------------------
-   SPREMANJE / UČITAVANJE LAYOUTA
---------------------------------------------------*/
-function saveLayout(){
-  const obj = {};
-  document.querySelectorAll(".fld").forEach(f=>{
-    const cs = getComputedStyle(f);
-    obj[f.id] = {
-      left: cs.left,
-      top: cs.top,
-      width: cs.width,
-      fontSize: cs.fontSize
+    dragState = {
+      mode: handle.classList.contains('right') ? 'resize' : 'move',
+      box,
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: rectBox.left - rectSheet.left,
+      startTop:  rectBox.top  - rectSheet.top,
+      startWidth: rectBox.width
     };
   });
-  try{
-    localStorage.setItem("uplatnica-layout", JSON.stringify(obj));
-    alert("Pozicije i fontovi spremljeni.");
-  }catch(e){
-    alert("Ne mogu spremiti layout: " + e.message);
-  }
-}
 
-(function loadLayout(){
-  let raw = null;
-  try{
-    raw = localStorage.getItem("uplatnica-layout");
-  }catch(e){}
-  if(!raw) return;
-  try{
-    const obj = JSON.parse(raw);
-    Object.keys(obj).forEach(id=>{
-      const f = document.getElementById(id);
-      if(!f) return;
-      const cfg = obj[id];
-      if(cfg.left) f.style.left = cfg.left;
-      if(cfg.top) f.style.top = cfg.top;
-      if(cfg.width) f.style.width = cfg.width;
-      if(cfg.fontSize) f.style.fontSize = cfg.fontSize;
+  window.addEventListener('mousemove', function(e){
+    if (!dragState) return;
+    e.preventDefault();
+    const rectSheet = sheet.getBoundingClientRect();
+    if (dragState.mode === 'move'){
+      let nx = dragState.startLeft + (e.clientX - dragState.startX);
+      let ny = dragState.startTop  + (e.clientY - dragState.startY);
+      nx = Math.max(0, Math.min(nx, rectSheet.width - dragState.box.offsetWidth));
+      ny = Math.max(0, Math.min(ny, rectSheet.height - dragState.box.offsetHeight));
+      dragState.box.style.left = nx + 'px';
+      dragState.box.style.top  = ny + 'px';
+    } else if (dragState.mode === 'resize'){
+      let nw = dragState.startWidth + (e.clientX - dragState.startX);
+      nw = Math.max(mmToPx(10), Math.min(nw, rectSheet.width - dragState.startLeft));
+      dragState.box.style.width = nw + 'px';
+      autoFitField(dragState.box);
+    }
+  });
+
+  window.addEventListener('mouseup', function(){
+    if (!dragState) return;
+    // spremi layout
+    const rectSheet = sheet.getBoundingClientRect();
+    const layoutNew = layout || {};
+    fieldEls.forEach((el,key)=>{
+      const r = el.getBoundingClientRect();
+      const xMm = (r.left - rectSheet.left) * 25.4 / 96;
+      const yMm = (r.top  - rectSheet.top)  * 25.4 / 96;
+      const wMm = (r.width) * 25.4 / 96;
+      const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+      const padMm = padPx * 25.4 / 96;
+      const fontSizePx = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===key)?.fontSize || 12);
+      layoutNew[key] = { xMm, yMm, wMm, padMm, fontSizePx };
     });
-  }catch(e){}
+    layout = layoutNew;
+    saveLayout(layoutNew);
+    dragState = null;
+    updateFieldControlDisplay();
+  });
+
+  // --- margine + reset + print ---
+  function updateMarginDisplay(){
+    if (marginVal) marginVal.textContent = sheetMargin.toFixed(1).replace('.0','');
+  }
+
+  if (btnMarginMinus){
+    btnMarginMinus.addEventListener('click', ()=>{
+      sheetMargin = Math.max(2, sheetMargin - 1);
+      document.documentElement.style.setProperty('--sheet-margin', sheetMargin + 'mm');
+      updateMarginDisplay();
+      try{ localStorage.setItem(STORAGE_MARGIN, String(sheetMargin)); }catch(e){}
+    });
+  }
+  if (btnMarginPlus){
+    btnMarginPlus.addEventListener('click', ()=>{
+      sheetMargin = Math.min(30, sheetMargin + 1);
+      document.documentElement.style.setProperty('--sheet-margin', sheetMargin + 'mm');
+      updateMarginDisplay();
+      try{ localStorage.setItem(STORAGE_MARGIN, String(sheetMargin)); }catch(e){}
+    });
+  }
+
+  if (btnReset){
+    btnReset.addEventListener('click', ()=>{
+      layout = {};
+      saveLayout(layout);
+      applyInitialPositions();
+      requestAnimationFrame(()=>{
+        autoFitAll();
+        updateFieldControlDisplay();
+      });
+    });
+  }
+
+  function updateFieldControlDisplay(){
+    if (!activeKey) return;
+    const el = fieldEls.get(activeKey);
+    if (!el) return;
+    const rectSheet = sheet.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const xMm = pxToMm(r.left - rectSheet.left);
+    const yMm = pxToMm(r.top - rectSheet.top);
+    const wMm = pxToMm(r.width);
+    const layoutInfo = layout[activeKey] || {};
+    const fontSize = parseFloat(el.style.fontSize) || layoutInfo.fontSizePx || (fieldDefs.find(f=>f.key===activeKey)?.fontSize || 12);
+    const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+    const padMm = layoutInfo.padMm != null ? layoutInfo.padMm : pxToMm(padPx);
+
+    if (posX) posX.value = xMm.toFixed(1);
+    if (posY) posY.value = yMm.toFixed(1);
+    if (posW) posW.value = wMm.toFixed(1);
+    if (fontInput) fontInput.value = fontSize.toFixed(1);
+    if (padInput) padInput.value = padMm.toFixed(1);
+  }
+
+  function applyManualChange(){
+    if (!activeKey) return;
+    const el = fieldEls.get(activeKey);
+    if (!el) return;
+    const rectSheet = sheet.getBoundingClientRect();
+    const maxWmm = pxToMm(rectSheet.width);
+    const xMm = Math.max(0, parseFloat(posX?.value) || 0);
+    const yMm = Math.max(0, parseFloat(posY?.value) || 0);
+    const wMm = Math.min(Math.max(10, parseFloat(posW?.value) || pxToMm(el.getBoundingClientRect().width)), maxWmm);
+    const fontSize = Math.max(6, Math.min(32, parseFloat(fontInput?.value) || (fieldDefs.find(f=>f.key===activeKey)?.fontSize || 12)));
+    const padMm = Math.max(0, Math.min(6, parseFloat(padInput?.value) || DEFAULT_PAD_MM));
+
+    el.style.left = mmToPx(xMm) + 'px';
+    el.style.top = mmToPx(yMm) + 'px';
+    el.style.width = mmToPx(wMm) + 'px';
+    el.style.fontSize = fontSize + 'px';
+    applyPadding(el, padMm);
+    autoFitField(el);
+    saveCurrentFieldState(activeKey);
+  }
+
+  function saveCurrentFieldState(key){
+    const el = fieldEls.get(key);
+    if (!el) return;
+    const rectSheet = sheet.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const xMm = (r.left - rectSheet.left) * 25.4 / 96;
+    const yMm = (r.top  - rectSheet.top)  * 25.4 / 96;
+    const wMm = (r.width) * 25.4 / 96;
+    const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
+    const padMm = padPx * 25.4 / 96;
+    const fontSizePx = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===key)?.fontSize || 12);
+    layout[key] = { xMm, yMm, wMm, padMm, fontSizePx };
+    saveLayout(layout);
+  }
+
+  if (fieldSelect){
+    fieldSelect.addEventListener('change', ()=>{
+      if (fieldSelect.value){
+        setActive(fieldSelect.value);
+      }
+    });
+  }
+
+  ['input','change'].forEach(evt=>{
+    if (posX) posX.addEventListener(evt, applyManualChange);
+    if (posY) posY.addEventListener(evt, applyManualChange);
+    if (posW) posW.addEventListener(evt, applyManualChange);
+    if (fontInput) fontInput.addEventListener(evt, applyManualChange);
+    if (padInput) padInput.addEventListener(evt, applyManualChange);
+  });
+
+  if (btnPrint){
+    btnPrint.addEventListener('click', ()=>{
+      window.print();
+    });
+  }
+
 })();
 </script>
 </body>
