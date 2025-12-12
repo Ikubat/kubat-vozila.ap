@@ -48,6 +48,14 @@ $svrha               = trim((string)($data['svrha']  ?? ''));
 $svrha1              = trim((string)($data['svrha1'] ?? ''));
 $uplatilac_tekst     = trim((string)($data['uplatilac_tekst'] ?? ''));
 $primatelj_tekst     = trim((string)($data['primatelj_tekst'] ?? ''));
+$uplatilac_kontakt   = trim((string)($data['uplatilac_kontakt'] ?? ''));
+$uplatilac_adresa    = trim((string)($data['uplatilac_adresa'] ?? ''));
+$uplatilac_mjesto    = trim((string)($data['uplatilac_mjesto'] ?? ''));
+$uplatilac_id_broj   = trim((string)($data['uplatilac_id_broj'] ?? ''));
+$primatelj_kontakt   = trim((string)($data['primatelj_kontakt'] ?? ''));
+$primatelj_adresa    = trim((string)($data['primatelj_adresa'] ?? ''));
+$primatelj_mjesto    = trim((string)($data['primatelj_mjesto'] ?? ''));
+$primatelj_id_broj   = trim((string)($data['primatelj_id_broj'] ?? ''));
 $mjesto_uplate       = trim((string)($data['mjesto_uplate'] ?? ''));
 $datum_uplate        = trim((string)($data['datum_uplate']  ?? ''));
 $iznos               = isset($data['iznos']) ? (float)$data['iznos'] : 0;
@@ -98,6 +106,14 @@ try {
 
     $colUplatilacTxt = $cols['uplatilac_tekst'] ?? null;
     $colPrimateljTxt = $cols['primatelj_tekst'] ?? null;
+    $colUplatilacKontakt = $cols['uplatilac_kontakt'] ?? null;
+    $colUplatilacAdresa  = $cols['uplatilac_adresa'] ?? null;
+    $colUplatilacMjesto  = $cols['uplatilac_mjesto'] ?? null;
+    $colUplatilacIdBroj  = $cols['uplatilac_id_broj'] ?? null;
+    $colPrimateljKontakt = $cols['primatelj_kontakt'] ?? null;
+    $colPrimateljAdresa  = $cols['primatelj_adresa'] ?? null;
+    $colPrimateljMjesto  = $cols['primatelj_mjesto'] ?? null;
+    $colPrimateljIdBroj  = $cols['primatelj_id_broj'] ?? null;
 
     $fields = [
         ['name' => $colOrDefault('uplatilac_id', 'uplatilac_id'), 'type' => 'i', 'value' => $uplatilac_id],
@@ -124,6 +140,30 @@ try {
     }
     if ($colPrimateljTxt) {
         $fields[] = ['name' => $colPrimateljTxt, 'type' => 's', 'value' => $primatelj_tekst];
+    }
+    if ($colUplatilacKontakt) {
+        $fields[] = ['name' => $colUplatilacKontakt, 'type' => 's', 'value' => $uplatilac_kontakt];
+    }
+    if ($colUplatilacAdresa) {
+        $fields[] = ['name' => $colUplatilacAdresa, 'type' => 's', 'value' => $uplatilac_adresa];
+    }
+    if ($colUplatilacMjesto) {
+        $fields[] = ['name' => $colUplatilacMjesto, 'type' => 's', 'value' => $uplatilac_mjesto];
+    }
+    if ($colUplatilacIdBroj) {
+        $fields[] = ['name' => $colUplatilacIdBroj, 'type' => 's', 'value' => $uplatilac_id_broj];
+    }
+    if ($colPrimateljKontakt) {
+        $fields[] = ['name' => $colPrimateljKontakt, 'type' => 's', 'value' => $primatelj_kontakt];
+    }
+    if ($colPrimateljAdresa) {
+        $fields[] = ['name' => $colPrimateljAdresa, 'type' => 's', 'value' => $primatelj_adresa];
+    }
+    if ($colPrimateljMjesto) {
+        $fields[] = ['name' => $colPrimateljMjesto, 'type' => 's', 'value' => $primatelj_mjesto];
+    }
+    if ($colPrimateljIdBroj) {
+        $fields[] = ['name' => $colPrimateljIdBroj, 'type' => 's', 'value' => $primatelj_id_broj];
     }
 
     $assignments = array_map(

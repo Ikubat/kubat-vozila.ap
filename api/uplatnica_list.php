@@ -80,6 +80,10 @@ try {
     $colUplatilacId  = $col(['uplatilac_id']);
     $colUplatilac    = $col(['uplatilac', 'uplatilac_naziv']);
     $colUplatilacTxt = $col(['uplatilac_tekst']);
+    $colUplatilacKontakt = $col(['uplatilac_kontakt']);
+    $colUplatilacAdresa  = $col(['uplatilac_adresa']);
+    $colUplatilacMjesto  = $col(['uplatilac_mjesto']);
+    $colUplatilacIdBroj  = $col(['uplatilac_id_broj']);
     $colAdresa       = $col(['adresa']);
     $colTelefon      = $col(['telefon']);
     $colSvrhaId      = $col(['svrha_id']);
@@ -88,6 +92,10 @@ try {
     $colPrimateljId  = $col(['primatelj_id']);
     $colPrimatelj    = $col(['primatelj', 'primatelj_naziv']);
     $colPrimateljTxt = $col(['primatelj_tekst']);
+    $colPrimateljKontakt = $col(['primatelj_kontakt']);
+    $colPrimateljAdresa  = $col(['primatelj_adresa']);
+    $colPrimateljMjesto  = $col(['primatelj_mjesto']);
+    $colPrimateljIdBroj  = $col(['primatelj_id_broj']);
     $colMjesto       = $col(['mjesto_uplate', 'mjesto']);
     $colRacunPos     = $col(['racun_posiljaoca', 'racun_platioca']);
     $colRacunPrim    = $col(['racun_primatelja', 'racun_primaoca']);
@@ -120,6 +128,22 @@ try {
         ? "u.`$colUplatilacTxt` AS uplatilac_tekst"
         : "'' AS uplatilac_tekst";
 
+    $sel[] = $colUplatilacKontakt
+        ? "u.`$colUplatilacKontakt` AS uplatilac_kontakt"
+        : "'' AS uplatilac_kontakt";
+
+    $sel[] = $colUplatilacAdresa
+        ? "u.`$colUplatilacAdresa` AS uplatilac_adresa"
+        : "'' AS uplatilac_adresa";
+
+    $sel[] = $colUplatilacMjesto
+        ? "u.`$colUplatilacMjesto` AS uplatilac_mjesto"
+        : "'' AS uplatilac_mjesto";
+
+    $sel[] = $colUplatilacIdBroj
+        ? "u.`$colUplatilacIdBroj` AS uplatilac_id_broj"
+        : "'' AS uplatilac_id_broj";
+
     $sel[] = $colAdresa
         ? "u.`$colAdresa` AS adresa"
         : "'' AS adresa";
@@ -151,6 +175,22 @@ try {
     $sel[] = $colPrimateljTxt
         ? "u.`$colPrimateljTxt` AS primatelj_tekst"
         : "'' AS primatelj_tekst";
+
+    $sel[] = $colPrimateljKontakt
+        ? "u.`$colPrimateljKontakt` AS primatelj_kontakt"
+        : "'' AS primatelj_kontakt";
+
+    $sel[] = $colPrimateljAdresa
+        ? "u.`$colPrimateljAdresa` AS primatelj_adresa"
+        : "'' AS primatelj_adresa";
+
+    $sel[] = $colPrimateljMjesto
+        ? "u.`$colPrimateljMjesto` AS primatelj_mjesto"
+        : "'' AS primatelj_mjesto";
+
+    $sel[] = $colPrimateljIdBroj
+        ? "u.`$colPrimateljIdBroj` AS primatelj_id_broj"
+        : "'' AS primatelj_id_broj";
 
     $sel[] = $colMjesto
         ? "u.`$colMjesto` AS mjesto_uplate"
@@ -274,6 +314,10 @@ try {
             'uplatilac_id'        => isset($r['uplatilac_id']) ? (int)$r['uplatilac_id'] : null,
             'uplatilac_naziv'     => $r['uplatilac_naziv'],
             'uplatilac_tekst'     => $r['uplatilac_tekst'],
+            'uplatilac_kontakt'   => $r['uplatilac_kontakt'],
+            'uplatilac_adresa'    => $r['uplatilac_adresa'],
+            'uplatilac_mjesto'    => $r['uplatilac_mjesto'],
+            'uplatilac_id_broj'   => $r['uplatilac_id_broj'],
             'adresa'              => $r['adresa'],
             'telefon'             => $r['telefon'],
             'svrha_id'            => isset($r['svrha_id']) ? (int)$r['svrha_id'] : null,
@@ -282,6 +326,10 @@ try {
             'primatelj_id'        => isset($r['primatelj_id']) ? (int)$r['primatelj_id'] : null,
             'primatelj_naziv'     => $r['primatelj_naziv'],
             'primatelj_tekst'     => $r['primatelj_tekst'],
+            'primatelj_kontakt'   => $r['primatelj_kontakt'],
+            'primatelj_adresa'    => $r['primatelj_adresa'],
+            'primatelj_mjesto'    => $r['primatelj_mjesto'],
+            'primatelj_id_broj'   => $r['primatelj_id_broj'],
             'mjesto_uplate'       => $r['mjesto_uplate'],
             'racun_posiljaoca'    => $r['racun_posiljaoca'],
             'racun_primatelja'    => $r['racun_primatelja'],
