@@ -42,11 +42,13 @@
     const $uplatilacIdBroj = document.getElementById('u_uplatilac_id_broj');
     const $uplatilacKontakt = document.getElementById('u_uplatilac_kontakt');
     const $uplatilacAdresa = document.getElementById('u_uplatilac_adresa');
+    const $uplatilacMjesto = document.getElementById('u_uplatilac_mjesto');
     const $primateljId    = document.getElementById('u_primatelj_id');
     const $primateljLabel = document.getElementById('u_primatelj_label');
     const $primateljIdBroj = document.getElementById('u_primatelj_id_broj');
     const $primateljKontakt = document.getElementById('u_primatelj_kontakt');
     const $primateljAdresa = document.getElementById('u_primatelj_adresa');
+    const $primateljMjesto = document.getElementById('u_primatelj_mjesto');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
     const $svrhaSel       = document.getElementById('u_svrha_id');
@@ -291,10 +293,12 @@
         if ($primateljIdBroj) $primateljIdBroj.value = partner?.id_broj || '';
         if ($primateljKontakt) $primateljKontakt.value = partner?.kontakt || '';
         if ($primateljAdresa) $primateljAdresa.value = partner?.adresa || '';
+        if ($primateljMjesto) $primateljMjesto.value = partner?.mjesto_naziv || '';
       } else {
         if ($uplatilacIdBroj) $uplatilacIdBroj.value = partner?.id_broj || '';
         if ($uplatilacKontakt) $uplatilacKontakt.value = partner?.kontakt || '';
         if ($uplatilacAdresa) $uplatilacAdresa.value = partner?.adresa || '';
+        if ($uplatilacMjesto) $uplatilacMjesto.value = partner?.mjesto_naziv || '';
       }
     }
 
@@ -425,11 +429,13 @@
       if ($uplatilacIdBroj) $uplatilacIdBroj.value = '';
       if ($uplatilacKontakt) $uplatilacKontakt.value = '';
       if ($uplatilacAdresa) $uplatilacAdresa.value = '';
+      if ($uplatilacMjesto) $uplatilacMjesto.value = '';
       $primateljId.value = '';
       $primateljLabel.value = '';
       if ($primateljIdBroj) $primateljIdBroj.value = '';
       if ($primateljKontakt) $primateljKontakt.value = '';
       if ($primateljAdresa) $primateljAdresa.value = '';
+      if ($primateljMjesto) $primateljMjesto.value = '';
       $svrhaSel.value = '';
       $svrha.value = '';
       $svrha1.value = '';
