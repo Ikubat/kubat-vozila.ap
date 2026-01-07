@@ -41,9 +41,15 @@
     const $uplatilacId    = document.getElementById('u_uplatilac_id');
     const $uplatilacLabel = document.getElementById('u_uplatilac_label');
     const $uplatilacTekst = document.getElementById('u_uplatilac_tekst');
+    const $uplatilacIdBroj = document.getElementById('u_uplatilac_id_broj');
+    const $uplatilacKontakt = document.getElementById('u_uplatilac_kontakt');
+    const $uplatilacAdresa = document.getElementById('u_uplatilac_adresa');
     const $primateljId    = document.getElementById('u_primatelj_id');
     const $primateljLabel = document.getElementById('u_primatelj_label');
     const $primateljTekst = document.getElementById('u_primatelj_tekst');
+    const $primateljIdBroj = document.getElementById('u_primatelj_id_broj');
+    const $primateljKontakt = document.getElementById('u_primatelj_kontakt');
+    const $primateljAdresa = document.getElementById('u_primatelj_adresa');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
 
@@ -233,7 +239,10 @@
             id,
             label,
             vrsta: p.vrsta_partnera || p.vrsta || '',
+            id_broj: p.id_broj || p.idbroj || '',
             broj_racuna: p.broj_racuna || p.racun || '',
+            kontakt: p.kontakt || p.telefon || '',
+            adresa: p.adresa || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             mjesto_porezna_sifra: p.mjesto_porezna_sifra || p.porezna_sifra || '',
             opcina_sifra: p.opcina_sifra || '',
@@ -452,6 +461,20 @@
             partnerData.racun_pos ||
             base.broj_racuna ||
             '',
+          id_broj:
+            partnerData.id_broj ||
+            partnerData.idbroj ||
+            base.id_broj ||
+            '',
+          kontakt:
+            partnerData.kontakt ||
+            partnerData.telefon ||
+            base.kontakt ||
+            '',
+          adresa:
+            partnerData.adresa ||
+            base.adresa ||
+            '',
           porezni_broj:
             partnerData.porezni_broj ||
             partnerData.porezni ||
@@ -487,6 +510,16 @@
         } else {
           applyUplatilacDefaults(partner);
         }
+      }
+
+      if (isPrimatelj) {
+        if ($primateljIdBroj) $primateljIdBroj.value = partner?.id_broj || '';
+        if ($primateljKontakt) $primateljKontakt.value = partner?.kontakt || '';
+        if ($primateljAdresa) $primateljAdresa.value = partner?.adresa || '';
+      } else {
+        if ($uplatilacIdBroj) $uplatilacIdBroj.value = partner?.id_broj || '';
+        if ($uplatilacKontakt) $uplatilacKontakt.value = partner?.kontakt || '';
+        if ($uplatilacAdresa) $uplatilacAdresa.value = partner?.adresa || '';
       }
     }
 
@@ -659,9 +692,15 @@
       $uplatilacId.value = '';
       $uplatilacLabel.value = '';
       if ($uplatilacTekst) $uplatilacTekst.value = '';
+      if ($uplatilacIdBroj) $uplatilacIdBroj.value = '';
+      if ($uplatilacKontakt) $uplatilacKontakt.value = '';
+      if ($uplatilacAdresa) $uplatilacAdresa.value = '';
       $primateljId.value = '';
       $primateljLabel.value = '';
       if ($primateljTekst) $primateljTekst.value = '';
+      if ($primateljIdBroj) $primateljIdBroj.value = '';
+      if ($primateljKontakt) $primateljKontakt.value = '';
+      if ($primateljAdresa) $primateljAdresa.value = '';
       $svrhaSel.value = '';
       $svrha.value = '';
       $svrha1.value = '';

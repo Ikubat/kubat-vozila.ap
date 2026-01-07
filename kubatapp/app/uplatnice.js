@@ -39,8 +39,14 @@
     const $id             = document.getElementById('u_id');
     const $uplatilacId    = document.getElementById('u_uplatilac_id');
     const $uplatilacLabel = document.getElementById('u_uplatilac_label');
+    const $uplatilacIdBroj = document.getElementById('u_uplatilac_id_broj');
+    const $uplatilacKontakt = document.getElementById('u_uplatilac_kontakt');
+    const $uplatilacAdresa = document.getElementById('u_uplatilac_adresa');
     const $primateljId    = document.getElementById('u_primatelj_id');
     const $primateljLabel = document.getElementById('u_primatelj_label');
+    const $primateljIdBroj = document.getElementById('u_primatelj_id_broj');
+    const $primateljKontakt = document.getElementById('u_primatelj_kontakt');
+    const $primateljAdresa = document.getElementById('u_primatelj_adresa');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
     const $svrhaSel       = document.getElementById('u_svrha_id');
@@ -125,6 +131,9 @@
             id,
             label,
             racun: p.racun || '',
+            id_broj: p.id_broj || p.idbroj || '',
+            kontakt: p.kontakt || p.telefon || '',
+            adresa: p.adresa || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             opcina_sifra: p.opcina_sifra || '',
             mjesto_naziv: p.mjesto_naziv || ''
@@ -254,6 +263,9 @@
           id: Number(partnerData.id),
           label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
           racun: partnerData.racun || partnerData.racun_pos || '',
+          id_broj: partnerData.id_broj || partnerData.idbroj || '',
+          kontakt: partnerData.kontakt || partnerData.telefon || '',
+          adresa: partnerData.adresa || '',
           porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
           opcina_sifra: partnerData.opcina_sifra || '',
           mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
@@ -273,6 +285,16 @@
         } else {
           applyUplatilacDefaults(partner);
         }
+      }
+
+      if (isPrimatelj) {
+        if ($primateljIdBroj) $primateljIdBroj.value = partner?.id_broj || '';
+        if ($primateljKontakt) $primateljKontakt.value = partner?.kontakt || '';
+        if ($primateljAdresa) $primateljAdresa.value = partner?.adresa || '';
+      } else {
+        if ($uplatilacIdBroj) $uplatilacIdBroj.value = partner?.id_broj || '';
+        if ($uplatilacKontakt) $uplatilacKontakt.value = partner?.kontakt || '';
+        if ($uplatilacAdresa) $uplatilacAdresa.value = partner?.adresa || '';
       }
     }
 
@@ -400,8 +422,14 @@
       $id.value = '';
       $uplatilacId.value = '';
       $uplatilacLabel.value = '';
+      if ($uplatilacIdBroj) $uplatilacIdBroj.value = '';
+      if ($uplatilacKontakt) $uplatilacKontakt.value = '';
+      if ($uplatilacAdresa) $uplatilacAdresa.value = '';
       $primateljId.value = '';
       $primateljLabel.value = '';
+      if ($primateljIdBroj) $primateljIdBroj.value = '';
+      if ($primateljKontakt) $primateljKontakt.value = '';
+      if ($primateljAdresa) $primateljAdresa.value = '';
       $svrhaSel.value = '';
       $svrha.value = '';
       $svrha1.value = '';
