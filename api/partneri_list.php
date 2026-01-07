@@ -38,6 +38,8 @@ try {
     $fBrojR   = $cols['broj_racuna'] ?? $cols['brojracuna'] ?? null;
     $fPorezni = $cols['porezni_broj'] ?? $cols['porezni'] ?? null;
     $fOpcina  = $cols['opcina_sifra'] ?? $cols['opcina'] ?? null;
+    $fKontakt = $cols['kontakt'] ?? $cols['telefon'] ?? $cols['tel'] ?? null;
+    $fAdresa  = $cols['adresa'] ?? null;
 
     // ako postoji kolona za općinu u partnerima -> koristi nju
     // ako ne postoji -> koristi poreznu šifru iz tablice mjesta
@@ -49,9 +51,9 @@ try {
         'p.id',
         'p.ime',
         'p.prezime',
-        'p.kontakt',
+        $fKontakt ? "p.`$fKontakt` AS kontakt" : "'' AS kontakt",
         'p.email',
-        'p.adresa',
+        $fAdresa ? "p.`$fAdresa` AS adresa" : "'' AS adresa",
         'p.mjesto_id',
 
         $fVrsta   ? "p.`$fVrsta` AS vrsta_partnera" : "'' AS vrsta_partnera",

@@ -163,6 +163,8 @@
       width:100%;
       padding:16px 16px 14px;
       font-size:14px;
+      max-height:92vh;
+      overflow-y:auto;
     }
     .modal header{
       display:flex;
@@ -307,24 +309,22 @@
 
           <div class="row-inline">
             <div class="field">
-              <label for="u_uplatilac_kontakt">Kontakt uplatioca</label>
-              <input id="u_uplatilac_kontakt" type="text" placeholder="Telefon ili e-mail">
+              <label for="u_uplatilac_id_broj">ID broj uplatilaca</label>
+              <input id="u_uplatilac_id_broj" type="text" readonly>
             </div>
             <div class="field">
-              <label for="u_uplatilac_id_broj">ID broj uplatioca</label>
-              <input id="u_uplatilac_id_broj" type="text" placeholder="ID broj / JMBG">
+              <label for="u_uplatilac_kontakt">Kontakt uplatilaca</label>
+              <input id="u_uplatilac_kontakt" type="text" readonly>
             </div>
           </div>
 
-          <div class="row-inline">
-            <div class="field">
-              <label for="u_uplatilac_adresa">Adresa uplatioca</label>
-              <input id="u_uplatilac_adresa" type="text">
-            </div>
-            <div class="field">
-              <label for="u_uplatilac_mjesto">Mjesto uplatioca</label>
-              <input id="u_uplatilac_mjesto" type="text">
-            </div>
+          <div class="field">
+            <label for="u_uplatilac_adresa">Adresa uplatilaca</label>
+            <input id="u_uplatilac_adresa" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="u_uplatilac_mjesto">Mjesto uplatilaca</label>
+            <input id="u_uplatilac_mjesto" type="text" readonly>
           </div>
 
           <div class="field">
@@ -345,24 +345,22 @@
 
           <div class="row-inline">
             <div class="field">
-              <label for="u_primatelj_kontakt">Kontakt primatelja</label>
-              <input id="u_primatelj_kontakt" type="text" placeholder="Telefon ili e-mail">
+              <label for="u_primatelj_id_broj">ID broj primatelja</label>
+              <input id="u_primatelj_id_broj" type="text" readonly>
             </div>
             <div class="field">
-              <label for="u_primatelj_id_broj">ID broj primatelja</label>
-              <input id="u_primatelj_id_broj" type="text" placeholder="ID broj / JMBG">
+              <label for="u_primatelj_kontakt">Kontakt primatelja</label>
+              <input id="u_primatelj_kontakt" type="text" readonly>
             </div>
           </div>
 
-          <div class="row-inline">
-            <div class="field">
-              <label for="u_primatelj_adresa">Adresa primatelja</label>
-              <input id="u_primatelj_adresa" type="text">
-            </div>
-            <div class="field">
-              <label for="u_primatelj_mjesto">Mjesto primatelja</label>
-              <input id="u_primatelj_mjesto" type="text">
-            </div>
+          <div class="field">
+            <label for="u_primatelj_adresa">Adresa primatelja</label>
+            <input id="u_primatelj_adresa" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="u_primatelj_mjesto">Mjesto primatelja</label>
+            <input id="u_primatelj_mjesto" type="text" readonly>
           </div>
 
           

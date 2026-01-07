@@ -41,21 +41,19 @@
     const $uplatilacId    = document.getElementById('u_uplatilac_id');
     const $uplatilacLabel = document.getElementById('u_uplatilac_label');
     const $uplatilacTekst = document.getElementById('u_uplatilac_tekst');
+    const $uplatilacIdBroj = document.getElementById('u_uplatilac_id_broj');
+    const $uplatilacKontakt = document.getElementById('u_uplatilac_kontakt');
+    const $uplatilacAdresa = document.getElementById('u_uplatilac_adresa');
+    const $uplatilacMjesto = document.getElementById('u_uplatilac_mjesto');
     const $primateljId    = document.getElementById('u_primatelj_id');
     const $primateljLabel = document.getElementById('u_primatelj_label');
     const $primateljTekst = document.getElementById('u_primatelj_tekst');
+    const $primateljIdBroj = document.getElementById('u_primatelj_id_broj');
+    const $primateljKontakt = document.getElementById('u_primatelj_kontakt');
+    const $primateljAdresa = document.getElementById('u_primatelj_adresa');
+    const $primateljMjesto = document.getElementById('u_primatelj_mjesto');
     const $btnPickUplat   = document.getElementById('u_pick_uplatilac');
     const $btnPickPrim    = document.getElementById('u_pick_primatelj');
-
-    const $uplatilacKontakt = document.getElementById('u_uplatilac_kontakt');
-    const $uplatilacAdresa  = document.getElementById('u_uplatilac_adresa');
-    const $uplatilacMjesto  = document.getElementById('u_uplatilac_mjesto');
-    const $uplatilacIdBroj  = document.getElementById('u_uplatilac_id_broj');
-
-    const $primateljKontakt = document.getElementById('u_primatelj_kontakt');
-    const $primateljAdresa  = document.getElementById('u_primatelj_adresa');
-    const $primateljMjesto  = document.getElementById('u_primatelj_mjesto');
-    const $primateljIdBroj  = document.getElementById('u_primatelj_id_broj');
 
     const $svrhaSel          = document.getElementById('u_svrha_id');
     const $svrhaNew          = document.getElementById('u_svrha_new');
@@ -259,14 +257,14 @@
             id,
             label,
             vrsta: p.vrsta_partnera || p.vrsta || '',
+            id_broj: p.id_broj || p.idbroj || '',
             broj_racuna: p.broj_racuna || p.racun || '',
+            kontakt: p.kontakt || p.telefon || '',
+            adresa: p.adresa || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             mjesto_porezna_sifra: p.mjesto_porezna_sifra || p.porezna_sifra || '',
             opcina_sifra: p.opcina_sifra || '',
-            mjesto_naziv: p.mjesto || p.mjesto_naziv || '',
-            kontakt: p.kontakt || p.email || '',
-            adresa: p.adresa || '',
-            id_broj: p.id_broj || ''
+            mjesto_naziv: p.mjesto || p.mjesto_naziv || ''
           });
         });
 
@@ -449,7 +447,7 @@
       }
     }
 
-    // 🔧 setPartner – merge partnerData + postojeći partner iz state.partners
+    // 🔧 setPartner – merge partnerData + postojeći partner iz state.partners␊
     function setPartner(target, id, label, partnerData) {
       const isPrimatelj = target === 'primatelj';
       const $idField    = isPrimatelj ? $primateljId : $uplatilacId;
@@ -480,6 +478,20 @@
             partnerData.racun ||
             partnerData.racun_pos ||
             base.broj_racuna ||
+            '',
+          id_broj:
+            partnerData.id_broj ||
+            partnerData.idbroj ||
+            base.id_broj ||
+            '',
+          kontakt:
+            partnerData.kontakt ||
+            partnerData.telefon ||
+            base.kontakt ||
+            '',
+          adresa:
+            partnerData.adresa ||
+            base.adresa ||
             '',
           porezni_broj:
             partnerData.porezni_broj ||
@@ -512,38 +524,22 @@
 
       if (partner) {
         if (isPrimatelj) {
-          if ($primateljKontakt && partner.kontakt && !$primateljKontakt.value) {
-            $primateljKontakt.value = partner.kontakt;
-          }
-          if ($primateljAdresa && partner.adresa && !$primateljAdresa.value) {
-            $primateljAdresa.value = partner.adresa;
-          }
-          if ($primateljMjesto && partner.mjesto_naziv && !$primateljMjesto.value) {
-            $primateljMjesto.value = partner.mjesto_naziv;
-          }
-          if ($primateljIdBroj && partner.id_broj && !$primateljIdBroj.value) {
-            $primateljIdBroj.value = partner.id_broj;
-          }
-        } else {
-          if ($uplatilacKontakt && partner.kontakt && !$uplatilacKontakt.value) {
-            $uplatilacKontakt.value = partner.kontakt;
-          }
-          if ($uplatilacAdresa && partner.adresa && !$uplatilacAdresa.value) {
-            $uplatilacAdresa.value = partner.adresa;
-          }
-          if ($uplatilacMjesto && partner.mjesto_naziv && !$uplatilacMjesto.value) {
-            $uplatilacMjesto.value = partner.mjesto_naziv;
-          }
-          if ($uplatilacIdBroj && partner.id_broj && !$uplatilacIdBroj.value) {
-            $uplatilacIdBroj.value = partner.id_broj;
-          }
-        }
-
-        if (isPrimatelj) {
           applyPrimateljDefaults(partner);
         } else {
           applyUplatilacDefaults(partner);
         }
+      }
+
+      if (isPrimatelj) {
+        if ($primateljIdBroj) $primateljIdBroj.value = partner?.id_broj || '';
+        if ($primateljKontakt) $primateljKontakt.value = partner?.kontakt || '';
+        if ($primateljAdresa) $primateljAdresa.value = partner?.adresa || '';
+        if ($primateljMjesto) $primateljMjesto.value = partner?.mjesto_naziv || '';
+      } else {
+        if ($uplatilacIdBroj) $uplatilacIdBroj.value = partner?.id_broj || '';
+        if ($uplatilacKontakt) $uplatilacKontakt.value = partner?.kontakt || '';
+        if ($uplatilacAdresa) $uplatilacAdresa.value = partner?.adresa || '';
+        if ($uplatilacMjesto) $uplatilacMjesto.value = partner?.mjesto_naziv || '';
       }
     }
 
@@ -724,17 +720,15 @@
       $uplatilacId.value = '';
       $uplatilacLabel.value = '';
       if ($uplatilacTekst) $uplatilacTekst.value = '';
+      if ($uplatilacIdBroj) $uplatilacIdBroj.value = '';
       if ($uplatilacKontakt) $uplatilacKontakt.value = '';
       if ($uplatilacAdresa) $uplatilacAdresa.value = '';
-      if ($uplatilacMjesto) $uplatilacMjesto.value = '';
-      if ($uplatilacIdBroj) $uplatilacIdBroj.value = '';
       $primateljId.value = '';
       $primateljLabel.value = '';
       if ($primateljTekst) $primateljTekst.value = '';
+      if ($primateljIdBroj) $primateljIdBroj.value = '';
       if ($primateljKontakt) $primateljKontakt.value = '';
       if ($primateljAdresa) $primateljAdresa.value = '';
-      if ($primateljMjesto) $primateljMjesto.value = '';
-      if ($primateljIdBroj) $primateljIdBroj.value = '';
       $svrhaSel.value = '';
       $svrha.value = '';
       $svrha1.value = '';
