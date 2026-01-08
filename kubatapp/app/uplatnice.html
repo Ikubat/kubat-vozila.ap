@@ -18,6 +18,7 @@
       --shadow: 0 4px 16px rgba(0,0,0,.08);
       --border: #e5e7eb;
       --primary: #2563eb;
+      --panel: #f8fafc;
     }
     *{box-sizing:border-box}
     body{
@@ -154,12 +155,15 @@
       width:100%;
       padding:16px 16px 14px;
       font-size:14px;
+      border:1px solid #e2e8f0;
     }
     .modal header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      margin-bottom:10px;
+      margin-bottom:12px;
+      padding-bottom:8px;
+      border-bottom:1px solid #e2e8f0;
     }
     .modal h2{
       margin:0;
@@ -180,35 +184,40 @@
     .grid-two{
       display:grid;
       grid-template-columns: 2fr 1.4fr;
-      gap:12px;
+      gap:16px;
     }
     .block{
       border-radius:10px;
-      border:1px solid #e5e7eb;
-      padding:10px;
+      border:1px solid #e2e8f0;
+      background:var(--panel);
+      padding:14px;
     }
     .block h3{
-      margin:0 0 6px;
-      font-size:14px;
+      margin:0 0 10px;
+      font-size:13px;
       font-weight:600;
-      color:#374151;
+      color:#475569;
+      text-transform:uppercase;
+      letter-spacing:.02em;
     }
     .field{
-      margin-bottom:6px;
+      margin-bottom:10px;
     }
     .field label{
       display:block;
-      font-size:12px;
-      color:#4b5563;
-      margin-bottom:2px;
+      font-size:11px;
+      font-weight:600;
+      color:#475569;
+      margin-bottom:4px;
     }
     .field input,
     .field select{
       width:100%;
+      background:#fff;
     }
     .row-inline{
       display:flex;
-      gap:8px;
+      gap:12px;
     }
     .row-inline .field{flex:1}
     .modal-footer{
