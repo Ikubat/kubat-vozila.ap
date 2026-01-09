@@ -540,7 +540,7 @@
     });
 
     // ---- spremi (create / update) ----
-    async function save() {
+    async function save(forceDuplicate = false) {
       const id = $id.value ? parseInt($id.value, 10) : 0;
 
       const body = {
@@ -561,7 +561,8 @@
         opcina_sifra:       $opcina.value.trim(),
         budzetska_org_sifra:$budzetska.value.trim(),
         poziv_na_broj:      $poziv.value.trim(),
-        napomena:           $napomena.value.trim()
+        napomena:           $napomena.value.trim(),
+        force_duplicate:    forceDuplicate || undefined
       };
 
       if (!body.uplatilac_id) {
@@ -592,6 +593,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
+        if (out && out.requires_confirm) {
+          const warningText = out.warning || 'Upozorenje: poziv na broj već postoji. Želite li nastaviti?';
+          const shouldContinue = confirm(warningText);
+          if (shouldContinue) {
+            await save(true);
+          }
+          return;
+        }
         if (!out.ok && out.error) {
           throw new Error(out.error);
         }
