@@ -114,6 +114,19 @@ try {
     $colPrimateljAdresa  = $cols['primatelj_adresa'] ?? null;
     $colPrimateljMjesto  = $cols['primatelj_mjesto'] ?? null;
     $colPrimateljIdBroj  = $cols['primatelj_id_broj'] ?? null;
+    $colPoziv = $cols['poziv_na_broj'] ?? ($cols['poziv'] ?? null);
+
+    $warning = '';
+    if ($colPoziv && $poziv_na_broj !== '') {
+        $checkSql = "SELECT id FROM `$T_UPLATNICE` WHERE `$colPoziv` = ? AND id <> ? LIMIT 1";
+        $stCheck = $db->prepare($checkSql);
+        $stCheck->bind_param('si', $poziv_na_broj, $id);
+        $stCheck->execute();
+        $dup = $stCheck->get_result()->fetch_assoc();
+        if ($dup) {
+            $warning = 'Upozorenje: poziv na broj već postoji u bazi (ID #' . $dup['id'] . ').';
+        }
+    }
 
     $fields = [
         ['name' => $colOrDefault('uplatilac_id', 'uplatilac_id'), 'type' => 'i', 'value' => $uplatilac_id],
@@ -182,6 +195,9 @@ try {
     $st->bind_param($types, ...$values);
     $st->execute();
 
+    if ($warning !== '') {
+        jok(['warning' => $warning]);
+    }
     jok();
 
 } catch (mysqli_sql_exception $e) {
