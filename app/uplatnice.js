@@ -40,14 +40,12 @@
     const $id             = document.getElementById('u_id');
     const $uplatilacId    = document.getElementById('u_uplatilac_id');
     const $uplatilacLabel = document.getElementById('u_uplatilac_label');
-    const $uplatilacTekst = document.getElementById('u_uplatilac_tekst');
     const $uplatilacIdBroj = document.getElementById('u_uplatilac_id_broj');
     const $uplatilacKontakt = document.getElementById('u_uplatilac_kontakt');
     const $uplatilacAdresa = document.getElementById('u_uplatilac_adresa');
     const $uplatilacMjesto = document.getElementById('u_uplatilac_mjesto');
     const $primateljId    = document.getElementById('u_primatelj_id');
     const $primateljLabel = document.getElementById('u_primatelj_label');
-    const $primateljTekst = document.getElementById('u_primatelj_tekst');
     const $primateljIdBroj = document.getElementById('u_primatelj_id_broj');
     const $primateljKontakt = document.getElementById('u_primatelj_kontakt');
     const $primateljAdresa = document.getElementById('u_primatelj_adresa');
@@ -153,13 +151,8 @@
 
     // --- PRINT payload iz forme ---
     function buildPrintPayloadFromForm() {
-      const uplatilacTekst =
-        ($uplatilacTekst && $uplatilacTekst.value.trim()) ||
-        $uplatilacLabel.value.trim();
-
-      const primateljTekst =
-        ($primateljTekst && $primateljTekst.value.trim()) ||
-        $primateljLabel.value.trim();
+      const uplatilacTekst = $uplatilacLabel.value.trim();
+      const primateljTekst = $primateljLabel.value.trim();
 
       const valuta = $valuta.value.trim() || 'KM';
       const iznosFull = $iznos.value
@@ -168,7 +161,7 @@
 
       return {
         uplatilac: uplatilacTekst,
-        uplatilac_tekst: $uplatilacTekst ? $uplatilacTekst.value.trim() : '',
+        uplatilac_tekst: '',
         uplatilac_kontakt: $uplatilacKontakt ? $uplatilacKontakt.value.trim() : '',
         uplatilac_adresa: $uplatilacAdresa ? $uplatilacAdresa.value.trim() : '',
         uplatilac_mjesto: $uplatilacMjesto ? $uplatilacMjesto.value.trim() : '',
@@ -719,13 +712,11 @@
       $id.value = '';
       $uplatilacId.value = '';
       $uplatilacLabel.value = '';
-      if ($uplatilacTekst) $uplatilacTekst.value = '';
       if ($uplatilacIdBroj) $uplatilacIdBroj.value = '';
       if ($uplatilacKontakt) $uplatilacKontakt.value = '';
       if ($uplatilacAdresa) $uplatilacAdresa.value = '';
       $primateljId.value = '';
       $primateljLabel.value = '';
-      if ($primateljTekst) $primateljTekst.value = '';
       if ($primateljIdBroj) $primateljIdBroj.value = '';
       if ($primateljKontakt) $primateljKontakt.value = '';
       if ($primateljAdresa) $primateljAdresa.value = '';
@@ -771,12 +762,10 @@
 
       setPartner('uplatilac', item.uplatilac_id || null, item.uplatilac_naziv || '');
       setPartner('primatelj', item.primatelj_id || null, item.primatelj_naziv || '');
-      if ($uplatilacTekst) $uplatilacTekst.value = item.uplatilac_tekst || '';
       if ($uplatilacKontakt) $uplatilacKontakt.value = item.uplatilac_kontakt || '';
       if ($uplatilacAdresa) $uplatilacAdresa.value = item.uplatilac_adresa || '';
       if ($uplatilacMjesto) $uplatilacMjesto.value = item.uplatilac_mjesto || '';
       if ($uplatilacIdBroj) $uplatilacIdBroj.value = item.uplatilac_id_broj || '';
-      if ($primateljTekst) $primateljTekst.value = item.primatelj_tekst || '';
       if ($primateljKontakt) $primateljKontakt.value = item.primatelj_kontakt || '';
       if ($primateljAdresa) $primateljAdresa.value = item.primatelj_adresa || '';
       if ($primateljMjesto) $primateljMjesto.value = item.primatelj_mjesto || '';
@@ -825,8 +814,8 @@
         uplatilac_id:  $uplatilacId.value ? parseInt($uplatilacId.value, 10) : null,
         primatelj_id:  $primateljId.value ? parseInt($primateljId.value, 10) : null,
         svrha_id:      $svrhaSel.value ? parseInt($svrhaSel.value, 10) : null,
-        uplatilac_tekst: $uplatilacTekst ? $uplatilacTekst.value.trim() : '',
-        primatelj_tekst: $primateljTekst ? $primateljTekst.value.trim() : '',
+        uplatilac_tekst: '',
+        primatelj_tekst: '',
         uplatilac_kontakt: $uplatilacKontakt ? $uplatilacKontakt.value.trim() : '',
         uplatilac_adresa: $uplatilacAdresa ? $uplatilacAdresa.value.trim() : '',
         uplatilac_mjesto: $uplatilacMjesto ? $uplatilacMjesto.value.trim() : '',
