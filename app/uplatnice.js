@@ -306,7 +306,7 @@
     function applyUplatilacDefaults(p) {
       if (!p) return;
 
-      if (!$mjesto.value)   $mjesto.value   = p.mjesto_naziv || '';
+      $mjesto.value   = p.mjesto_naziv || '';
       if (!$racunPos.value) $racunPos.value = p.broj_racuna || '';
 
       const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
@@ -372,7 +372,6 @@
       const s = state.svrhe.get(id);
       if (!s) return;
 
-      if (!$svrha.value)   $svrha.value = s.naziv || '';
       if (!$svrha1.value)  $svrha1.value = s.naziv2 || '';
       if (!$vrstaPrihoda.value) $vrstaPrihoda.value = s.vrsta_prihoda || '';
       if (!$budzetska.value)    $budzetska.value = s.budzetska || '';
