@@ -91,6 +91,18 @@ try {
         jdie('Uplatnica ne postoji.', 404);
     }
 
+    $warning = '';
+    if ($poziv_na_broj !== '') {
+        $checkSql = "SELECT id FROM `$T_UPLATNICE` WHERE poziv_na_broj = ? AND id <> ? LIMIT 1";
+        $stCheck = $db->prepare($checkSql);
+        $stCheck->bind_param('si', $poziv_na_broj, $id);
+        $stCheck->execute();
+        $dup = $stCheck->get_result()->fetch_assoc();
+        if ($dup) {
+            $warning = 'Upozorenje: poziv na broj već postoji u bazi (ID #' . $dup['id'] . ').';
+        }
+    }
+
     $sql = "UPDATE `$T_UPLATNICE`
             SET uplatilac_id        = ?,
                 primatelj_id        = ?,
@@ -135,6 +147,9 @@ try {
     );
     $st->execute();
 
+    if ($warning !== '') {
+        jok(['warning' => $warning]);
+    }
     jok();
 
 } catch (mysqli_sql_exception $e) {

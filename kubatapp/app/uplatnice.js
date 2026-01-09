@@ -534,8 +534,12 @@
         if (!out.ok && out.error) {
           throw new Error(out.error);
         }
+        const warning = out && out.warning ? String(out.warning) : '';
         closeModal();
         await loadUplatnice();
+        if (warning) {
+          alert(warning);
+        }
       } catch (err) {
         console.error('save uplatnica error', err);
         $msg.textContent = err.message || 'Greška pri spremanju.';

@@ -81,6 +81,18 @@ if ($racun_primatelja === '') jdie('Račun primatelja je obavezan.');
 try {
     $db = $conn;
 
+    $warning = '';
+    if ($poziv_na_broj !== '') {
+        $checkSql = "SELECT id FROM `$T_UPLATNICE` WHERE poziv_na_broj = ? LIMIT 1";
+        $stCheck = $db->prepare($checkSql);
+        $stCheck->bind_param('s', $poziv_na_broj);
+        $stCheck->execute();
+        $dup = $stCheck->get_result()->fetch_assoc();
+        if ($dup) {
+            $warning = 'Upozorenje: poziv na broj već postoji u bazi (ID #' . $dup['id'] . ').';
+        }
+    }
+
     $sql = "INSERT INTO `$T_UPLATNICE`
       (uplatilac_id, primatelj_id, svrha_id,
        svrha, svrha1, mjesto_uplate, datum_uplate,
@@ -113,7 +125,11 @@ try {
     $st->execute();
 
     $newId = (int)$db->insert_id;
-    jok(['id' => $newId]);
+    $payload = ['id' => $newId];
+    if ($warning !== '') {
+        $payload['warning'] = $warning;
+    }
+    jok($payload);
 
 } catch (mysqli_sql_exception $e) {
     jdie('DB greška: '.$e->getMessage(), 500);
