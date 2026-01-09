@@ -165,7 +165,7 @@
       width:100%;
       padding:16px 16px 14px;
       font-size:14px;
-      max-height:92vh;
+      max-height:98vh;
       overflow-y:auto;
       border:1px solid #e2e8f0;
     }
@@ -198,6 +198,8 @@
       grid-template-columns: 2fr 1.4fr;
       gap:16px;
     }
+    .grid-two .uplatnica-left{grid-column:1;}
+    .grid-two .uplatnica-right{grid-column:2;}
     .block{
       border-radius:10px;
       border:1px solid #e2e8f0;
@@ -232,6 +234,9 @@
     .field{
       margin-bottom:10px;
     }
+    .section .field:last-child{
+      margin-bottom:0;
+    }
     .field label{
       display:block;
       font-size:11px;
@@ -258,6 +263,8 @@
 
     @media (max-width: 800px){
       .grid-two{grid-template-columns:1fr}
+      .grid-two .uplatnica-left,
+      .grid-two .uplatnica-right{grid-column:auto;}
       .head-row,.row{
         grid-template-columns: 90px 1.4fr 1.4fr 1.6fr 90px;
       }
@@ -315,14 +322,13 @@
 
       <div class="grid-two">
         <!-- Lijeva strana – kao papirna uplatnica -->
-        <div class="block">
+        <div class="block uplatnica-left">
           <h3>Osnovni podaci</h3>
 
           <div class="section">
             <p class="section-title">Uplatilac</p>
             <div class="field">
-              <label for="u_uplatilac_id">Uplatilac (partner)</label>
-              <div class="picker-row">
+            <div class="picker-row">
                 <input id="u_uplatilac_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
                 <input id="u_uplatilac_id" type="hidden">
                 <button id="u_pick_uplatilac" class="btn sec" type="button">
@@ -342,21 +348,21 @@
               </div>
             </div>
 
-          <div class="row-inline">
-            <div class="field">
-              <label for="u_uplatilac_adresa">Adresa uplatilaca</label>
-              <input id="u_uplatilac_adresa" type="text" readonly>
-            </div>
-            <div class="field">
-              <label for="u_uplatilac_mjesto">Mjesto uplatilaca</label>
-              <input id="u_uplatilac_mjesto" type="text" readonly>
+            <div class="row-inline">
+              <div class="field">
+                <label for="u_uplatilac_adresa">Adresa uplatilaca</label>
+                <input id="u_uplatilac_adresa" type="text" readonly>
+              </div>
+              <div class="field">
+                <label for="u_uplatilac_mjesto">Mjesto uplatilaca</label>
+                <input id="u_uplatilac_mjesto" type="text" readonly>
+              </div>
             </div>
           </div>
 
           <div class="section">
             <p class="section-title">Primatelj</p>
             <div class="field">
-              <label for="u_primatelj_id">Primatelj (partner)</label>
               <div class="picker-row">
                 <input id="u_primatelj_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
                 <input id="u_primatelj_id" type="hidden">
@@ -387,11 +393,11 @@
               <input id="u_primatelj_mjesto" type="text" readonly>
             </div>
           </div>
+        </div>
 
           <div class="section">
             <p class="section-title">Uplata i svrha</p>
             <div class="field">
-              <label for="u_svrha_id">Šifra svrhe</label>
               <div class="picker-row">
                 <select id="u_svrha_id"></select>
                 <button id="u_svrha_new_btn" class="btn sec" type="button">
@@ -424,7 +430,7 @@
         </div>
 
         <!-- Desna strana – porezni dio -->
-        <div class="block">
+        <div class="block uplatnica-right">
           <h3>Porezni / budžetski dio</h3>
 
           <div class="section">
@@ -481,20 +487,20 @@
               <label for="u_napomena">Napomena (opcionalno)</label>
               <input id="u_napomena" type="text">
             </div>
+
+            <div class="modal-footer">
+              <button id="u_print" class="btn sec" type="button">
+                <i class="fa-solid fa-print"></i>
+                Printaj
+              </button>
+              <button id="u_save" class="btn primary" type="button">Spremi</button>
+              <button id="u_cancel" class="btn sec" type="button">Odustani</button>
+            </div>
           </div>
         </div>
       </div>
 
       <div id="u_msg" class="hint" style="display:none;text-align:left;color:#b91c1c;"></div>
-
-      <div class="modal-footer">
-        <button id="u_print" class="btn sec" type="button">
-          <i class="fa-solid fa-print"></i>
-          Printaj
-        </button>
-        <button id="u_save" class="btn primary" type="button">Spremi</button>
-        <button id="u_cancel" class="btn sec" type="button">Odustani</button>
-      </div>
     </div>
   </div>
 
