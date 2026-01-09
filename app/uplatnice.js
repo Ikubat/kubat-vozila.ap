@@ -310,43 +310,31 @@
       if (!$racunPos.value) $racunPos.value = p.broj_racuna || '';
 
       const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+      const isCarinaPdvUvoz = svrhaText.includes('uplata carine i pdv (uvoz)');
 
       const vrstaLower = (p.vrsta || '').toLowerCase();
-      const isPravna   = vrstaLower.includes('pravna') || vrstaLower.includes('pravno');
       const isFizicka  = vrstaLower.includes('fizič') || vrstaLower.includes('fizic');
-      const isObrt     = vrstaLower.includes('obrt') || vrstaLower.includes('szr') || vrstaLower.includes('str');
 
       const partnerOpcina =
         p.mjesto_porezna_sifra ||
         p.opcina_sifra ||
         '';
 
+      const idBrojUplatilac = (p.id_broj || '').trim();
+
+      if (isCarinaPdvUvoz && isFizicka) {
+        $brojPorezni.value = '001000000019';
+      } else {
+        $brojPorezni.value = idBrojUplatilac;
+      }
+
       if (svrhaText.includes('uvoz')) {
-        if (isFizicka) {
-          // fizička osoba + uvoz
-          $brojPorezni.value = '0010000000019';
-        } else if (isPravna) {
-          // pravna osoba + uvoz
-          $brojPorezni.value = (p.porezni_broj || '').trim();
-        } else if (isObrt) {
-          // obrt + uvoz → prazno
-          $brojPorezni.value = '';
-        } else {
-          // nepoznata vrsta – ako je prazno, stavi broj iz partnera
-          if (!$brojPorezni.value) {
-            $brojPorezni.value = (p.porezni_broj || '').trim();
-          }
-        }
 
         // kod UVOZ u općinu upiši poreznu šifru mjesta uplatioca
         if (partnerOpcina) {
           $opcina.value = partnerOpcina;
         }
       } else {
-        // NIJE uvoz – samo default popune ako je prazno
-        if (!$brojPorezni.value) {
-          $brojPorezni.value = (p.porezni_broj || '').trim();
-        }
         if (!$opcina.value && partnerOpcina) {
           $opcina.value = partnerOpcina;
         }
