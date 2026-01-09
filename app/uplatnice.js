@@ -545,6 +545,19 @@
       );
     }
 
+    function findPartnerByLabel(label) {
+      const normalized = (label || '').trim().toLowerCase();
+      if (!normalized) return null;
+
+      for (const partner of state.partners.values()) {
+        if ((partner.label || '').trim().toLowerCase() === normalized) {
+          return partner;
+        }
+      }
+
+      return null;
+    }
+
     window.setSelectedPartner = function (id, naziv, partner) {
       if (!id) return;
       const target = pickTarget === 'primatelj' ? 'primatelj' : 'uplatilac';
@@ -755,11 +768,31 @@
       const item = state.all.find(x => x.id === id);
       if (!item) return;
 
+      const matchedUplatilac = !item.uplatilac_id
+        ? findPartnerByLabel(item.uplatilac_naziv || item.uplatilac_tekst || '')
+        : null;
+      const matchedPrimatelj = !item.primatelj_id
+        ? findPartnerByLabel(item.primatelj_naziv || item.primatelj_tekst || '')
+        : null;
+
       $title.textContent = 'Uredi uplatnicu #' + id;
       $id.value = id;
 
-      setPartner('uplatilac', item.uplatilac_id || null, item.uplatilac_naziv || '');
-      setPartner('primatelj', item.primatelj_id || null, item.primatelj_naziv || '');
+      const uplatilacId = item.uplatilac_id || matchedUplatilac?.id || null;
+      const primateljId = item.primatelj_id || matchedPrimatelj?.id || null;
+
+      setPartner(
+        'uplatilac',
+        uplatilacId,
+        item.uplatilac_naziv || '',
+        matchedUplatilac || null
+      );
+      setPartner(
+        'primatelj',
+        primateljId,
+        item.primatelj_naziv || '',
+        matchedPrimatelj || null
+      );
       if ($uplatilacTekst) $uplatilacTekst.value = item.uplatilac_tekst || '';
       if ($uplatilacKontakt) $uplatilacKontakt.value = item.uplatilac_kontakt || '';
       if ($uplatilacAdresa) $uplatilacAdresa.value = item.uplatilac_adresa || '';
