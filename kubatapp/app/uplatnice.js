@@ -126,8 +126,10 @@
             label,
             racun: p.racun || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
+            id_broj: p.id_broj || '',
             opcina_sifra: p.opcina_sifra || '',
-            mjesto_naziv: p.mjesto_naziv || ''
+            mjesto_naziv: p.mjesto_naziv || '',
+            vrsta: p.vrsta || ''
           });
         });
 
@@ -170,7 +172,18 @@
       if (!p) return;
       if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
       if (!$racunPos.value)      $racunPos.value = p.racun || '';
-      if (!$brojPorezni.value)   $brojPorezni.value = p.porezni_broj || '';
+      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+      const isCarinaPdvUvoz = svrhaText.includes('uplata carine i pdv (uvoz)');
+
+      const vrstaLower = (p.vrsta || '').toLowerCase();
+      const isFizicka  = vrstaLower.includes('fizič') || vrstaLower.includes('fizic');
+
+      if (isCarinaPdvUvoz && isFizicka) {
+        $brojPorezni.value = '001000000019';
+      } else {
+        $brojPorezni.value = (p.id_broj || '').trim();
+      }
+
       if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
     }
 
@@ -189,6 +202,16 @@
       if (!$vrstaPrihoda.value) $vrstaPrihoda.value = s.vrsta_prihoda || '';
       if (!$budzetska.value)    $budzetska.value = s.budzetska || '';
       if (!$poziv.value)        $poziv.value = s.poziv || '';
+
+      recomputeFromSvrha();
+    }
+
+    function recomputeFromSvrha() {
+      const uId = $uplatilacId.value ? parseInt($uplatilacId.value, 10) : 0;
+      if (!uId) return;
+      const p = state.partners.get(uId);
+      if (!p) return;
+      applyUplatilacDefaults(p);
     }
 
     function setSvrhaNewMsg(msg = '', isError = false) {
@@ -255,8 +278,10 @@
           label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
           racun: partnerData.racun || partnerData.racun_pos || '',
           porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
+          id_broj: partnerData.id_broj || '',
           opcina_sifra: partnerData.opcina_sifra || '',
-          mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
+          mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || '',
+          vrsta: partnerData.vrsta || ''
         };
         state.partners.set(partner.id, partner);
       } else if (id) {
