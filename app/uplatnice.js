@@ -303,13 +303,23 @@
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
+    function getSvrhaText() {
+      const rawText = ($svrha.value + ' ' + $svrha1.value).trim();
+      if (rawText) return rawText.toLowerCase();
+      const id = parseInt($svrhaSel.value, 10);
+      if (!id) return '';
+      const s = state.svrhe.get(id);
+      if (!s) return '';
+      return (String(s.naziv || '') + ' ' + String(s.naziv2 || '')).trim().toLowerCase();
+    }
+
     function applyUplatilacDefaults(p) {
       if (!p) return;
 
       $mjesto.value   = p.mjesto_naziv || '';
       if (!$racunPos.value) $racunPos.value = p.broj_racuna || '';
 
-      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+      const svrhaText = getSvrhaText();
       const isCarinaPdvUvoz = svrhaText.includes('uplata carine i pdv (uvoz)');
 
       const vrstaLower = (p.vrsta || '').toLowerCase();
