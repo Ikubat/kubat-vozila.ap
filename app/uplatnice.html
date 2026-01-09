@@ -18,6 +18,7 @@
       --shadow: 0 4px 16px rgba(0,0,0,.08);
       --border: #e5e7eb;
       --primary: #2563eb;
+      --panel: #f8fafc;
     }
     *{box-sizing:border-box}
     body{
@@ -52,6 +53,7 @@
       border-radius:var(--radius);
       background:#fff;
       font-size:14px;
+      font-weight:600;
       outline:none;
     }
     input:focus, select:focus{
@@ -165,12 +167,15 @@
       font-size:14px;
       max-height:92vh;
       overflow-y:auto;
+      border:1px solid #e2e8f0;
     }
     .modal header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      margin-bottom:10px;
+      margin-bottom:12px;
+      padding-bottom:8px;
+      border-bottom:1px solid #e2e8f0;
     }
     .modal h2{
       margin:0;
@@ -191,35 +196,57 @@
     .grid-two{
       display:grid;
       grid-template-columns: 2fr 1.4fr;
-      gap:12px;
+      gap:16px;
     }
     .block{
       border-radius:10px;
-      border:1px solid #e5e7eb;
-      padding:10px;
+      border:1px solid #e2e8f0;
+      background:var(--panel);
+      padding:14px;
+    }
+    .section{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:10px;
+      padding:12px;
+      margin-bottom:12px;
+      box-shadow:0 1px 2px rgba(15,23,42,.04);
+    }
+    .section:last-child{margin-bottom:0}
+    .section-title{
+      font-size:12px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:#64748b;
+      margin:0 0 10px;
     }
     .block h3{
-      margin:0 0 6px;
-      font-size:14px;
+      margin:0 0 10px;
+      font-size:13px;
       font-weight:600;
-      color:#374151;
+      color:#475569;
+      text-transform:uppercase;
+      letter-spacing:.02em;
     }
     .field{
-      margin-bottom:6px;
+      margin-bottom:10px;
     }
     .field label{
       display:block;
-      font-size:12px;
-      color:#4b5563;
-      margin-bottom:2px;
+      font-size:11px;
+      font-weight:600;
+      color:#475569;
+      margin-bottom:4px;
     }
     .field input,
     .field select{
       width:100%;
+      background:#fff;
     }
     .row-inline{
       display:flex;
-      gap:8px;
+      gap:12px;
     }
     .row-inline .field{flex:1}
     .modal-footer{
@@ -291,128 +318,116 @@
         <div class="block">
           <h3>Osnovni podaci</h3>
 
-          <div class="field">
-            <label for="u_uplatilac_id">Uplatilac (partner)</label>
-            <div class="picker-row">
-              <input id="u_uplatilac_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
-              <input id="u_uplatilac_id" type="hidden">
-              <button id="u_pick_uplatilac" class="btn sec" type="button">
-                <i class="fa-solid fa-user"></i> Partneri
-              </button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="u_uplatilac_tekst">Uplatilac (slobodan unos)</label>
-            <input id="u_uplatilac_tekst" type="text" placeholder="Dodatni opis uplatilaca">
-          </div>
-
-          <div class="row-inline">
+          <div class="section">
+            <p class="section-title">Uplatilac</p>
             <div class="field">
-              <label for="u_uplatilac_id_broj">ID broj uplatilaca</label>
-              <input id="u_uplatilac_id_broj" type="text" readonly>
+              <label for="u_uplatilac_id">Uplatilac (partner)</label>
+              <div class="picker-row">
+                <input id="u_uplatilac_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
+                <input id="u_uplatilac_id" type="hidden">
+                <button id="u_pick_uplatilac" class="btn sec" type="button">
+                  <i class="fa-solid fa-user"></i> Partneri
+                </button>
+              </div>
             </div>
+
             <div class="field">
-              <label for="u_uplatilac_kontakt">Kontakt uplatilaca</label>
-              <input id="u_uplatilac_kontakt" type="text" readonly>
+              <label for="u_uplatilac_tekst">Uplatilac (slobodan unos)</label>
+              <input id="u_uplatilac_tekst" type="text" placeholder="Dodatni opis uplatilaca">
             </div>
-          </div>
 
-          <div class="field">
-            <label for="u_uplatilac_adresa">Adresa uplatilaca</label>
-            <input id="u_uplatilac_adresa" type="text" readonly>
-          </div>
-          <div class="field">
-            <label for="u_uplatilac_mjesto">Mjesto uplatilaca</label>
-            <input id="u_uplatilac_mjesto" type="text" readonly>
-          </div>
-
-          <div class="field">
-            <label for="u_primatelj_id">Primatelj (partner)</label>
-            <div class="picker-row">
-              <input id="u_primatelj_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
-              <input id="u_primatelj_id" type="hidden">
-              <button id="u_pick_primatelj" class="btn sec" type="button">
-                <i class="fa-solid fa-user"></i> Partneri
-              </button>
+            <div class="row-inline">
+              <div class="field">
+                <label for="u_uplatilac_id_broj">ID broj uplatilaca</label>
+                <input id="u_uplatilac_id_broj" type="text" readonly>
+              </div>
+              <div class="field">
+                <label for="u_uplatilac_kontakt">Kontakt uplatilaca</label>
+                <input id="u_uplatilac_kontakt" type="text" readonly>
+              </div>
             </div>
-          </div>
 
-          <div class="field">
-            <label for="u_primatelj_tekst">Primatelj (slobodan unos)</label>
-            <input id="u_primatelj_tekst" type="text" placeholder="Dodatni opis primatelja">
-          </div>
-
-          <div class="row-inline">
             <div class="field">
-              <label for="u_primatelj_id_broj">ID broj primatelja</label>
-              <input id="u_primatelj_id_broj" type="text" readonly>
+              <label for="u_uplatilac_adresa">Adresa uplatilaca</label>
+              <input id="u_uplatilac_adresa" type="text" readonly>
             </div>
             <div class="field">
-              <label for="u_primatelj_kontakt">Kontakt primatelja</label>
-              <input id="u_primatelj_kontakt" type="text" readonly>
+              <label for="u_uplatilac_mjesto">Mjesto uplatilaca</label>
+              <input id="u_uplatilac_mjesto" type="text" readonly>
             </div>
           </div>
 
-          <div class="field">
-            <label for="u_primatelj_adresa">Adresa primatelja</label>
-            <input id="u_primatelj_adresa" type="text" readonly>
-          </div>
-          <div class="field">
-            <label for="u_primatelj_mjesto">Mjesto primatelja</label>
-            <input id="u_primatelj_mjesto" type="text" readonly>
-          </div>
-
-          
-          <div class="field">
-            <label for="u_svrha_id">Šifra svrhe</label>
-            <div class="picker-row">
-              <select id="u_svrha_id"></select>
-              <button id="u_svrha_new_btn" class="btn sec" type="button">
-                <i class="fa-solid fa-plus"></i> Dodaj svrhu
-              </button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="u_svrha">Svrha uplate (prvi red)</label>
-            <input id="u_svrha" type="text">
-          </div>
-
-          <div class="field">
-            <label for="u_svrha1">Svrha uplate (drugi red)</label>
-            <input id="u_svrha1" type="text">
-          </div>
-
-          <div class="row-inline">
+          <div class="section">
+            <p class="section-title">Primatelj</p>
             <div class="field">
-              <label for="u_mjesto">Mjesto uplate</label>
-              <input id="u_mjesto" type="text">
+              <label for="u_primatelj_id">Primatelj (partner)</label>
+              <div class="picker-row">
+                <input id="u_primatelj_label" class="display-input" type="text" readonly placeholder="Odaberi partnera kroz prozor partnera">
+                <input id="u_primatelj_id" type="hidden">
+                <button id="u_pick_primatelj" class="btn sec" type="button">
+                  <i class="fa-solid fa-user"></i> Partneri
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="u_primatelj_tekst">Primatelj (slobodan unos)</label>
+              <input id="u_primatelj_tekst" type="text" placeholder="Dodatni opis primatelja">
+            </div>
+
+            <div class="row-inline">
+              <div class="field">
+                <label for="u_primatelj_id_broj">ID broj primatelja</label>
+                <input id="u_primatelj_id_broj" type="text" readonly>
+              </div>
+              <div class="field">
+                <label for="u_primatelj_kontakt">Kontakt primatelja</label>
+                <input id="u_primatelj_kontakt" type="text" readonly>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="u_primatelj_adresa">Adresa primatelja</label>
+              <input id="u_primatelj_adresa" type="text" readonly>
             </div>
             <div class="field">
-              <label for="u_datum">Datum</label>
-              <input id="u_datum" type="date">
+              <label for="u_primatelj_mjesto">Mjesto primatelja</label>
+              <input id="u_primatelj_mjesto" type="text" readonly>
             </div>
           </div>
 
-          <div class="row-inline">
+          <div class="section">
+            <p class="section-title">Uplata i svrha</p>
             <div class="field">
-              <label for="u_iznos">Iznos</label>
-              <input id="u_iznos" type="number" step="0.01" min="0">
+              <label for="u_svrha_id">Šifra svrhe</label>
+              <div class="picker-row">
+                <select id="u_svrha_id"></select>
+                <button id="u_svrha_new_btn" class="btn sec" type="button">
+                  <i class="fa-solid fa-plus"></i> Dodaj svrhu
+                </button>
+              </div>
             </div>
-            <div class="field">
-              <label for="u_valuta">Valuta</label>
-              <input id="u_valuta" type="text" value="KM">
-            </div>
-          </div>
 
-          <div class="field">
-            <label for="u_racun_pos">Račun pošiljaoca</label>
-            <input id="u_racun_pos" type="text">
-          </div>
-          <div class="field">
-            <label for="u_racun_prim">Račun primatelja</label>
-            <input id="u_racun_prim" type="text">
+            <div class="field">
+              <label for="u_svrha">Svrha uplate (prvi red)</label>
+              <input id="u_svrha" type="text">
+            </div>
+
+            <div class="field">
+              <label for="u_svrha1">Svrha uplate (drugi red)</label>
+              <input id="u_svrha1" type="text">
+            </div>
+
+            <div class="row-inline">
+              <div class="field">
+                <label for="u_mjesto">Mjesto uplate</label>
+                <input id="u_mjesto" type="text">
+              </div>
+              <div class="field">
+                <label for="u_datum">Datum</label>
+                <input id="u_datum" type="date">
+              </div>
+            </div>
           </div>
         </div>
 
@@ -420,34 +435,60 @@
         <div class="block">
           <h3>Porezni / budžetski dio</h3>
 
-          <div class="field">
-            <label for="u_broj_poreskog">Broj poreskog obveznika</label>
-            <input id="u_broj_poreskog" type="text">
+          <div class="section">
+            <p class="section-title">Iznos i računi</p>
+            <div class="row-inline">
+              <div class="field">
+                <label for="u_iznos">Iznos</label>
+                <input id="u_iznos" type="number" step="0.01" min="0">
+              </div>
+              <div class="field">
+                <label for="u_valuta">Valuta</label>
+                <input id="u_valuta" type="text" value="KM">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="u_racun_pos">Račun pošiljaoca</label>
+              <input id="u_racun_pos" type="text">
+            </div>
+            <div class="field">
+              <label for="u_racun_prim">Račun primatelja</label>
+              <input id="u_racun_prim" type="text">
+            </div>
           </div>
 
-          <div class="field">
-            <label for="u_vrsta_prihoda">Vrsta prihoda</label>
-            <input id="u_vrsta_prihoda" type="text">
-          </div>
+          <div class="section">
+            <p class="section-title">Porezni podaci</p>
+            <div class="field">
+              <label for="u_broj_poreskog">Broj poreskog obveznika</label>
+              <input id="u_broj_poreskog" type="text">
+            </div>
 
-          <div class="field">
-            <label for="u_opcina">Općina</label>
-            <input id="u_opcina" type="text">
-          </div>
+            <div class="field">
+              <label for="u_vrsta_prihoda">Vrsta prihoda</label>
+              <input id="u_vrsta_prihoda" type="text">
+            </div>
 
-          <div class="field">
-            <label for="u_budzetska">Budžetska organizacija</label>
-            <input id="u_budzetska" type="text">
-          </div>
+            <div class="field">
+              <label for="u_opcina">Općina</label>
+              <input id="u_opcina" type="text">
+            </div>
 
-          <div class="field">
-            <label for="u_poziv">Poziv na broj</label>
-            <input id="u_poziv" type="text">
-          </div>
+            <div class="field">
+              <label for="u_budzetska">Budžetska organizacija</label>
+              <input id="u_budzetska" type="text">
+            </div>
 
-          <div class="field">
-            <label for="u_napomena">Napomena (opcionalno)</label>
-            <input id="u_napomena" type="text">
+            <div class="field">
+              <label for="u_poziv">Poziv na broj</label>
+              <input id="u_poziv" type="text">
+            </div>
+
+            <div class="field">
+              <label for="u_napomena">Napomena (opcionalno)</label>
+              <input id="u_napomena" type="text">
+            </div>
           </div>
         </div>
       </div>
