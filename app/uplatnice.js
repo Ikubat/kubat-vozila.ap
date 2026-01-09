@@ -325,7 +325,7 @@
       const idBrojUplatilac = (p.id_broj || '').trim();
 
       if (isCarinaPdvUvoz && isFizicka) {
-        $brojPorezni.value = '001000000019';
+        $brojPorezni.value = '0010000000019';
       } else {
         $brojPorezni.value = idBrojUplatilac;
       }

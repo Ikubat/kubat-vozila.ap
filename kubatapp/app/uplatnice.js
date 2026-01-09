@@ -125,6 +125,8 @@
             id,
             label,
             racun: p.racun || '',
+            vrsta: p.vrsta_partnera || p.vrsta || '',
+            id_broj: p.id_broj || p.idbroj || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             opcina_sifra: p.opcina_sifra || '',
             mjesto_naziv: p.mjesto_naziv || ''
@@ -170,7 +172,18 @@
       if (!p) return;
       if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
       if (!$racunPos.value)      $racunPos.value = p.racun || '';
-      if (!$brojPorezni.value)   $brojPorezni.value = p.porezni_broj || '';
+      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+      const isCarinaPdvUvoz = svrhaText.includes('uplata carine i pdv (uvoz)');
+
+      const vrstaLower = (p.vrsta || '').toLowerCase();
+      const isFizicka  = vrstaLower.includes('fizič') || vrstaLower.includes('fizic');
+      const idBrojUplatilac = (p.id_broj || '').trim();
+
+      if (isCarinaPdvUvoz && isFizicka) {
+        $brojPorezni.value = '0010000000019';
+      } else {
+        $brojPorezni.value = idBrojUplatilac;
+      }
       if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
     }
 
@@ -189,6 +202,12 @@
       if (!$vrstaPrihoda.value) $vrstaPrihoda.value = s.vrsta_prihoda || '';
       if (!$budzetska.value)    $budzetska.value = s.budzetska || '';
       if (!$poziv.value)        $poziv.value = s.poziv || '';
+
+      const uId = $uplatilacId.value ? parseInt($uplatilacId.value, 10) : 0;
+      if (!uId) return;
+      const p = state.partners.get(uId);
+      if (!p) return;
+      applyUplatilacDefaults(p);
     }
 
     function setSvrhaNewMsg(msg = '', isError = false) {
