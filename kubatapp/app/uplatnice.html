@@ -182,6 +182,8 @@
       grid-template-columns: 2fr 1.4fr;
       gap:12px;
     }
+    .grid-two .uplatnica-left{grid-column:1;}
+    .grid-two .uplatnica-right{grid-column:2;}
     .block{
       border-radius:10px;
       border:1px solid #e5e7eb;
@@ -220,6 +222,8 @@
 
     @media (max-width: 800px){
       .grid-two{grid-template-columns:1fr}
+      .grid-two .uplatnica-left,
+      .grid-two .uplatnica-right{grid-column:auto;}
       .head-row,.row{
         grid-template-columns: 90px 1.4fr 1.4fr 1.6fr 90px;
       }
@@ -273,7 +277,7 @@
 
       <div class="grid-two">
         <!-- Lijeva strana – kao papirna uplatnica -->
-        <div class="block">
+        <div class="block uplatnica-left">
           <h3>Osnovni podaci</h3>
 
           <div class="field">
@@ -358,7 +362,7 @@
         </div>
 
         <!-- Desna strana – porezni dio -->
-        <div class="block">
+        <div class="block uplatnica-right">
           <h3>Porezni / budžetski dio</h3>
 
           <div class="field">
