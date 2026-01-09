@@ -303,13 +303,23 @@
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
+    function getSvrhaText() {
+      const rawText = ($svrha.value + ' ' + $svrha1.value).trim();
+      if (rawText) return rawText.toLowerCase();
+      const id = parseInt($svrhaSel.value, 10);
+      if (!id) return '';
+      const s = state.svrhe.get(id);
+      if (!s) return '';
+      return (String(s.naziv || '') + ' ' + String(s.naziv2 || '')).trim().toLowerCase();
+    }
+
     function applyUplatilacDefaults(p) {
       if (!p) return;
 
       $mjesto.value   = p.mjesto_naziv || '';
       if (!$racunPos.value) $racunPos.value = p.broj_racuna || '';
 
-      const svrhaText = ($svrha.value + ' ' + $svrha1.value).toLowerCase();
+      const svrhaText = getSvrhaText();
       const isCarinaPdvUvoz = svrhaText.includes('uplata carine i pdv (uvoz)');
 
       const vrstaLower = (p.vrsta || '').toLowerCase();
@@ -325,7 +335,7 @@
       const idBrojUplatilac = (p.id_broj || '').trim();
 
       if (isCarinaPdvUvoz && isFizicka) {
-        $brojPorezni.value = '001000000019';
+        $brojPorezni.value = '0010000000019';
       } else {
         $brojPorezni.value = idBrojUplatilac;
       }
@@ -806,7 +816,7 @@
     });
 
     // ---- spremi (create / update) ----
-    async function save() {
+    async function save(forceDuplicate = false) {
       const id = $id.value ? parseInt($id.value, 10) : 0;
 
       const body = {
@@ -837,7 +847,8 @@
         opcina_sifra:       $opcina.value.trim(),
         budzetska_org_sifra:$budzetska.value.trim(),
         poziv_na_broj:      $poziv.value.trim(),
-        napomena:           $napomena.value.trim()
+        napomena:           $napomena.value.trim(),
+        force_duplicate:    forceDuplicate || undefined
       };
 
       if (!body.uplatilac_id) {
@@ -873,6 +884,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
+        if (out && out.requires_confirm) {
+          const warningText = out.warning || 'Upozorenje: poziv na broj već postoji. Želite li nastaviti?';
+          const shouldContinue = confirm(warningText);
+          if (shouldContinue) {
+            await save(true);
+          }
+          return;
+        }
         if (!out.ok && out.error) {
           throw new Error(out.error);
         }

@@ -71,6 +71,7 @@ $opcina_sifra        = trim((string)($data['opcina_sifra'] ?? ''));
 $budzetska_org_sifra = trim((string)($data['budzetska_org_sifra'] ?? ''));
 $poziv_na_broj       = trim((string)($data['poziv_na_broj'] ?? ''));
 $napomena            = trim((string)($data['napomena'] ?? ''));
+$force_duplicate     = !empty($data['force_duplicate']);
 
 // minimalna validacija
 if ($uplatilac_id <= 0) jdie('Uplatilac je obavezan.');
@@ -89,6 +90,26 @@ try {
     $st->execute();
     if (!$st->get_result()->fetch_assoc()) {
         jdie('Uplatnica ne postoji.', 404);
+    }
+
+    $warning = '';
+    if ($poziv_na_broj !== '') {
+        $checkSql = "SELECT id FROM `$T_UPLATNICE` WHERE poziv_na_broj = ? AND id <> ? LIMIT 1";
+        $stCheck = $db->prepare($checkSql);
+        $stCheck->bind_param('si', $poziv_na_broj, $id);
+        $stCheck->execute();
+        $dup = $stCheck->get_result()->fetch_assoc();
+        if ($dup) {
+            $warning = 'Upozorenje: poziv na broj već postoji u bazi (ID #' . $dup['id'] . ').';
+        }
+    }
+    if ($warning !== '' && !$force_duplicate) {
+        echo json_encode([
+            'ok' => false,
+            'warning' => $warning,
+            'requires_confirm' => true
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     $sql = "UPDATE `$T_UPLATNICE`

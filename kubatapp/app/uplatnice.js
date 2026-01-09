@@ -125,6 +125,8 @@
             id,
             label,
             racun: p.racun || '',
+            vrsta: p.vrsta_partnera || p.vrsta || '',
+            id_broj: p.id_broj || p.idbroj || '',
             porezni_broj: p.porezni_broj || p.porezni || '',
             opcina_sifra: p.opcina_sifra || '',
             mjesto_naziv: p.mjesto_naziv || ''
@@ -166,11 +168,32 @@
     }
 
     // ---- popuni polja kad korisnik odabere uplatilaca / primatelja / svrhu ----
+    function getSvrhaText() {
+      const rawText = ($svrha.value + ' ' + $svrha1.value).trim();
+      if (rawText) return rawText.toLowerCase();
+      const id = parseInt($svrhaSel.value, 10);
+      if (!id) return '';
+      const s = state.svrhe.get(id);
+      if (!s) return '';
+      return (String(s.naziv || '') + ' ' + String(s.naziv2 || '')).trim().toLowerCase();
+    }
+
     function applyUplatilacDefaults(p) {
       if (!p) return;
       if (!$mjesto.value)        $mjesto.value = p.mjesto_naziv || '';
       if (!$racunPos.value)      $racunPos.value = p.racun || '';
-      if (!$brojPorezni.value)   $brojPorezni.value = p.porezni_broj || '';
+      const svrhaText = getSvrhaText();
+      const isCarinaPdvUvoz = svrhaText.includes('uplata carine i pdv (uvoz)');
+
+      const vrstaLower = (p.vrsta || '').toLowerCase();
+      const isFizicka  = vrstaLower.includes('fizič') || vrstaLower.includes('fizic');
+      const idBrojUplatilac = (p.id_broj || '').trim();
+
+      if (isCarinaPdvUvoz && isFizicka) {
+        $brojPorezni.value = '0010000000019';
+      } else {
+        $brojPorezni.value = idBrojUplatilac;
+      }
       if (!$opcina.value)        $opcina.value = p.opcina_sifra || '';
     }
 
@@ -189,6 +212,12 @@
       if (!$vrstaPrihoda.value) $vrstaPrihoda.value = s.vrsta_prihoda || '';
       if (!$budzetska.value)    $budzetska.value = s.budzetska || '';
       if (!$poziv.value)        $poziv.value = s.poziv || '';
+
+      const uId = $uplatilacId.value ? parseInt($uplatilacId.value, 10) : 0;
+      if (!uId) return;
+      const p = state.partners.get(uId);
+      if (!p) return;
+      applyUplatilacDefaults(p);
     }
 
     function setSvrhaNewMsg(msg = '', isError = false) {
@@ -249,18 +278,50 @@
       $idField.value = id ? String(id) : '';
 
       let partner = null;
+      const existing = id ? state.partners.get(Number(id)) || null : null;
       if (partnerData && partnerData.id) {
+        const base = existing || {};
         partner = {
           id: Number(partnerData.id),
-          label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
-          racun: partnerData.racun || partnerData.racun_pos || '',
-          porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
-          opcina_sifra: partnerData.opcina_sifra || '',
-          mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
+          label:
+            partnerData.label ||
+            label ||
+            base.label ||
+            partnerData.naziv ||
+            ('Partner #' + partnerData.id),
+          racun:
+            partnerData.racun ||
+            partnerData.racun_pos ||
+            base.racun ||
+            '',
+          vrsta:
+            partnerData.vrsta ||
+            partnerData.vrsta_partnera ||
+            base.vrsta ||
+            '',
+          id_broj:
+            partnerData.id_broj ||
+            partnerData.idbroj ||
+            base.id_broj ||
+            '',
+          porezni_broj:
+            partnerData.porezni_broj ||
+            partnerData.porezni ||
+            base.porezni_broj ||
+            '',
+          opcina_sifra:
+            partnerData.opcina_sifra ||
+            base.opcina_sifra ||
+            '',
+          mjesto_naziv:
+            partnerData.mjesto ||
+            partnerData.mjesto_naziv ||
+            base.mjesto_naziv ||
+            ''
         };
         state.partners.set(partner.id, partner);
-      } else if (id) {
-        partner = state.partners.get(Number(id)) || null;
+      } else if (existing) {
+        partner = existing;
       }
 
       if ($labelField) {
@@ -479,7 +540,7 @@
     });
 
     // ---- spremi (create / update) ----
-    async function save() {
+    async function save(forceDuplicate = false) {
       const id = $id.value ? parseInt($id.value, 10) : 0;
 
       const body = {
@@ -500,7 +561,8 @@
         opcina_sifra:       $opcina.value.trim(),
         budzetska_org_sifra:$budzetska.value.trim(),
         poziv_na_broj:      $poziv.value.trim(),
-        napomena:           $napomena.value.trim()
+        napomena:           $napomena.value.trim(),
+        force_duplicate:    forceDuplicate || undefined
       };
 
       if (!body.uplatilac_id) {
@@ -531,6 +593,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
+        if (out && out.requires_confirm) {
+          const warningText = out.warning || 'Upozorenje: poziv na broj već postoji. Želite li nastaviti?';
+          const shouldContinue = confirm(warningText);
+          if (shouldContinue) {
+            await save(true);
+          }
+          return;
+        }
         if (!out.ok && out.error) {
           throw new Error(out.error);
         }
