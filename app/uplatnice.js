@@ -545,6 +545,19 @@
       );
     }
 
+    function findPartnerByLabel(label) {
+      const normalized = (label || '').trim().toLowerCase();
+      if (!normalized) return null;
+
+      for (const partner of state.partners.values()) {
+        if ((partner.label || '').trim().toLowerCase() === normalized) {
+          return partner;
+        }
+      }
+
+      return null;
+    }
+
     window.setSelectedPartner = function (id, naziv, partner) {
       if (!id) return;
       const target = pickTarget === 'primatelj' ? 'primatelj' : 'uplatilac';
@@ -755,21 +768,59 @@
       const item = state.all.find(x => x.id === id);
       if (!item) return;
 
+      const matchedUplatilac = !item.uplatilac_id
+        ? findPartnerByLabel(item.uplatilac_naziv || item.uplatilac_tekst || '')
+        : null;
+      const matchedPrimatelj = !item.primatelj_id
+        ? findPartnerByLabel(item.primatelj_naziv || item.primatelj_tekst || '')
+        : null;
+
       $title.textContent = 'Uredi uplatnicu #' + id;
       $id.value = id;
 
-      setPartner('uplatilac', item.uplatilac_id || null, item.uplatilac_naziv || '');
-      setPartner('primatelj', item.primatelj_id || null, item.primatelj_naziv || '');
+      const uplatilacId = item.uplatilac_id || matchedUplatilac?.id || null;
+      const primateljId = item.primatelj_id || matchedPrimatelj?.id || null;
+      const uplatilacPartner = matchedUplatilac || (uplatilacId ? state.partners.get(uplatilacId) : null);
+      const primateljPartner = matchedPrimatelj || (primateljId ? state.partners.get(primateljId) : null);
+
+      setPartner(
+        'uplatilac',
+        uplatilacId,
+        item.uplatilac_naziv || '',
+        matchedUplatilac || null
+      );
+      setPartner(
+        'primatelj',
+        primateljId,
+        item.primatelj_naziv || '',
+        matchedPrimatelj || null
+      );
       if ($uplatilacTekst) $uplatilacTekst.value = item.uplatilac_tekst || '';
-      if ($uplatilacKontakt) $uplatilacKontakt.value = item.uplatilac_kontakt || '';
-      if ($uplatilacAdresa) $uplatilacAdresa.value = item.uplatilac_adresa || '';
-      if ($uplatilacMjesto) $uplatilacMjesto.value = item.uplatilac_mjesto || '';
-      if ($uplatilacIdBroj) $uplatilacIdBroj.value = item.uplatilac_id_broj || '';
+      if ($uplatilacKontakt) {
+        $uplatilacKontakt.value = item.uplatilac_kontakt || uplatilacPartner?.kontakt || '';
+      }
+      if ($uplatilacAdresa) {
+        $uplatilacAdresa.value = item.uplatilac_adresa || uplatilacPartner?.adresa || '';
+      }
+      if ($uplatilacMjesto) {
+        $uplatilacMjesto.value = item.uplatilac_mjesto || uplatilacPartner?.mjesto_naziv || '';
+      }
+      if ($uplatilacIdBroj) {
+        $uplatilacIdBroj.value = item.uplatilac_id_broj || uplatilacPartner?.id_broj || '';
+      }
       if ($primateljTekst) $primateljTekst.value = item.primatelj_tekst || '';
-      if ($primateljKontakt) $primateljKontakt.value = item.primatelj_kontakt || '';
-      if ($primateljAdresa) $primateljAdresa.value = item.primatelj_adresa || '';
-      if ($primateljMjesto) $primateljMjesto.value = item.primatelj_mjesto || '';
-      if ($primateljIdBroj) $primateljIdBroj.value = item.primatelj_id_broj || '';
+      if ($primateljKontakt) {
+        $primateljKontakt.value = item.primatelj_kontakt || primateljPartner?.kontakt || '';
+      }
+      if ($primateljAdresa) {
+        $primateljAdresa.value = item.primatelj_adresa || primateljPartner?.adresa || '';
+      }
+      if ($primateljMjesto) {
+        $primateljMjesto.value = item.primatelj_mjesto || primateljPartner?.mjesto_naziv || '';
+      }
+      if ($primateljIdBroj) {
+        $primateljIdBroj.value = item.primatelj_id_broj || primateljPartner?.id_broj || '';
+      }
       $svrhaSel.value = item.svrha_id || '';
 
       $svrha.value = item.svrha_tekst || '';
