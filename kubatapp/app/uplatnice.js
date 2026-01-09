@@ -268,18 +268,50 @@
       $idField.value = id ? String(id) : '';
 
       let partner = null;
+      const existing = id ? state.partners.get(Number(id)) || null : null;
       if (partnerData && partnerData.id) {
+        const base = existing || {};
         partner = {
           id: Number(partnerData.id),
-          label: partnerData.label || label || partnerData.naziv || ('Partner #' + partnerData.id),
-          racun: partnerData.racun || partnerData.racun_pos || '',
-          porezni_broj: partnerData.porezni_broj || partnerData.porezni || '',
-          opcina_sifra: partnerData.opcina_sifra || '',
-          mjesto_naziv: partnerData.mjesto || partnerData.mjesto_naziv || ''
+          label:
+            partnerData.label ||
+            label ||
+            base.label ||
+            partnerData.naziv ||
+            ('Partner #' + partnerData.id),
+          racun:
+            partnerData.racun ||
+            partnerData.racun_pos ||
+            base.racun ||
+            '',
+          vrsta:
+            partnerData.vrsta ||
+            partnerData.vrsta_partnera ||
+            base.vrsta ||
+            '',
+          id_broj:
+            partnerData.id_broj ||
+            partnerData.idbroj ||
+            base.id_broj ||
+            '',
+          porezni_broj:
+            partnerData.porezni_broj ||
+            partnerData.porezni ||
+            base.porezni_broj ||
+            '',
+          opcina_sifra:
+            partnerData.opcina_sifra ||
+            base.opcina_sifra ||
+            '',
+          mjesto_naziv:
+            partnerData.mjesto ||
+            partnerData.mjesto_naziv ||
+            base.mjesto_naziv ||
+            ''
         };
         state.partners.set(partner.id, partner);
-      } else if (id) {
-        partner = state.partners.get(Number(id)) || null;
+      } else if (existing) {
+        partner = existing;
       }
 
       if ($labelField) {
