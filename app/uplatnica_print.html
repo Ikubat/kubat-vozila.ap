@@ -106,10 +106,13 @@
       font-size:var(--field-font);
       line-height:1.1;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
       color:#111827;
     }
     .field-text{
-      display:inline-block;
+      display:block;
+      width:100%;
       transform-origin:left center;
     }
 
@@ -171,9 +174,14 @@
       Povuci plave točkice ili mijenjaj vrijednosti ispod. Margina: <span id="marginVal"></span>mm
     </span>
     <label>
+    <label>
       Format papira:
       <select id="paperSelect"></select>
     </label>
+    <div id="customPaperControls" class="group" style="display:none;">
+      <label>Širina: <input id="customPaperWidth" type="number" min="50" max="400" step="1" /> mm</label>
+      <label>Visina: <input id="customPaperHeight" type="number" min="50" max="400" step="1" /> mm</label>
+    </div>
     <div class="group">
       <button id="btnMarginMinus">– margina</button>
       <button id="btnMarginPlus">+ margina</button>
@@ -189,6 +197,7 @@
       <label>Širina: <input id="posW" type="number" step="0.5" aria-label="Širina polja" /> mm</label>
       <label>Font: <input id="fontInput" type="number" step="0.5" min="6" max="32" aria-label="Veličina fonta" /> px</label>
       <label>Padding: <input id="padInput" type="number" step="0.5" min="0" max="6" aria-label="Unutarnja margina" /> mm</label>
+      <label>Razmak slova: <input id="letterInput" type="number" step="0.1" min="-1" max="5" aria-label="Razmak slova" /> px</label>
     </div>
     <button id="btnPrint" class="main">Print</button>
   </div>
@@ -207,39 +216,50 @@
   const marginVal = document.getElementById('marginVal');
   const fieldSelect = document.getElementById('fieldSelect');
   const paperSelect = document.getElementById('paperSelect');
+  const customPaperControls = document.getElementById('customPaperControls');
+  const customPaperWidth = document.getElementById('customPaperWidth');
+  const customPaperHeight = document.getElementById('customPaperHeight');
   const posX = document.getElementById('posX');
   const posY = document.getElementById('posY');
   const posW = document.getElementById('posW');
   const fontInput = document.getElementById('fontInput');
   const padInput = document.getElementById('padInput');
+  const letterInput = document.getElementById('letterInput');
   const pageSizeStyle = document.getElementById('pageSizeStyle');
 
   const STORAGE_LAYOUT = 'uplatnica-print-layout-v2';
   const STORAGE_MARGIN = 'uplatnica-print-margin-v1';
   const STORAGE_PAPER = 'uplatnica-print-paper-v1';
+  const STORAGE_PAPER_CUSTOM = 'uplatnica-print-paper-custom-v1';
 
   const DEFAULT_FONT_PX = 12;
   const DEFAULT_PAD_MM = 1.5;
+  const DEFAULT_LETTER_SPACING = 0;
 
   const PAPER_SIZES = [
     { key:'slip', label:'Uplatnica 168×100mm', w:168, h:100 },
     { key:'a4p',  label:'A4 (210×297mm)', w:210, h:297 },
-    { key:'a4l',  label:'A4 landscape (297×210mm)', w:297, h:210 }
+    { key:'a4l',  label:'A4 landscape (297×210mm)', w:297, h:210 },
+    { key:'custom', label:'Custom', w:null, h:null }
   ];
+  const DEFAULT_CUSTOM_PAPER = { w:168, h:100 };
 
   // --- definiramo polja i početne pozicije (u mm, okvirno) ---
   const fieldDefs = [
     { key:'uplatilac_tel',       maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:6,   w:72 },
-    { key:'uplatilac_ime',       maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:14,  w:72 },
-    { key:'uplatilac_adresa',    maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:22,  w:72 },
-    { key:'uplatilac_jmbg',      maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:30,  w:72 },
-    { key:'svrha',               maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:40,  w:72 },
-    { key:'svrha1',              maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:48,  w:72 },
-    { key:'primatelj',           maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:60,  w:72 },
-    { key:'primatelj_adresa',    maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:68,  w:72 },
-    { key:'mjesto',              maxChars:24, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:80,  w:45 },
-    { key:'datum',               maxChars:14, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:55,  y:80,  w:25 },
-    { key:'racun_posiljaoca',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:90,  w:72 },
+    { key:'uplatilac_ime',       maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:12,  w:72 },
+    { key:'uplatilac_adresa',    maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:18,  w:72 },
+    { key:'uplatilac_mjesto',    maxChars:24, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:24,  w:72 },
+    { key:'uplatilac_id_broj',   maxChars:20, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:30,  w:72 },
+    { key:'svrha',               maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:38,  w:72 },
+    { key:'svrha1',              maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:44,  w:72 },
+    { key:'svrha2',              maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:50,  w:72 },
+    { key:'primatelj',           maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:58,  w:72 },
+    { key:'primatelj_adresa',    maxChars:32, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:64,  w:72 },
+    { key:'primatelj_mjesto',    maxChars:24, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:70,  w:72 },
+    { key:'mjesto',              maxChars:24, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:78,  w:45 },
+    { key:'datum',               maxChars:14, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:55,  y:78,  w:25 },
+    { key:'racun_posiljaoca',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:8,   y:88,  w:72 },
 
     { key:'racun_primatelja',    maxChars:30, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:10,  w:65 },
     { key:'iznos',               maxChars:18, fontSize:DEFAULT_FONT_PX, padMm:DEFAULT_PAD_MM, x:90,  y:24,  w:40 },
@@ -287,6 +307,7 @@
 
       const txt = document.createElement('span');
       txt.className = 'field-text';
+      txt.style.letterSpacing = (def.letterSpacing ?? DEFAULT_LETTER_SPACING) + 'px';
       txt.textContent = '';
       el.appendChild(txt);
 
@@ -321,13 +342,49 @@
     document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
   }
 
+  function loadCustomPaper(){
+    let stored = DEFAULT_CUSTOM_PAPER;
+    try{
+      const raw = localStorage.getItem(STORAGE_PAPER_CUSTOM);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.w === 'number' && typeof parsed.h === 'number') {
+          stored = parsed;
+        }
+      }
+    }catch(e){}
+    return stored;
+  }
+
+  function saveCustomPaper(size){
+    try{
+      localStorage.setItem(STORAGE_PAPER_CUSTOM, JSON.stringify(size));
+    }catch(e){}
+  }
+
+  function updateCustomPaperInputs(size){
+    if (customPaperWidth) customPaperWidth.value = String(size.w);
+    if (customPaperHeight) customPaperHeight.value = String(size.h);
+  }
+
+  function updateCustomVisibility(key){
+    if (!customPaperControls) return;
+    customPaperControls.style.display = key === 'custom' ? 'flex' : 'none';
+  }
+
   function applyPaperSize(key){
     const found = PAPER_SIZES.find(p=>p.key===key) || PAPER_SIZES[0];
-    updatePageSizeStyle(found.w, found.h);
+    let size = { w: found.w, h: found.h };
+    if (found.key === 'custom'){
+      size = loadCustomPaper();
+      updateCustomPaperInputs(size);
+    }
+    updatePageSizeStyle(size.w, size.h);
     if (paperSelect && paperSelect.value !== found.key){
       paperSelect.value = found.key;
     }
     try{ localStorage.setItem(STORAGE_PAPER, found.key); }catch(e){}
+    updateCustomVisibility(found.key);
   }
 
   function initPaperSelect(){
@@ -350,6 +407,20 @@
   }
 
   initPaperSelect();
+
+  function applyCustomPaperChange(){
+    if (!paperSelect || paperSelect.value !== 'custom') return;
+    const w = Math.max(50, Math.min(400, parseFloat(customPaperWidth?.value) || DEFAULT_CUSTOM_PAPER.w));
+    const h = Math.max(50, Math.min(400, parseFloat(customPaperHeight?.value) || DEFAULT_CUSTOM_PAPER.h));
+    const size = { w, h };
+    saveCustomPaper(size);
+    updatePageSizeStyle(size.w, size.h);
+  }
+
+  ['input','change'].forEach(evt=>{
+    if (customPaperWidth) customPaperWidth.addEventListener(evt, applyCustomPaperChange);
+    if (customPaperHeight) customPaperHeight.addEventListener(evt, applyCustomPaperChange);
+  });
 
   function applyPadding(el, padMm){
     const padPx = mmToPx(padMm);
@@ -406,11 +477,14 @@
       const wMm    = saved.wMm != null ? saved.wMm : def.w;
       const fontSize = saved.fontSizePx != null ? saved.fontSizePx : (def.fontSize || 12);
       const padMm = saved.padMm != null ? saved.padMm : (def.padMm || DEFAULT_PAD_MM);
+      const letterSpacing = saved.letterSpacingPx != null ? saved.letterSpacingPx : (def.letterSpacing ?? DEFAULT_LETTER_SPACING);
       el.style.left = mmToPx(leftMm) + 'px';
       el.style.top  = mmToPx(topMm) + 'px';
       el.style.width = mmToPx(wMm) + 'px';
       el.style.fontSize = fontSize + 'px';
       applyPadding(el, padMm);
+      const txt = el.querySelector('.field-text');
+      if (txt) txt.style.letterSpacing = letterSpacing + 'px';
     });
   }
 
@@ -427,14 +501,17 @@
     payloadData = data;
 
     const map = {
-      uplatilac_tel:       (data.uplatilac_tel || data.uplatilac_kontakt || data.uplatilac_kontakt_tel || '').trim(),
-      uplatilac_ime:       (data.uplatilac || data.uplatilac_ime || '').trim(),
+      uplatilac_tel:       (data.uplatilac_kontakt || data.uplatilac_tel || data.uplatilac_kontakt_tel || '').trim(),
+      uplatilac_ime:       (data.uplatilac || data.uplatilac_tekst || data.uplatilac_naziv || data.uplatilac_ime || '').trim(),
       uplatilac_adresa:    (data.uplatilac_adresa || data.uplatilac_adresa2 || '').trim(),
-      uplatilac_jmbg:      (data.uplatilac_jmbg || data.uplatilac_id || data.jmbg || '').trim(),
-      primatelj:           (data.primatelj || data.primatelj_ime || '').trim(),
-      primatelj_adresa:    (data.primatelj_adresa || '').trim(),
+      uplatilac_mjesto:    (data.uplatilac_mjesto || data.uplatilac_mjesto_naziv || '').trim(),
+      uplatilac_id_broj:   (data.uplatilac_id_broj || data.uplatilac_jmbg || data.uplatilac_id || data.jmbg || '').trim(),
+      primatelj:           (data.primatelj || data.primatelj_tekst || data.primatelj_naziv || data.primatelj_ime || '').trim(),
+      primatelj_adresa:    (data.primatelj_adresa || data.primatelj_adresa2 || '').trim(),
+      primatelj_mjesto:    (data.primatelj_mjesto || data.primatelj_mjesto_naziv || '').trim(),
       svrha:               (data.svrha || '').trim(),
       svrha1:              (data.svrha1 || '').trim(),
+      svrha2:              (data.svrha2 || data.svrha_drugi || '').trim(),
       mjesto:              (data.mjesto || '').trim(),
       datum:               (data.datum || '').trim(),
       iznos:               (data.iznos || '').trim(),
@@ -472,12 +549,6 @@
     const txt = el.querySelector('.field-text');
     if (!txt) return;
     txt.style.transform = 'scaleX(1)';
-    const natural = txt.getBoundingClientRect().width || 1;
-    const boxW = el.getBoundingClientRect().width || 1;
-    let scale = boxW / natural;
-    if (!isFinite(scale) || scale <= 0) scale = 1;
-    scale = Math.max(0.5, Math.min(3, scale)); // da ne poludi
-    txt.style.transform = 'scaleX(' + scale.toFixed(3) + ')';
   }
 
   // --- parsiranje payload-a iz URL hash-a ili localStorage-a ---
@@ -572,7 +643,8 @@
       const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
       const padMm = padPx * 25.4 / 96;
       const fontSizePx = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===key)?.fontSize || 12);
-      layoutNew[key] = { xMm, yMm, wMm, padMm, fontSizePx };
+      const letterSpacingPx = parseFloat(el.querySelector('.field-text')?.style.letterSpacing) || (fieldDefs.find(f=>f.key===key)?.letterSpacing ?? DEFAULT_LETTER_SPACING);
+      layoutNew[key] = { xMm, yMm, wMm, padMm, fontSizePx, letterSpacingPx };
     });
     layout = layoutNew;
     saveLayout(layoutNew);
@@ -627,12 +699,14 @@
     const fontSize = parseFloat(el.style.fontSize) || layoutInfo.fontSizePx || (fieldDefs.find(f=>f.key===activeKey)?.fontSize || 12);
     const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
     const padMm = layoutInfo.padMm != null ? layoutInfo.padMm : pxToMm(padPx);
+    const letterSpacingPx = parseFloat(el.querySelector('.field-text')?.style.letterSpacing) || layoutInfo.letterSpacingPx || (fieldDefs.find(f=>f.key===activeKey)?.letterSpacing ?? DEFAULT_LETTER_SPACING);
 
     if (posX) posX.value = xMm.toFixed(1);
     if (posY) posY.value = yMm.toFixed(1);
     if (posW) posW.value = wMm.toFixed(1);
     if (fontInput) fontInput.value = fontSize.toFixed(1);
     if (padInput) padInput.value = padMm.toFixed(1);
+    if (letterInput) letterInput.value = letterSpacingPx.toFixed(1);
   }
 
   function applyManualChange(){
@@ -646,12 +720,17 @@
     const wMm = Math.min(Math.max(10, parseFloat(posW?.value) || pxToMm(el.getBoundingClientRect().width)), maxWmm);
     const fontSize = Math.max(6, Math.min(32, parseFloat(fontInput?.value) || (fieldDefs.find(f=>f.key===activeKey)?.fontSize || 12)));
     const padMm = Math.max(0, Math.min(6, parseFloat(padInput?.value) || DEFAULT_PAD_MM));
+    const fallbackLetterSpacing = fieldDefs.find(f=>f.key===activeKey)?.letterSpacing ?? DEFAULT_LETTER_SPACING;
+    const rawLetterSpacing = parseFloat(letterInput?.value);
+    const letterSpacingPx = Math.max(-1, Math.min(5, isNaN(rawLetterSpacing) ? fallbackLetterSpacing : rawLetterSpacing));
 
     el.style.left = mmToPx(xMm) + 'px';
     el.style.top = mmToPx(yMm) + 'px';
     el.style.width = mmToPx(wMm) + 'px';
     el.style.fontSize = fontSize + 'px';
     applyPadding(el, padMm);
+    const txt = el.querySelector('.field-text');
+    if (txt) txt.style.letterSpacing = letterSpacingPx + 'px';
     autoFitField(el);
     saveCurrentFieldState(activeKey);
   }
@@ -667,7 +746,8 @@
     const padPx = parseFloat(el.style.padding) || mmToPx(DEFAULT_PAD_MM);
     const padMm = padPx * 25.4 / 96;
     const fontSizePx = parseFloat(el.style.fontSize) || (fieldDefs.find(f=>f.key===key)?.fontSize || 12);
-    layout[key] = { xMm, yMm, wMm, padMm, fontSizePx };
+    const letterSpacingPx = parseFloat(el.querySelector('.field-text')?.style.letterSpacing) || (fieldDefs.find(f=>f.key===key)?.letterSpacing ?? DEFAULT_LETTER_SPACING);
+    layout[key] = { xMm, yMm, wMm, padMm, fontSizePx, letterSpacingPx };
     saveLayout(layout);
   }
 
@@ -685,6 +765,7 @@
     if (posW) posW.addEventListener(evt, applyManualChange);
     if (fontInput) fontInput.addEventListener(evt, applyManualChange);
     if (padInput) padInput.addEventListener(evt, applyManualChange);
+    if (letterInput) letterInput.addEventListener(evt, applyManualChange);
   });
 
   if (btnPrint){

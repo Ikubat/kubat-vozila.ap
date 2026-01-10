@@ -15,11 +15,21 @@
 // Podrazumijevamo da je lokalno ako je host "localhost" ili "127.0.0.1"
 $httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'cli';
 
+// Izvuci host bez porta (npr. "192.168.1.10:8080" -> "192.168.1.10")
+$hostOnly = explode(':', $httpHost)[0];
+
+// LAN (privatni) IP opsezi: 10.x.x.x, 172.16-31.x.x, 192.168.x.x
+$isLanIp = (bool) preg_match(
+    '/^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})$/',
+    $hostOnly
+);
+
 $isLocal =
     $httpHost === 'localhost' ||
     $httpHost === '127.0.0.1' ||
     $httpHost === 'localhost:80' ||
-    $httpHost === 'localhost:8080';
+    $httpHost === 'localhost:8080' ||
+    $isLanIp;
 
 /* ============================
    2. POSTAVKE ZA BAZU
@@ -91,6 +101,7 @@ $DB_HOST = DB_HOST;
 $DB_USER = DB_USER;
 $DB_PASS = DB_PASS;
 $DB_NAME = DB_NAME;
+
 
 // Globalna mysqli konekcija za sve API fajlove koji koriste $conn
 if (!isset($conn) || !($conn instanceof mysqli)) {

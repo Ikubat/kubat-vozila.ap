@@ -66,6 +66,7 @@ $opcina_sifra        = trim((string)($data['opcina_sifra'] ?? ''));
 $budzetska_org_sifra = trim((string)($data['budzetska_org_sifra'] ?? ''));
 $poziv_na_broj       = trim((string)($data['poziv_na_broj'] ?? ''));
 $napomena            = trim((string)($data['napomena'] ?? ''));
+$force_duplicate     = !empty($data['force_duplicate']);
 
 // ako nije poslano, pokušaj dohvatiti općinu prema uplatilacu
 function kubatapp_fetch_partner_opcina(mysqli $db, int $partnerId): string {
@@ -179,6 +180,14 @@ try {
         if ($dup) {
             $warning = 'Upozorenje: poziv na broj već postoji u bazi (ID #' . $dup['id'] . ').';
         }
+    }
+    if ($warning !== '' && !$force_duplicate) {
+        echo json_encode([
+            'ok' => false,
+            'warning' => $warning,
+            'requires_confirm' => true
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     $fields = [
