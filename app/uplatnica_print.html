@@ -141,12 +141,15 @@
 
     @media print{
       @page {
-        size: var(--sheet-width) var(--sheet-height);
+        size: 168mm 100mm;
         margin: 0;
       }
+      html,
       body{
         background:white;
         margin:0;
+        width:var(--sheet-width);
+        height:var(--sheet-height);
       }
       .topbar{display:none !important;}
       .page-wrap{
@@ -155,6 +158,7 @@
       .sheet{
         box-shadow:none;
         margin:0 auto;
+        overflow:visible;
       }
       .field-box{
         border:0;
@@ -173,7 +177,6 @@
     <span class="info">
       Povuci plave točkice ili mijenjaj vrijednosti ispod. Margina: <span id="marginVal"></span>mm
     </span>
-    <label>
     <label>
       Format papira:
       <select id="paperSelect"></select>
@@ -336,7 +339,7 @@
   }
 
   function updatePageSizeStyle(wMm, hMm){
-    const css = `@page { size: ${wMm}mm ${hMm}mm; margin: 0; }`;
+    const css = `@media print { @page { size: ${wMm}mm ${hMm}mm; margin: 0; } html, body { width: ${wMm}mm; height: ${hMm}mm; } }`;
     if (pageSizeStyle) pageSizeStyle.textContent = css;
     document.documentElement.style.setProperty('--sheet-width', wMm + 'mm');
     document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
