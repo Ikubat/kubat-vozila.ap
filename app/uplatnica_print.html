@@ -10,8 +10,11 @@
       --sheet-margin: 8mm; /* početna margina – možeš mijenjati */
       --sheet-width: 168mm;
       --sheet-height: 100mm;
+      --paper-width: 168mm;
+      --paper-height: 100mm;
       --handle-size: 8px;
       --field-font: 12px;
+      --print-scale: 1;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -141,7 +144,7 @@
 
     @media print{
       @page {
-        size: var(--sheet-width) var(--sheet-height);
+        size: var(--paper-width) var(--paper-height);
         margin: 0;
       }
       body{
@@ -155,6 +158,8 @@
       .sheet{
         box-shadow:none;
         margin:0 auto;
+        transform: scale(var(--print-scale));
+        transform-origin: top left;
       }
       .field-box{
         border:0;
@@ -235,6 +240,10 @@
   const DEFAULT_FONT_PX = 12;
   const DEFAULT_PAD_MM = 1.5;
   const DEFAULT_LETTER_SPACING = 0;
+  const BASE_SHEET = { w: 168, h: 100 };
+
+  document.documentElement.style.setProperty('--sheet-width', BASE_SHEET.w + 'mm');
+  document.documentElement.style.setProperty('--sheet-height', BASE_SHEET.h + 'mm');
 
   const PAPER_SIZES = [
     { key:'slip', label:'Uplatnica 168×100mm', w:168, h:100 },
@@ -335,11 +344,17 @@
     });
   }
 
+  function updatePrintScale(wMm, hMm){
+    const scale = Math.min(wMm / BASE_SHEET.w, hMm / BASE_SHEET.h);
+    document.documentElement.style.setProperty('--print-scale', String(scale));
+  }
+
   function updatePageSizeStyle(wMm, hMm){
     const css = `@page { size: ${wMm}mm ${hMm}mm; margin: 0; }`;
     if (pageSizeStyle) pageSizeStyle.textContent = css;
-    document.documentElement.style.setProperty('--sheet-width', wMm + 'mm');
-    document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
+    document.documentElement.style.setProperty('--paper-width', wMm + 'mm');
+    document.documentElement.style.setProperty('--paper-height', hMm + 'mm');
+    updatePrintScale(wMm, hMm);
   }
 
   function loadCustomPaper(){
