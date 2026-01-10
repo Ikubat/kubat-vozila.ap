@@ -472,12 +472,6 @@
     const txt = el.querySelector('.field-text');
     if (!txt) return;
     txt.style.transform = 'scaleX(1)';
-    const natural = txt.getBoundingClientRect().width || 1;
-    const boxW = el.getBoundingClientRect().width || 1;
-    let scale = boxW / natural;
-    if (!isFinite(scale) || scale <= 0) scale = 1;
-    scale = Math.max(0.5, Math.min(3, scale)); // da ne poludi
-    txt.style.transform = 'scaleX(' + scale.toFixed(3) + ')';
   }
 
   // --- parsiranje payload-a iz URL hash-a ili localStorage-a ---
