@@ -430,14 +430,14 @@
     payloadData = data;
 
     const map = {
-      uplatilac_tel:       (data.uplatilac_tel || data.uplatilac_kontakt || data.uplatilac_kontakt_tel || '').trim(),
-      uplatilac_ime:       (data.uplatilac || data.uplatilac_ime || '').trim(),
+      uplatilac_tel:       (data.uplatilac_kontakt || data.uplatilac_tel || data.uplatilac_kontakt_tel || '').trim(),
+      uplatilac_ime:       (data.uplatilac || data.uplatilac_tekst || data.uplatilac_naziv || data.uplatilac_ime || '').trim(),
       uplatilac_adresa:    (data.uplatilac_adresa || data.uplatilac_adresa2 || '').trim(),
-      uplatilac_mjesto:    (data.uplatilac_mjesto || '').trim(),
+      uplatilac_mjesto:    (data.uplatilac_mjesto || data.uplatilac_mjesto_naziv || '').trim(),
       uplatilac_id_broj:   (data.uplatilac_id_broj || data.uplatilac_jmbg || data.uplatilac_id || data.jmbg || '').trim(),
-      primatelj:           (data.primatelj || data.primatelj_ime || '').trim(),
-      primatelj_adresa:    (data.primatelj_adresa || '').trim(),
-      primatelj_mjesto:    (data.primatelj_mjesto || '').trim(),
+      primatelj:           (data.primatelj || data.primatelj_tekst || data.primatelj_naziv || data.primatelj_ime || '').trim(),
+      primatelj_adresa:    (data.primatelj_adresa || data.primatelj_adresa2 || '').trim(),
+      primatelj_mjesto:    (data.primatelj_mjesto || data.primatelj_mjesto_naziv || '').trim(),
       svrha:               (data.svrha || '').trim(),
       svrha1:              (data.svrha1 || '').trim(),
       svrha2:              (data.svrha2 || data.svrha_drugi || '').trim(),
