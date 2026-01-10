@@ -647,6 +647,14 @@
 
     async function loadUplatnice() {
       try {
+        const pickValue = (...values) => {
+          for (const value of values) {
+            if (value === undefined || value === null) continue;
+            const text = String(value).trim();
+            if (text) return text;
+          }
+          return '';
+        };
         const qs = new URLSearchParams();
         if (state.q) qs.set('q', state.q);
 
@@ -672,20 +680,20 @@
               r.uplatilac_naziv || r.uplatilac ||
               (pU && pU.label) || '',
             uplatilac_tekst: r.uplatilac_tekst || '',
-            uplatilac_kontakt: r.uplatilac_kontakt || '',
-            uplatilac_adresa: r.uplatilac_adresa || '',
-            uplatilac_mjesto: r.uplatilac_mjesto || '',
-            uplatilac_id_broj: r.uplatilac_id_broj || '',
+            uplatilac_kontakt: pickValue(r.uplatilac_kontakt, pU && pU.kontakt),
+            uplatilac_adresa: pickValue(r.uplatilac_adresa, pU && pU.adresa),
+            uplatilac_mjesto: pickValue(r.uplatilac_mjesto, pU && pU.mjesto_naziv),
+            uplatilac_id_broj: pickValue(r.uplatilac_id_broj, pU && pU.id_broj),
 
             primatelj_id: pId,
             primatelj_naziv:
               r.primatelj_naziv || r.primatelj ||
               (pP && pP.label) || '',
             primatelj_tekst: r.primatelj_tekst || '',
-            primatelj_kontakt: r.primatelj_kontakt || '',
-            primatelj_adresa: r.primatelj_adresa || '',
-            primatelj_mjesto: r.primatelj_mjesto || '',
-            primatelj_id_broj: r.primatelj_id_broj || '',
+            primatelj_kontakt: pickValue(r.primatelj_kontakt, pP && pP.kontakt),
+            primatelj_adresa: pickValue(r.primatelj_adresa, pP && pP.adresa),
+            primatelj_mjesto: pickValue(r.primatelj_mjesto, pP && pP.mjesto_naziv),
+            primatelj_id_broj: pickValue(r.primatelj_id_broj, pP && pP.id_broj),
 
             svrha_id: r.svrha_id ? parseInt(r.svrha_id, 10) : null,
             svrha_tekst: r.svrha_tekst || r.svrha || '',
