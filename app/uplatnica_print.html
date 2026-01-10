@@ -174,6 +174,10 @@
       Format papira:
       <select id="paperSelect"></select>
     </label>
+    <div id="customPaperControls" class="group" style="display:none;">
+      <label>Širina: <input id="customPaperWidth" type="number" min="50" max="400" step="1" /> mm</label>
+      <label>Visina: <input id="customPaperHeight" type="number" min="50" max="400" step="1" /> mm</label>
+    </div>
     <div class="group">
       <button id="btnMarginMinus">– margina</button>
       <button id="btnMarginPlus">+ margina</button>
@@ -207,6 +211,9 @@
   const marginVal = document.getElementById('marginVal');
   const fieldSelect = document.getElementById('fieldSelect');
   const paperSelect = document.getElementById('paperSelect');
+  const customPaperControls = document.getElementById('customPaperControls');
+  const customPaperWidth = document.getElementById('customPaperWidth');
+  const customPaperHeight = document.getElementById('customPaperHeight');
   const posX = document.getElementById('posX');
   const posY = document.getElementById('posY');
   const posW = document.getElementById('posW');
@@ -217,6 +224,7 @@
   const STORAGE_LAYOUT = 'uplatnica-print-layout-v2';
   const STORAGE_MARGIN = 'uplatnica-print-margin-v1';
   const STORAGE_PAPER = 'uplatnica-print-paper-v1';
+  const STORAGE_PAPER_CUSTOM = 'uplatnica-print-paper-custom-v1';
 
   const DEFAULT_FONT_PX = 12;
   const DEFAULT_PAD_MM = 1.5;
@@ -224,8 +232,10 @@
   const PAPER_SIZES = [
     { key:'slip', label:'Uplatnica 168×100mm', w:168, h:100 },
     { key:'a4p',  label:'A4 (210×297mm)', w:210, h:297 },
-    { key:'a4l',  label:'A4 landscape (297×210mm)', w:297, h:210 }
+    { key:'a4l',  label:'A4 landscape (297×210mm)', w:297, h:210 },
+    { key:'custom', label:'Custom', w:null, h:null }
   ];
+  const DEFAULT_CUSTOM_PAPER = { w:168, h:100 };
 
   // --- definiramo polja i početne pozicije (u mm, okvirno) ---
   const fieldDefs = [
@@ -321,13 +331,49 @@
     document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
   }
 
+  function loadCustomPaper(){
+    let stored = DEFAULT_CUSTOM_PAPER;
+    try{
+      const raw = localStorage.getItem(STORAGE_PAPER_CUSTOM);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.w === 'number' && typeof parsed.h === 'number') {
+          stored = parsed;
+        }
+      }
+    }catch(e){}
+    return stored;
+  }
+
+  function saveCustomPaper(size){
+    try{
+      localStorage.setItem(STORAGE_PAPER_CUSTOM, JSON.stringify(size));
+    }catch(e){}
+  }
+
+  function updateCustomPaperInputs(size){
+    if (customPaperWidth) customPaperWidth.value = String(size.w);
+    if (customPaperHeight) customPaperHeight.value = String(size.h);
+  }
+
+  function updateCustomVisibility(key){
+    if (!customPaperControls) return;
+    customPaperControls.style.display = key === 'custom' ? 'flex' : 'none';
+  }
+
   function applyPaperSize(key){
     const found = PAPER_SIZES.find(p=>p.key===key) || PAPER_SIZES[0];
-    updatePageSizeStyle(found.w, found.h);
+    let size = { w: found.w, h: found.h };
+    if (found.key === 'custom'){
+      size = loadCustomPaper();
+      updateCustomPaperInputs(size);
+    }
+    updatePageSizeStyle(size.w, size.h);
     if (paperSelect && paperSelect.value !== found.key){
       paperSelect.value = found.key;
     }
     try{ localStorage.setItem(STORAGE_PAPER, found.key); }catch(e){}
+    updateCustomVisibility(found.key);
   }
 
   function initPaperSelect(){
@@ -350,6 +396,20 @@
   }
 
   initPaperSelect();
+
+  function applyCustomPaperChange(){
+    if (!paperSelect || paperSelect.value !== 'custom') return;
+    const w = Math.max(50, Math.min(400, parseFloat(customPaperWidth?.value) || DEFAULT_CUSTOM_PAPER.w));
+    const h = Math.max(50, Math.min(400, parseFloat(customPaperHeight?.value) || DEFAULT_CUSTOM_PAPER.h));
+    const size = { w, h };
+    saveCustomPaper(size);
+    updatePageSizeStyle(size.w, size.h);
+  }
+
+  ['input','change'].forEach(evt=>{
+    if (customPaperWidth) customPaperWidth.addEventListener(evt, applyCustomPaperChange);
+    if (customPaperHeight) customPaperHeight.addEventListener(evt, applyCustomPaperChange);
+  });
 
   function applyPadding(el, padMm){
     const padPx = mmToPx(padMm);
