@@ -183,29 +183,30 @@
   const DEFAULT_PAD_MM = 1.5;
 
   const fieldDefs = [
-    { key:'uplatilac',           maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:10,  w:70 },
-    { key:'primatelj',           maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:22,  w:70 },
+    { key:'uplatilac_tel',       maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:6,   w:72 },
+    { key:'uplatilac_ime',       maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:12,  w:72 },
+    { key:'uplatilac_adresa',    maxChars:32, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:18,  w:72 },
+    { key:'uplatilac_mjesto',    maxChars:24, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:24,  w:72 },
+    { key:'uplatilac_id_broj',   maxChars:20, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:30,  w:72 },
+    { key:'svrha',               maxChars:32, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:38,  w:72 },
+    { key:'svrha1',              maxChars:32, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:44,  w:72 },
+    { key:'svrha2',              maxChars:32, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:50,  w:72 },
+    { key:'primatelj',           maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:58,  w:72 },
+    { key:'primatelj_adresa',    maxChars:32, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:64,  w:72 },
+    { key:'primatelj_mjesto',    maxChars:24, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:70,  w:72 },
+    { key:'mjesto',              maxChars:24, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:78,  w:45 },
+    { key:'datum',               maxChars:14, fontSize:12, padMm:DEFAULT_PAD_MM, x:55,  y:78,  w:25 },
+    { key:'racun_posiljaoca',    maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:8,   y:88,  w:72 },
 
-    { key:'svrha',               maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:34,  w:70 },
-    { key:'svrha1',              maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:42,  w:70 },
-
-    { key:'iznos_full',          maxChars:18, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:34,  w:40 },
-    { key:'racun_primatelja',    maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:22,  w:40 },
-
-    { key:'mjesto',              maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:10,  y:55,  w:60 },
-    { key:'broj_poreskog_obv',   maxChars:13, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:55,  w:40 },
-
-    { key:'opcina_sifra',        maxChars:6,  fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:63,  w:40 },
-    { key:'poziv_na_broj',       maxChars:20, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:71,  w:40 }
+    { key:'racun_primatelja',    maxChars:30, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:10,  w:65 },
+    { key:'iznos',               maxChars:18, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:24,  w:40 },
+    { key:'valuta',              maxChars:6,  fontSize:12, padMm:DEFAULT_PAD_MM, x:132, y:24,  w:18 },
+    { key:'broj_poreskog_obv',   maxChars:20, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:36,  w:65 },
+    { key:'vrsta_prihoda_sifra', maxChars:16, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:46,  w:65 },
+    { key:'opcina_sifra',        maxChars:10, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:56,  w:65 },
+    { key:'budzetska_org_sifra', maxChars:16, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:66,  w:65 },
+    { key:'poziv_na_broj',       maxChars:26, fontSize:12, padMm:DEFAULT_PAD_MM, x:90,  y:76,  w:65 }
   ];
-
-  // Dopuna: mjesto + datum u istom polju
-  function combinePlaceAndDate(data){
-    const mjesto = (data.mjesto || '').trim();
-    const datum  = (data.datum || '').trim();
-    if (mjesto && datum) return mjesto + ', ' + datum;
-    return mjesto || datum || '';
-  }
 
   // --- pomoćne pretvorbe mm <-> px ---
   function mmToPx(mm){
@@ -334,18 +335,28 @@
     if (!data) return;
     payloadData = data;
 
-    const mjDat = combinePlaceAndDate(data);
-
     const map = {
-      uplatilac:           (data.uplatilac_tekst || data.uplatilac || '').trim(),
-      primatelj:           (data.primatelj || '').trim(),
+      uplatilac_tel:       (data.uplatilac_tel || data.uplatilac_kontakt || data.uplatilac_kontakt_tel || '').trim(),
+      uplatilac_ime:       (data.uplatilac || data.uplatilac_ime || '').trim(),
+      uplatilac_adresa:    (data.uplatilac_adresa || data.uplatilac_adresa2 || '').trim(),
+      uplatilac_mjesto:    (data.uplatilac_mjesto || '').trim(),
+      uplatilac_id_broj:   (data.uplatilac_id_broj || data.uplatilac_jmbg || data.uplatilac_id || data.jmbg || '').trim(),
+      primatelj:           (data.primatelj || data.primatelj_ime || '').trim(),
+      primatelj_adresa:    (data.primatelj_adresa || '').trim(),
+      primatelj_mjesto:    (data.primatelj_mjesto || '').trim(),
       svrha:               (data.svrha || '').trim(),
       svrha1:              (data.svrha1 || '').trim(),
-      iznos_full:          (data.iznos_full || (data.iznos ? (data.iznos + ' ' + (data.valuta || 'KM')) : '')).trim(),
+      svrha2:              (data.svrha2 || data.svrha_drugi || '').trim(),
+      mjesto:              (data.mjesto || '').trim(),
+      datum:               (data.datum || '').trim(),
+      iznos:               (data.iznos || '').trim(),
+      valuta:              (data.valuta || 'KM').trim(),
+      racun_posiljaoca:    (data.racun_posiljaoca || '').trim(),
       racun_primatelja:    (data.racun_primatelja || '').trim(),
-      mjesto:              mjDat,
       broj_poreskog_obv:   (data.broj_poreskog_obv || '').trim(),
+      vrsta_prihoda_sifra: (data.vrsta_prihoda_sifra || '').trim(),
       opcina_sifra:        (data.opcina_sifra || '').trim(),
+      budzetska_org_sifra: (data.budzetska_org_sifra || '').trim(),
       poziv_na_broj:       (data.poziv_na_broj || '').trim()
     };
 
