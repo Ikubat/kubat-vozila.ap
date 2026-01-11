@@ -10,8 +10,11 @@
       --sheet-margin: 8mm; /* početna margina – možeš mijenjati */
       --sheet-width: 168mm;
       --sheet-height: 100mm;
+      --paper-width: 168mm;
+      --paper-height: 100mm;
       --handle-size: 8px;
       --field-font: 12px;
+      --print-scale: 1;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -141,7 +144,7 @@
 
     @media print{
       @page {
-        size: var(--sheet-width) var(--sheet-height);
+        size: var(--paper-width) var(--paper-height);
         margin: 0;
       }
       body{
@@ -155,7 +158,7 @@
       .sheet{
         box-shadow:none;
         margin:0 auto;
-      }
+        /* transform removed: do not auto-scale on print */}
       .field-box{
         border:0;
         padding:0;
@@ -173,7 +176,6 @@
     <span class="info">
       Povuci plave točkice ili mijenjaj vrijednosti ispod. Margina: <span id="marginVal"></span>mm
     </span>
-    <label>
     <label>
       Format papira:
       <select id="paperSelect"></select>
@@ -235,6 +237,10 @@
   const DEFAULT_FONT_PX = 12;
   const DEFAULT_PAD_MM = 1.5;
   const DEFAULT_LETTER_SPACING = 0;
+  const BASE_SHEET = { w: 168, h: 100 };
+
+  document.documentElement.style.setProperty('--sheet-width', BASE_SHEET.w + 'mm');
+  document.documentElement.style.setProperty('--sheet-height', BASE_SHEET.h + 'mm');
 
   const PAPER_SIZES = [
     { key:'slip', label:'Uplatnica 168×100mm', w:168, h:100 },
@@ -335,11 +341,17 @@
     });
   }
 
+  function updatePrintScale(wMm, hMm){
+    // Print should be 1:1. Do not scale the slip based on selected paper size.
+    document.documentElement.style.setProperty('--print-scale', '1');
+  }
+
   function updatePageSizeStyle(wMm, hMm){
     const css = `@page { size: ${wMm}mm ${hMm}mm; margin: 0; }`;
     if (pageSizeStyle) pageSizeStyle.textContent = css;
-    document.documentElement.style.setProperty('--sheet-width', wMm + 'mm');
-    document.documentElement.style.setProperty('--sheet-height', hMm + 'mm');
+    document.documentElement.style.setProperty('--paper-width', wMm + 'mm');
+    document.documentElement.style.setProperty('--paper-height', hMm + 'mm');
+    updatePrintScale(wMm, hMm);
   }
 
   function loadCustomPaper(){
@@ -407,20 +419,6 @@
   }
 
   initPaperSelect();
-
-  function applyCustomPaperChange(){
-    if (!paperSelect || paperSelect.value !== 'custom') return;
-    const w = Math.max(50, Math.min(400, parseFloat(customPaperWidth?.value) || DEFAULT_CUSTOM_PAPER.w));
-    const h = Math.max(50, Math.min(400, parseFloat(customPaperHeight?.value) || DEFAULT_CUSTOM_PAPER.h));
-    const size = { w, h };
-    saveCustomPaper(size);
-    updatePageSizeStyle(size.w, size.h);
-  }
-
-  ['input','change'].forEach(evt=>{
-    if (customPaperWidth) customPaperWidth.addEventListener(evt, applyCustomPaperChange);
-    if (customPaperHeight) customPaperHeight.addEventListener(evt, applyCustomPaperChange);
-  });
 
   function applyPadding(el, padMm){
     const padPx = mmToPx(padMm);
