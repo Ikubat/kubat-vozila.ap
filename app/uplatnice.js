@@ -166,6 +166,18 @@
         ? `${parseFloat($iznos.value).toFixed(2)} ${valuta}`
         : '';
 
+      const svrhaId = $svrhaSel && $svrhaSel.value ? parseInt($svrhaSel.value, 10) : null;
+      const svrhaSifrarnik = svrhaId && state.svrhe.has(svrhaId)
+        ? (state.svrhe.get(svrhaId).naziv || '').trim()
+        : '';
+
+      const formSvrha = $svrha.value.trim();
+      const formSvrha1 = $svrha1.value.trim();
+
+      const payloadSvrha = svrhaSifrarnik || formSvrha;
+      const payloadSvrha1 = svrhaSifrarnik ? formSvrha : formSvrha1;
+      const payloadSvrha2 = svrhaSifrarnik ? formSvrha1 : '';
+
       return {
         uplatilac: uplatilacTekst,
         uplatilac_tekst: $uplatilacTekst ? $uplatilacTekst.value.trim() : '',
@@ -178,8 +190,9 @@
         primatelj_adresa: $primateljAdresa ? $primateljAdresa.value.trim() : '',
         primatelj_mjesto: $primateljMjesto ? $primateljMjesto.value.trim() : '',
         primatelj_id_broj: $primateljIdBroj ? $primateljIdBroj.value.trim() : '',
-        svrha: $svrha.value.trim(),
-        svrha1: $svrha1.value.trim(),
+        svrha: payloadSvrha,
+        svrha1: payloadSvrha1,
+        svrha2: payloadSvrha2,
         mjesto: $mjesto.value.trim(),
         datum: $datum.value || '',
         iznos: $iznos.value ? parseFloat($iznos.value).toFixed(2) : '',
@@ -206,13 +219,19 @@
         : parseFloat(item.iznos);
       const iznos = Number.isFinite(iznosVal) ? iznosVal.toFixed(2) : '';
 
+      const hasSifrarnik = Boolean(item.svrha_tekst);
+      const payloadSvrha = hasSifrarnik ? item.svrha_tekst : (item.svrha || '');
+      const payloadSvrha1 = hasSifrarnik ? (item.svrha || '') : (item.svrha1 || '');
+      const payloadSvrha2 = hasSifrarnik ? (item.svrha1 || '') : '';
+
       return {
         id: item.id,
         uplatilac: item.uplatilac_naziv || '',
         uplatilac_tekst: item.uplatilac_tekst || '',
         primatelj: item.primatelj_naziv || '',
-        svrha: item.svrha_tekst || item.svrha || '',
-        svrha1: item.svrha1 || '',
+        svrha: payloadSvrha,
+        svrha1: payloadSvrha1,
+        svrha2: payloadSvrha2,
         mjesto: item.mjesto || item.mjesto_uplate || '',
         datum: item.datum || item.datum_uplate || '',
         iznos: iznos,
