@@ -498,6 +498,12 @@
     if (!data) return;
     payloadData = data;
 
+    const svrhaLine1 = (data.svrha || '').trim();
+    const svrhaLine2 = (data.svrha1 || '').trim();
+    const svrhaLine3 = (data.svrha2 || data.svrha_drugi || '').trim();
+    const svrhaSecond = svrhaLine2 || svrhaLine3;
+    const svrhaThird = svrhaLine2 ? svrhaLine3 : '';
+
     const map = {
       uplatilac_tel:       (data.uplatilac_kontakt || data.uplatilac_tel || data.uplatilac_kontakt_tel || '').trim(),
       uplatilac_ime:       (data.uplatilac || data.uplatilac_tekst || data.uplatilac_naziv || data.uplatilac_ime || '').trim(),
@@ -507,9 +513,9 @@
       primatelj:           (data.primatelj || data.primatelj_tekst || data.primatelj_naziv || data.primatelj_ime || '').trim(),
       primatelj_adresa:    (data.primatelj_adresa || data.primatelj_adresa2 || '').trim(),
       primatelj_mjesto:    (data.primatelj_mjesto || data.primatelj_mjesto_naziv || '').trim(),
-      svrha:               (data.svrha || '').trim(),
-      svrha1:              (data.svrha1 || '').trim(),
-      svrha2:              (data.svrha2 || data.svrha_drugi || '').trim(),
+      svrha:               svrhaLine1,
+      svrha1:              svrhaSecond,
+      svrha2:              svrhaThird,
       mjesto:              (data.mjesto || '').trim(),
       datum:               (data.datum || '').trim(),
       iznos:               (data.iznos || '').trim(),

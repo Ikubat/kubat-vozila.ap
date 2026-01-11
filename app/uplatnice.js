@@ -332,12 +332,13 @@
         p.opcina_sifra ||
         '';
 
+      const porezniBroj = (p.porezni_broj || p.porezni || '').trim();
       const idBrojUplatilac = (p.id_broj || '').trim();
 
       if (isCarinaPdvUvoz && isFizicka) {
         $brojPorezni.value = '0010000000019';
-      } else {
-        $brojPorezni.value = idBrojUplatilac;
+      } else if (!$brojPorezni.value) {
+        $brojPorezni.value = porezniBroj || idBrojUplatilac;
       }
 
       if (svrhaText.includes('uvoz')) {
