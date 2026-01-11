@@ -200,6 +200,8 @@
     // --- PRINT payload iz stavke u listi ---
     function buildPrintPayloadFromItem(item) {
       if (!item) return null;
+      const uplatilacText = (item.uplatilac_tekst || item.uplatilac_naziv || '').trim();
+      const primateljText = (item.primatelj_tekst || item.primatelj_naziv || '').trim();
       const valuta = (item.valuta || 'KM').trim() || 'KM';
       const iznosVal = item.iznos === undefined || item.iznos === null
         ? ''
@@ -208,9 +210,10 @@
 
       return {
         id: item.id,
-        uplatilac: item.uplatilac_naziv || '',
+        uplatilac: uplatilacText,
         uplatilac_tekst: item.uplatilac_tekst || '',
-        primatelj: item.primatelj_naziv || '',
+        primatelj: primateljText,
+        primatelj_tekst: item.primatelj_tekst || '',
         svrha: item.svrha_tekst || item.svrha || '',
         svrha1: item.svrha1 || '',
         mjesto: item.mjesto || item.mjesto_uplate || '',
