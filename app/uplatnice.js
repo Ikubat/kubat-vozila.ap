@@ -205,14 +205,19 @@
         ? ''
         : parseFloat(item.iznos);
       const iznos = Number.isFinite(iznosVal) ? iznosVal.toFixed(2) : '';
+      const svrhaMeta = item.svrha_id ? state.svrhe.get(item.svrha_id) : null;
+      const svrhaLine1 = (item.svrha_tekst || item.svrha || '').trim()
+        || (svrhaMeta?.naziv ? String(svrhaMeta.naziv).trim() : '');
+      const svrhaLine2 = (item.svrha1 || '').trim()
+        || (svrhaMeta?.naziv2 ? String(svrhaMeta.naziv2).trim() : '');
 
       return {
         id: item.id,
         uplatilac: item.uplatilac_naziv || '',
         uplatilac_tekst: item.uplatilac_tekst || '',
         primatelj: item.primatelj_naziv || '',
-        svrha: item.svrha_tekst || item.svrha || '',
-        svrha1: item.svrha1 || '',
+        svrha: svrhaLine1,
+        svrha1: svrhaLine2,
         mjesto: item.mjesto || item.mjesto_uplate || '',
         datum: item.datum || item.datum_uplate || '',
         iznos: iznos,
