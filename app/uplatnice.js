@@ -205,6 +205,11 @@
         ? ''
         : parseFloat(item.iznos);
       const iznos = Number.isFinite(iznosVal) ? iznosVal.toFixed(2) : '';
+      const svrhaFallback = (() => {
+        if (!item.svrha_id) return '';
+        const svrha = state.svrhe.get(item.svrha_id);
+        return svrha?.naziv2 ? String(svrha.naziv2).trim() : '';
+      })();
 
       return {
         id: item.id,
@@ -212,7 +217,7 @@
         uplatilac_tekst: item.uplatilac_tekst || '',
         primatelj: item.primatelj_naziv || '',
         svrha: item.svrha_tekst || item.svrha || '',
-        svrha1: item.svrha1 || '',
+        svrha1: item.svrha1 || svrhaFallback,
         mjesto: item.mjesto || item.mjesto_uplate || '',
         datum: item.datum || item.datum_uplate || '',
         iznos: iznos,
