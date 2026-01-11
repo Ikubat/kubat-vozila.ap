@@ -494,6 +494,23 @@
   // --- popuni tekst iz payload-a ---
   let payloadData = null;
 
+  function formatDateShort(raw){
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    const parts = value.match(/\d+/g);
+    if (!parts || parts.length < 3) return value;
+    let day = '';
+    let month = '';
+    let year = '';
+    if (parts[0].length === 4) {
+      [year, month, day] = parts;
+    } else {
+      [day, month, year] = parts;
+    }
+    const yy = year.slice(-2);
+    return `${day.padStart(2, '0')} ${month.padStart(2, '0')} ${yy}`;
+  }
+
   function setData(data){
     if (!data) return;
     payloadData = data;
@@ -517,7 +534,7 @@
       svrha1:              svrhaSecond,
       svrha2:              svrhaThird,
       mjesto:              (data.mjesto || '').trim(),
-      datum:               (data.datum || '').trim(),
+      datum:               formatDateShort(data.datum),
       iznos:               (data.iznos || '').trim(),
       valuta:              (data.valuta || 'KM').trim(),
       racun_posiljaoca:    (data.racun_posiljaoca || '').trim(),

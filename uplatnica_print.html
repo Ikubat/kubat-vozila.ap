@@ -199,10 +199,27 @@
     { key:'poziv_na_broj',       maxChars:20, fontSize:12, padMm:DEFAULT_PAD_MM, x:120, y:71,  w:40 }
   ];
 
+  function formatDateShort(raw){
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    const parts = value.match(/\d+/g);
+    if (!parts || parts.length < 3) return value;
+    let day = '';
+    let month = '';
+    let year = '';
+    if (parts[0].length === 4) {
+      [year, month, day] = parts;
+    } else {
+      [day, month, year] = parts;
+    }
+    const yy = year.slice(-2);
+    return `${day.padStart(2, '0')} ${month.padStart(2, '0')} ${yy}`;
+  }
+
   // Dopuna: mjesto + datum u istom polju
   function combinePlaceAndDate(data){
     const mjesto = (data.mjesto || '').trim();
-    const datum  = (data.datum || '').trim();
+    const datum  = formatDateShort(data.datum);
     if (mjesto && datum) return mjesto + ', ' + datum;
     return mjesto || datum || '';
   }
